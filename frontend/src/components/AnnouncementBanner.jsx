@@ -18,7 +18,7 @@ const AnnouncementBanner = ({ announcements }) => {
   const currentAnnouncement = announcements[currentIndex];
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[60] bg-amber-600 text-white py-3 px-4 shadow-md">
+    <div className="bg-amber-500 text-white py-3 px-4 shadow-md">
       <div className="max-w-7xl mx-auto flex items-center justify-center">
         <div className="flex items-center space-x-4 w-full">
           <div className="flex-1 text-center">

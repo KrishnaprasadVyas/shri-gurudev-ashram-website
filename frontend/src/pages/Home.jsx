@@ -14,7 +14,6 @@ const Home = () => {
 
   return (
     <>
-      <AnnouncementBanner announcements={announcements} />
       <HeroSection
         title="Welcome to Gurudev Ashram"
         subtitle="A sanctuary of peace, devotion, and selfless service"
