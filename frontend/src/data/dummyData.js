@@ -109,7 +109,7 @@ export const events = [
 export const galleryImages = [
   {
     id: 1,
-    src: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    src: "/assets/gallery_images/1.png",
     category: "satsang",
     title: "Satsang Gathering"
   },

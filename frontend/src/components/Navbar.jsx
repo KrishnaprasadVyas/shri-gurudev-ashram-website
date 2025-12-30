@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import AnnouncementBanner from './AnnouncementBanner';
 import { Link, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import logo from '../assets/Logo.png';
 
 const Navbar = ({ showAnnouncement = false, announcements = [] }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -187,7 +186,7 @@ const Navbar = ({ showAnnouncement = false, announcements = [] }) => {
           <div className="flex-shrink-0">
             <Link to="/" className="flex items-center justify-center group transition-transform duration-300 hover:scale-105">
               <img
-                src={logo}
+                src="/assets/Logo.png"
                 alt="Gurudev Ashram Logo"
                 className="h-16 md:h-20 lg:h-24 w-auto object-contain"
               />

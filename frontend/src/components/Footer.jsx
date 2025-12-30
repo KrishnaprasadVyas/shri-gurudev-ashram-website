@@ -11,18 +11,18 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-bold text-amber-700 mb-4">AARTIS AND DISCOURSES</h3>
             <div className="space-y-2 text-sm text-gray-600">
-              <p>Mangal Aarti - 04:30 am</p>
-              <p>Sringar Darshan - 07:30 am</p>
-              <p>Srimad Bhagavatam Discourse - 08:00 am</p>
-              <p>Raj Bhoga Aarti - 12:30 pm</p>
-              <p>Uthapana Aarti - 04:30 pm</p>
-              <p>Sandhya Aarti - 07:00 pm</p>
-              <p>Bhagavad Gita Discourse - 07:30 pm</p>
+              <p>काकड़ा आरती - सुबह 4 बजे</p>
+              <p>दैनिक सुबह आरती - सुबह 6 बजे</p>
+              <p>प्रातः भोजन</p>
+              <p>मध्याह्न भोजन</p>
+              <p>हरिपाठ - शाम 6 बजे</p>
+              <p>रात्रि भोजन</p>
+              <p>गीता पाठ - रात 8 बजे</p>
             </div>
             <div className="mt-4">
               <h4 className="font-semibold text-gray-700 mb-2">Darshan Timings</h4>
               <p className="text-sm text-gray-600">04:30 am to 01:00 pm</p>
-              <p className="text-sm text-gray-600">04:30 pm to 08:30 pm</p>
+              <p className="text-sm text-gray-600">04:30 pm to 09:00 pm</p>
             </div>
             <p className="text-xs text-gray-500 mt-4 italic">Temple timings may be changed on special occasions.</p>
           </div>

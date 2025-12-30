@@ -52,11 +52,7 @@ const GalleryGrid = ({ images, categories = [] }) => {
               alt={image.title}
               className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-300"
             />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-              <p className="text-white opacity-0 group-hover:opacity-100 transition-opacity font-semibold text-center px-4">
-                {image.title}
-              </p>
-            </div>
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors" />
           </div>
         ))}
       </div>
@@ -82,7 +78,6 @@ const GalleryGrid = ({ images, categories = [] }) => {
               alt={selectedImage.title}
               className="max-w-full max-h-[90vh] object-contain rounded-lg"
             />
-            <p className="text-white text-center mt-4">{selectedImage.title}</p>
           </div>
         </div>
       )}

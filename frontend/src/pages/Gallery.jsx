@@ -1,9 +1,12 @@
 import SectionHeading from '../components/SectionHeading';
 import GalleryGrid from '../components/GalleryGrid';
 import { galleryImages } from '../data/dummyData';
+import { brochureGalleryImages, brochureCategories } from '../data/brochureData';
 
 const Gallery = () => {
-  const categories = ['all', 'satsang', 'seva', 'yoga', 'events'];
+  // GalleryGrid already renders a single 'All' button — pass only brochure categories
+  const categories = brochureCategories;
+  const images = brochureGalleryImages.length > 0 ? brochureGalleryImages : galleryImages;
 
   return (
     <>
@@ -21,7 +24,7 @@ const Gallery = () => {
             subtitle="Capturing beautiful moments from our ashram activities and events"
             center={true}
           />
-          <GalleryGrid images={galleryImages} categories={categories} />
+          <GalleryGrid images={images} categories={categories} />
         </div>
       </section>
     </>
