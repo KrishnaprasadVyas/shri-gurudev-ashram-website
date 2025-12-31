@@ -21,45 +21,100 @@ export const announcements = [
 export const activities = [
     {
     id: 1,
-    title: "Daily Satsang",
-    description: "Morning and evening spiritual discourses and bhajans",
+    title: "Festival Celebration",
+    description: "Celebrations and special programs for major festivals.",
     icon: "",
-    category: "spiritual"
+    category: "spiritual",
+    subitems: [
+      {
+        id: "jammashtami",
+        title: "Jammashtami",
+        description: "Devotional programs and celebrations on Lord Krishna's birth."
+      },
+      {
+        id: "holi",
+        title: "Holi",
+        description: "Colorful Holi celebrations with community participation."
+      },
+      {
+        id: "diwali",
+        title: "Diwali",
+        description: "Festival of lights and special aartis and bhajans."
+      },
+      {
+        id: "rakshabandhan",
+        title: "Rakshabandhan",
+        description: "Sibling bonding festival programs and rituals."
+      }
+    ]
   },
   {
     id: 2,
     title: "Annadan Seva",
     description: "Feeding the needy and underprivileged families",
     icon: "",
-    category: "social"
+    category: "social",
+    subitems: [
+      {
+        id: "annadan-overview",
+        title: "Annadan Seva",
+        description: "Feeding drives and schedules for supporting families.",
+        points: ["Daily meal distribution", "Special festival distributions"]
+      }
+    ],
   },
   {
-    id: 3,
-    title: "Education Programs",
-    description: "Free education and skill development for children",
+    id: 7,
+    title: "Daily Routine",
+    description: "Regular daily schedule and aartis.",
     icon: "",
-    category: "social"
+    category: "spiritual",
+    subitems: [
+      {
+        id: "daily-aandan",
+        title: "Daily Aandan",
+        description: ""
+      },
+      {
+        id: "morning-aarti",
+        title: "Daily Morning Aarti 6am",
+        description: ""
+      },
+      {
+        id: "kakda-aarti",
+        title: "Kakda Aarti 4am",
+        description: ""
+      },
+      {
+        id: "haripath",
+        title: "Haripath (6 pm)",
+        description: ""
+      }
+    ]
   },
   {
-    id: 4,
-    title: "Medical Camps",
-    description: "Free health checkups and medical assistance",
+    id: 8,
+    title: "Gurudev Programs",
+    description: "Special spiritual programs led by Gurudev.",
     icon: "",
-    category: "charitable"
-  },
-  {
-    id: 5,
-    title: "Yoga & Meditation",
-    description: "Regular yoga classes and meditation sessions",
-    icon: "",
-    category: "spiritual"
-  },
-  {
-    id: 6,
-    title: "Environmental Initiatives",
-    description: "Tree plantation and environmental awareness programs",
-    icon: "",
-    category: "charitable"
+    category: "spiritual",
+    subitems: [
+      {
+        id: "shrimad-bhagwat",
+        title: "Shrimad bhagwat khata",
+        description: ""
+      },
+      {
+        id: "ram-katha",
+        title: "Ram katha",
+        description: ""
+      },
+      {
+        id: "hari-kala",
+        title: "Hari kala kirtan",
+        description: ""
+      }
+    ]
   }
 ];
 

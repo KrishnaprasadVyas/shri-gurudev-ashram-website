@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "./context/CartContext";
 import MainLayout from "./layouts/MainLayout";
+import ScrollToTop from "./components/ScrollToTop";
 
 // Pages
 import Home from "./pages/Home";
@@ -12,6 +13,7 @@ import Gallery from "./pages/Gallery";
 import Testimonials from "./pages/Testimonials";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
+import ActivityDetail from "./pages/ActivityDetail";
 
 // Donation Module
 import DonationPage from "./modules/donation/DonationPage";
@@ -27,6 +29,7 @@ import OrderTrackingPage from "./modules/ecommerce/OrderTrackingPage";
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <CartProvider>
         <Routes>
           <Route path="/" element={<MainLayout />}>
@@ -35,6 +38,7 @@ function App() {
             <Route path="about" element={<About />} />
             <Route path="gurudev" element={<Gurudev />} />
             <Route path="activities" element={<Activities />} />
+            <Route path="activities/:id" element={<ActivityDetail />} />
             <Route path="events" element={<Events />} />
             <Route path="gallery" element={<Gallery />} />
             <Route path="testimonials" element={<Testimonials />} />
