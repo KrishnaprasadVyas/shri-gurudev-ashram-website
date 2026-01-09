@@ -1,16 +1,16 @@
-import { useState } from 'react';
-import SectionHeading from '../components/SectionHeading';
-import FormInput from '../components/FormInput';
-import PrimaryButton from '../components/PrimaryButton';
-import { validateEmail, validatePhone } from '../utils/helpers';
+import { useState } from "react";
+import SectionHeading from "../components/SectionHeading";
+import FormInput from "../components/FormInput";
+import PrimaryButton from "../components/PrimaryButton";
+import { validateEmail, validatePhone } from "../utils/helpers";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    subject: '',
-    message: ''
+    name: "",
+    email: "",
+    phone: "",
+    subject: "",
+    message: "",
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -18,10 +18,10 @@ const Contact = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
@@ -29,27 +29,27 @@ const Contact = () => {
     const newErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
+      newErrors.name = "Name is required";
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!validateEmail(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = "Please enter a valid email address";
     }
 
     if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
+      newErrors.phone = "Phone number is required";
     } else if (!validatePhone(formData.phone)) {
-      newErrors.phone = 'Please enter a valid 10-digit phone number';
+      newErrors.phone = "Please enter a valid 10-digit phone number";
     }
 
     if (!formData.subject.trim()) {
-      newErrors.subject = 'Subject is required';
+      newErrors.subject = "Subject is required";
     }
 
     if (!formData.message.trim()) {
-      newErrors.message = 'Message is required';
+      newErrors.message = "Message is required";
     }
 
     setErrors(newErrors);
@@ -58,24 +58,33 @@ const Contact = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+
+    if (!validateForm()) return;
 
     setIsSubmitting(true);
-    
-    // Simulate API call
-    // TODO: Replace with actual API call
-    setTimeout(() => {
-      console.log('Form submitted:', formData);
-      setIsSubmitting(false);
+
+    try {
+      const res = await fetch("http://localhost:5000/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message);
+
       setSubmitSuccess(true);
-      setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
-      
-      // Reset success message after 5 seconds
+      setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
+
       setTimeout(() => setSubmitSuccess(false), 5000);
-    }, 1000);
+    } catch (err) {
+      alert(err.message || "Failed to send message");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -88,7 +97,8 @@ const Contact = () => {
               <SectionHeading title="Send us a Message" />
               {submitSuccess && (
                 <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
-                  Thank you! Your message has been sent successfully. We'll get back to you soon.
+                  Thank you! Your message has been sent successfully. We'll get
+                  back to you soon.
                 </div>
               )}
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -131,7 +141,10 @@ const Contact = () => {
                   error={errors.subject}
                 />
                 <div className="mb-4">
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="message"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Message <span className="text-red-500">*</span>
                   </label>
                   <textarea
@@ -143,13 +156,15 @@ const Contact = () => {
                     required
                     className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
                       errors.message
-                        ? 'border-red-500 focus:ring-red-500'
-                        : 'border-gray-300 focus:ring-amber-500'
+                        ? "border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:ring-amber-500"
                     }`}
                     placeholder="Enter your message"
                   />
                   {errors.message && (
-                    <p className="mt-1 text-sm text-red-600">{errors.message}</p>
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.message}
+                    </p>
                   )}
                 </div>
                 <PrimaryButton
@@ -157,7 +172,7 @@ const Contact = () => {
                   disabled={isSubmitting}
                   className="w-full"
                 >
-                  {isSubmitting ? 'Sending...' : 'Send Message'}
+                  {isSubmitting ? "Sending..." : "Send Message"}
                 </PrimaryButton>
               </form>
             </div>
@@ -167,14 +182,19 @@ const Contact = () => {
               <SectionHeading title="Get in Touch" />
               <div className="space-y-6">
                 <div className="bg-amber-50 p-6 rounded-lg">
-                  <h3 className="text-xl font-bold text-amber-900 mb-4">Contact Information</h3>
+                  <h3 className="text-xl font-bold text-amber-900 mb-4">
+                    Contact Information
+                  </h3>
                   <div className="space-y-4">
                     <div className="flex items-start space-x-3">
                       <div>
                         <p className="font-semibold text-gray-900">Address</p>
                         <p className="text-gray-700">
-                          श्री गुरुदेव आश्रम, पलसखेड सपकाल, तहसील चिखली, जिला बुलडाणा, महाराष्ट्र - 443001<br />
-                          स्वामी हरिचैतन्य शान्ति आश्रम ट्रस्ट, दाताला, तहसील मलकापूर, जिला बुलडाणा - 443102
+                          श्री गुरुदेव आश्रम, पलसखेड सपकाल, तहसील चिखली, जिला
+                          बुलडाणा, महाराष्ट्र - 443001
+                          <br />
+                          स्वामी हरिचैतन्य शान्ति आश्रम ट्रस्ट, दाताला, तहसील
+                          मलकापूर, जिला बुलडाणा - 443102
                         </p>
                       </div>
                     </div>
@@ -188,8 +208,22 @@ const Contact = () => {
                     <div className="flex items-start space-x-3">
                       <div>
                         <p className="font-semibold text-gray-900">Email</p>
-                        <p className="text-gray-700"><a href="mailto:info@shrigurudevashram.org" className="text-amber-600 hover:underline">info@shrigurudevashram.org</a></p>
-                        <p className="text-gray-700"><a href="mailto:info@shantiashramtrust.org" className="text-amber-600 hover:underline">info@shantiashramtrust.org</a></p>
+                        <p className="text-gray-700">
+                          <a
+                            href="mailto:info@shrigurudevashram.org"
+                            className="text-amber-600 hover:underline"
+                          >
+                            info@shrigurudevashram.org
+                          </a>
+                        </p>
+                        <p className="text-gray-700">
+                          <a
+                            href="mailto:info@shantiashramtrust.org"
+                            className="text-amber-600 hover:underline"
+                          >
+                            info@shantiashramtrust.org
+                          </a>
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -197,7 +231,9 @@ const Contact = () => {
 
                 {/* Google Maps Embed */}
                 <div className="bg-amber-50 p-6 rounded-lg">
-                  <h3 className="text-xl font-bold text-amber-900 mb-4">Find Us</h3>
+                  <h3 className="text-xl font-bold text-amber-900 mb-4">
+                    Find Us
+                  </h3>
                   <div className="w-full h-64 rounded-lg overflow-hidden">
                     <iframe
                       src="https://www.google.com/maps?q=Shri+Gurudev+Ashram+Palaskhed+Sapkal+Chikhli+Buldhana+Maharashtra+443001&output=embed"
@@ -216,7 +252,9 @@ const Contact = () => {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-amber-600 hover:underline"
-                    >Open in Google Maps</a>
+                    >
+                      Open in Google Maps
+                    </a>
                   </p>
                 </div>
               </div>
@@ -229,4 +267,3 @@ const Contact = () => {
 };
 
 export default Contact;
-
