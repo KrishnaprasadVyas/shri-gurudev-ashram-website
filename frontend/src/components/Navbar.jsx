@@ -69,19 +69,19 @@ const Navbar = ({ showAnnouncement = false, announcements = [] }) => {
     >
       {/* Top Bar - Social Media, Heading & Action Buttons */}
       <div className="bg-amber-50/90 border-b border-amber-200/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="hidden md:flex justify-between items-center h-10 py-2">
+        <div className="max-w-6xl mx-auto px-8 sm:px-12 lg:px-16 relative">
+          <div className="hidden xl:flex justify-between items-center h-24 py-8">
             {/* Social Media Icons */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-4">
               <a
                 href="https://www.facebook.com/SwamiHarichaitanyanandS/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-8 h-8 flex items-center justify-center border-2 border-amber-400 rounded-md text-amber-500 hover:bg-amber-400 hover:text-white transition-all duration-300 group"
+                className="w-9 h-9 flex items-center justify-center border-2 border-amber-400 rounded-md text-amber-500 hover:bg-amber-400 hover:text-white transition-all duration-300 group"
                 aria-label="Facebook"
               >
                 <svg
-                  className="w-4 h-4 group-hover:text-white transition-colors"
+                  className="w-4.5 h-4.5 group-hover:text-white transition-colors"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                 >
@@ -92,11 +92,11 @@ const Navbar = ({ showAnnouncement = false, announcements = [] }) => {
                 href="https://www.youtube.com/@shrigurudevashram"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-8 h-8 flex items-center justify-center border-2 border-amber-400 rounded-md text-amber-500 hover:bg-amber-400 hover:text-white transition-all duration-300 group"
+                className="w-9 h-9 flex items-center justify-center border-2 border-amber-400 rounded-md text-amber-500 hover:bg-amber-400 hover:text-white transition-all duration-300 group"
                 aria-label="YouTube"
               >
                 <svg
-                  className="w-4 h-4 group-hover:text-white transition-colors"
+                  className="w-4.5 h-4.5 group-hover:text-white transition-colors"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                 >
@@ -107,11 +107,11 @@ const Navbar = ({ showAnnouncement = false, announcements = [] }) => {
                 href="https://www.instagram.com/swami_harichaitanyaji_/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-8 h-8 flex items-center justify-center border-2 border-amber-400 rounded-md text-amber-500 hover:bg-amber-400 hover:text-white transition-all duration-300 group"
+                className="w-9 h-9 flex items-center justify-center border-2 border-amber-400 rounded-md text-amber-500 hover:bg-amber-400 hover:text-white transition-all duration-300 group"
                 aria-label="Instagram"
               >
                 <svg
-                  className="w-4 h-4 group-hover:text-white transition-colors"
+                  className="w-4.5 h-4.5 group-hover:text-white transition-colors"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                 >
@@ -122,11 +122,11 @@ const Navbar = ({ showAnnouncement = false, announcements = [] }) => {
                 href="https://x.com/Harichaitanyaji"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-8 h-8 flex items-center justify-center border-2 border-amber-400 rounded-md text-amber-500 hover:bg-amber-400 hover:text-white transition-all duration-300 group"
+                className="w-9 h-9 flex items-center justify-center border-2 border-amber-400 rounded-md text-amber-500 hover:bg-amber-400 hover:text-white transition-all duration-300 group"
                 aria-label="Twitter/X"
               >
                 <svg
-                  className="w-4 h-4 group-hover:text-white transition-colors"
+                  className="w-4.5 h-4.5 group-hover:text-white transition-colors"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                 >
@@ -134,15 +134,28 @@ const Navbar = ({ showAnnouncement = false, announcements = [] }) => {
                 </svg>
               </a>
             </div>
+            {/* Logo */}
+            <div className="flex justify-center flex-1 xl:ml-24">
+              <Link
+                to="/"
+                className="group transition-transform duration-300 hover:scale-105"
+              >
+                <img
+                  src="/assets/Logo.png"
+                  alt="Gurudev Ashram Logo"
+                  className="h-16 md:h-20 lg:h-24 w-auto object-contain"
+                />
+              </Link>
+            </div>
 
             {/* Action Buttons */}
-            <div className="hidden sm:flex items-center space-x-2">
+            <div className="hidden ml-6 sm:flex items-center space-x-3">
               <Link
                 to="/donate"
-                className="px-3 py-1.5 border-2 border-amber-400 rounded-md text-amber-500 text-xs font-semibold hover:bg-amber-400 hover:text-white transition-all duration-300 flex items-center space-x-1"
+                className="px-4 py-2 border-2 border-amber-400 rounded-md text-amber-600 text-sm font-semibold hover:bg-amber-400 hover:text-white transition-all duration-300 flex items-center space-x-2 shadow-sm"
               >
                 <svg
-                  className="w-3 h-3"
+                  className="w-4 h-4"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -157,21 +170,21 @@ const Navbar = ({ showAnnouncement = false, announcements = [] }) => {
               </Link>
               <Link
                 to="/shop"
-                className="px-3 py-1.5 border-2 border-amber-400 rounded-md text-amber-500 text-xs font-semibold hover:bg-amber-400 hover:text-white transition-all duration-300 flex items-center space-x-1 relative"
+                className="px-4 py-2 border-2 border-amber-400 rounded-md text-amber-600 text-sm font-semibold hover:bg-amber-400 hover:text-white transition-all duration-300 flex items-center space-x-2 relative shadow-sm"
               >
                 <span>Shop</span>
                 {getCartItemCount() > 0 && (
-                  <span className="ml-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  <span className="ml-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                     {getCartItemCount()}
                   </span>
                 )}
               </Link>
               <Link
                 to="/login"
-                className="px-3 py-1.5 border-2 border-amber-400 rounded-md text-amber-500 text-xs font-semibold hover:bg-amber-400 hover:text-white transition-all duration-300 flex items-center space-x-1"
+                className="px-4 py-2 border-2 border-amber-400 rounded-md text-amber-600 text-sm font-semibold hover:bg-amber-400 hover:text-white transition-all duration-300 flex items-center space-x-2 shadow-sm"
               >
                 <svg
-                  className="w-3 h-3"
+                  className="w-4 h-4"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -185,25 +198,15 @@ const Navbar = ({ showAnnouncement = false, announcements = [] }) => {
               </Link>
             </div>
           </div>
-
-          {/* Heading - Absolutely Centered */}
-          <div className="hidden md:block absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-            <h1
-              className="text-sm md:text-base text-gray-700 font-medium whitespace-nowrap"
-              style={{ fontFamily: "sans-serif" }}
-            >
-              श्री गुरुदेव आश्रम, पळसखेड (सपकाळ)
-            </h1>
-          </div>
         </div>
       </div>
 
       {/* Main Navbar - Logo & Navigation */}
-      <div className="bg-amber-50/95">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="bg-amber-50/95 border-b border-amber-200/40">
+        <div className="max-w-1xl px-8 sm:px-12 lg:px-16 xl:mx-40">
           {/* Mobile row with centered heading+logo block and airy spacing */}
-          <div className="flex lg:hidden items-center justify-between py-3 px-2 gap-3">
-            <div className="flex flex-col items-center justify-center gap-1 min-w-30">
+          <div className="flex xl:hidden items-center justify-between py-3 px-3 gap-3">
+            <div className="flex flex-col items-center justify-center gap-1">
               <p className="text-sm font-semibold text-amber-700 leading-tight text-center">
                 श्री गुरुदेव आश्रम
               </p>
@@ -215,37 +218,48 @@ const Navbar = ({ showAnnouncement = false, announcements = [] }) => {
                 />
               </Link>
             </div>
-            <div className="flex items-center space-x-2 pr-2">
+            <div className="flex items-center pr-2">
+              {/* Compact donate button for extra-small screens */}
               <Link
                 to="/donate"
-                className="px-2 py-1 border border-amber-400 rounded-md text-amber-600 text-xs font-semibold hover:bg-amber-100"
+                className="sm:hidden px-2.5 py-1 border-2 border-amber-400 rounded-md text-amber-700 text-xs font-semibold hover:bg-amber-100 shadow-sm flex-shrink-0"
               >
                 Donate
               </Link>
-              <Link
-                to="/shop"
-                className="px-2 py-1 border border-amber-400 rounded-md text-amber-600 text-xs font-semibold hover:bg-amber-100 relative"
-              >
-                Shop
-                {getCartItemCount() > 0 && (
-                  <span className="ml-1 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 inline-flex items-center justify-center">
-                    {getCartItemCount()}
-                  </span>
-                )}
-              </Link>
-              <Link
-                to="/login"
-                className="px-2 py-1 border border-amber-400 rounded-md text-amber-600 text-xs font-semibold hover:bg-amber-100"
-              >
-                Login
-              </Link>
+              {/* Full actions shown from sm and up */}
+              <div className="hidden sm:flex items-center space-x-2">
+                <Link
+                  to="/donate"
+                  className="px-3 py-1.5 border-2 border-amber-400 rounded-md text-amber-700 text-sm font-semibold hover:bg-amber-100 shadow-sm"
+                >
+                  Donate
+                </Link>
+                <Link
+                  to="/shop"
+                  className="px-3 py-1.5 border-2 border-amber-400 rounded-md text-amber-700 text-sm font-semibold hover:bg-amber-100 relative shadow-sm"
+                >
+                  Shop
+                  {getCartItemCount() > 0 && (
+                    <span className="ml-1 bg-red-500 text-white text-[11px] rounded-full w-5 h-5 inline-flex items-center justify-center">
+                      {getCartItemCount()}
+                    </span>
+                  )}
+                </Link>
+                <Link
+                  to="/login"
+                  className="px-3 py-1.5 border-2 border-amber-400 rounded-md text-amber-700 text-sm font-semibold hover:bg-amber-100 shadow-sm"
+                >
+                  Login
+                </Link>
+              </div>
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-2 rounded-md text-gray-600 hover:bg-amber-100 transition-colors"
+                className="ml-2 p-2 rounded-md text-amber-700 hover:bg-amber-100 transition-colors flex-shrink-0"
                 aria-label="Toggle menu"
+                aria-expanded={isMenuOpen}
               >
                 <svg
-                  className="h-6 w-6"
+                  className="h-7 w-7"
                   fill="none"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -263,60 +277,56 @@ const Navbar = ({ showAnnouncement = false, announcements = [] }) => {
             </div>
           </div>
 
-          {/* Desktop Navigation - Centered Layout */}
-          <div className="hidden lg:flex justify-center items-center h-20 lg:h-24 relative">
+          {/* Desktop Navigation - Centered Layout (Grid for perfect centering) */}
+          <div className="hidden xl:flex justify-between items-center py-5 relative">
             {/* Desktop Navigation - Left Side */}
-            <div className="flex items-center space-x-1 flex-1 justify-end pr-8">
+            <div className="flex items-center justify-between space-x-6">
               {navLinks.slice(0, 4).map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`px-3 py-2 text-sm font-semibold uppercase tracking-wide transition-all duration-300 relative group ${
+                  className={`px-4 py-3 text-base font-medium uppercase tracking-wider transition-all duration-300 relative group ${
                     isActive(link.path)
-                      ? "text-amber-600"
-                      : "text-gray-600 hover:text-amber-500"
+                      ? "text-amber-700"
+                      : "text-gray-600 hover:text-amber-600"
                   }`}
                 >
                   {link.label}
                   {isActive(link.path) && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-400 transform transition-all duration-300"></span>
+                    <span className="absolute -bottom-0.5 left-0 right-0 h-1 bg-amber-500 rounded-full transform transition-all duration-300"></span>
                   )}
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-400 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+                  <span className="absolute -bottom-0.5 left-0 right-0 h-1 bg-amber-300 rounded-full transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
                 </Link>
               ))}
             </div>
 
-            {/* Logo - Centered */}
-            <div className="shrink-0">
-              <Link
-                to="/"
-                className="flex items-center justify-center group transition-transform duration-300 hover:scale-105"
+            {/* Center Title */}
+            <div className="text-center justify-self-center">
+              <h1
+                className="text-base md:text-lg text-gray-700 font-semibold tracking-wide leading-tight whitespace-nowrap text-center"
+                style={{ fontFamily: "sans-serif" }}
               >
-                <img
-                  src="/assets/Logo.png"
-                  alt="Gurudev Ashram Logo"
-                  className="h-16 md:h-20 lg:h-24 w-auto object-contain"
-                />
-              </Link>
+                श्री गुरुदेव आश्रम,
+                <br></br>पळसखेड (सपकाळ)
+              </h1>
             </div>
-
             {/* Desktop Navigation - Right Side */}
-            <div className="flex items-center space-x-1 flex-1 justify-start pl-8">
+            <div className="flex items-center space-x-6">
               {navLinks.slice(4).map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`px-3 py-2 text-sm font-semibold uppercase tracking-wide transition-all duration-300 relative group ${
+                  className={`px-4 py-3 text-base font-medium uppercase tracking-wider transition-all duration-300 relative group ${
                     isActive(link.path)
-                      ? "text-amber-600"
-                      : "text-gray-600 hover:text-amber-500"
+                      ? "text-amber-700"
+                      : "text-gray-600 hover:text-amber-600"
                   }`}
                 >
                   {link.label}
                   {isActive(link.path) && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-400 transform transition-all duration-300"></span>
+                    <span className="absolute -bottom-0.5 left-0 right-0 h-1 bg-amber-500 rounded-full transform transition-all duration-300"></span>
                   )}
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-400 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+                  <span className="absolute -bottom-0.5 left-0 right-0 h-1 bg-amber-300 rounded-full transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
                 </Link>
               ))}
             </div>
@@ -326,7 +336,7 @@ const Navbar = ({ showAnnouncement = false, announcements = [] }) => {
 
       {/* Mobile Navigation */}
       {isMenuOpen && (
-        <div className="lg:hidden bg-amber-50/95 border-t border-amber-200/30 animate-slideDown">
+        <div className="xl:hidden bg-amber-50/95 border-t border-amber-200/30 animate-slideDown">
           <div className="px-4 py-4 space-y-1">
             {navLinks.map((link) => (
               <Link
@@ -346,7 +356,7 @@ const Navbar = ({ showAnnouncement = false, announcements = [] }) => {
               <Link
                 to="/shop"
                 onClick={() => setIsMenuOpen(false)}
-                className="block px-4 py-3 bg-amber-500 text-white rounded-md text-center font-semibold hover:bg-amber-600 transition-colors relative"
+                className="block px-4 py-3.5 bg-amber-500 text-white rounded-md text-center font-semibold hover:bg-amber-600 transition-colors relative"
               >
                 Shop
                 {getCartItemCount() > 0 && (
@@ -358,14 +368,14 @@ const Navbar = ({ showAnnouncement = false, announcements = [] }) => {
               <Link
                 to="/cart"
                 onClick={() => setIsMenuOpen(false)}
-                className="block px-4 py-3 bg-amber-400 text-white rounded-md text-center font-semibold hover:bg-amber-500 transition-colors relative"
+                className="block px-4 py-3.5 bg-amber-400 text-white rounded-md text-center font-semibold hover:bg-amber-500 transition-colors relative"
               >
                 Cart {getCartItemCount() > 0 && `(${getCartItemCount()})`}
               </Link>
               <Link
                 to="/login"
                 onClick={() => setIsMenuOpen(false)}
-                className="block px-4 py-3 border border-amber-300 text-amber-700 rounded-md text-center font-semibold hover:bg-amber-100 transition-colors"
+                className="block px-4 py-3.5 border border-amber-300 text-amber-700 rounded-md text-center font-semibold hover:bg-amber-100 transition-colors"
               >
                 Login
               </Link>
