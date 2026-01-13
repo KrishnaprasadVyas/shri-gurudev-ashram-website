@@ -13,6 +13,8 @@ const donationSchema = new mongoose.Schema(
       default: "PENDING",
     },
     transactionRef: String,
+    receiptUrl: String,
+    receiptNumber: String,
   },
   { timestamps: true }
 );
