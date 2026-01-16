@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
 
 const app = express();
@@ -7,6 +8,7 @@ const app = express();
 connectDB();
 
 app.use(cors());
+app.use(cookieParser());
 app.use("/api/webhooks/razorpay", express.raw({ type: "application/json" }));
 app.use(express.json());
 
