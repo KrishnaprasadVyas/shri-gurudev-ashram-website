@@ -23,17 +23,47 @@ exports.sendOtp = async (req, res) => {
 exports.verifyOtp = async (req, res) => {
   const { mobile, otp } = req.body;
 
-  const record = await Otp.findOne({ mobile }).sort({ _id: -1 });
-  if (!record) return res.status(400).json({ message: "Invalid OTP" });
+  if (!mobile || !otp) {
+    return res.status(400).json({ message: "Mobile and OTP required" });
+  }
 
-  const isValid = await bcrypt.compare(otp, record.otpHash);
-  if (!isValid) return res.status(400).json({ message: "Invalid OTP" });
+  const record = await Otp.findOne({ mobile }).sort({ _id: -1 });
+  if (!record) {
+    return res.status(400).json({ message: "Invalid OTP" });
+  }
+
+  if (record.expiresAt < new Date()) {
+    await Otp.deleteMany({ mobile });
+    return res.status(400).json({ message: "OTP expired" });
+  }
+
+  const isValid = await bcrypt.compare(otp.toString(), record.otpHash);
+  if (!isValid) {
+    return res.status(400).json({ message: "Invalid OTP" });
+  }
 
   let user = await User.findOne({ mobile });
-  if (!user) user = await User.create({ mobile });
+  if (!user) {
+    user = await User.create({ mobile });
+  }
 
-  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-    expiresIn: "1h",
+  const token = jwt.sign(
+    {
+      userId: user._id,
+      role: user.role,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+
+  await Otp.deleteMany({ mobile });
+
+  // Store session cookie for all users
+  res.cookie("authToken", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 
   res.json({ token });
