@@ -1,6 +1,8 @@
 const Donation = require("../models/Donation");
 const razorpay = require("../config/razorpay");
 const { v4: uuidv4 } = require("uuid");
+const path = require("path");
+const fs = require("fs");
 
 exports.createDonation = async (req, res) => {
   try {
@@ -45,10 +47,10 @@ exports.createDonation = async (req, res) => {
     }
 
     const donation = await Donation.create({
-      user: req.user.id,
+      user: req.user?.id || null, // ← THIS FIX
       amount,
       donationHead,
-      donorDob: dob,
+      donorDob,
       donorIdType,
       donorIdNumber,
       status: "PENDING",
@@ -104,13 +106,99 @@ exports.createDonationOrder = async (req, res) => {
 
 exports.getUserDonations = async (req, res) => {
   try {
-    const donations = await Donation.find({ user: req.user.id }).sort({
-      createdAt: -1,
-    });
+    const donations = await Donation.find({ user: req.user.id })
+      .select("_id donationHead amount status createdAt receiptUrl")
+      .sort({ createdAt: -1 });
 
     res.json(donations);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to fetch donations" });
+  }
+};
+
+/**
+ * Get donation status
+ * PUBLIC endpoint - no auth required
+ * Used by Step5Success polling for both guest and logged-in users
+ * Safe: only returns status, no sensitive data
+ */
+exports.getDonationStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate ObjectId format to prevent DB errors
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: "Invalid donation ID" });
+    }
+
+    const donation = await Donation.findById(id).select("status");
+
+    if (!donation) {
+      return res.status(404).json({ status: "NOT_FOUND" });
+    }
+
+    res.json({ status: donation.status });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to fetch donation status" });
+  }
+};
+
+/**
+ * Download donation receipt
+ * PUBLIC endpoint - accessible via donationId (acts as access token)
+ * Streams the existing PDF - does NOT regenerate
+ * Only returns receipt if donation.status === "SUCCESS"
+ */
+exports.downloadReceipt = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate ObjectId format
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: "Invalid donation ID" });
+    }
+
+    const donation = await Donation.findById(id);
+
+    if (!donation) {
+      return res.status(404).json({ message: "Donation not found" });
+    }
+
+    // Check if donation is successful
+    if (donation.status !== "SUCCESS") {
+      return res
+        .status(403)
+        .json({ message: "Receipt not available for this donation" });
+    }
+
+    // Check if receipt exists
+    if (!donation.receiptUrl) {
+      return res.status(404).json({ message: "Receipt not generated yet" });
+    }
+
+    // Construct receipt file path
+    const receiptPath = path.join(
+      __dirname,
+      "../../receipts",
+      path.basename(donation.receiptUrl)
+    );
+
+    if (!fs.existsSync(receiptPath)) {
+      return res.status(404).json({ message: "Receipt file not found" });
+    }
+
+    // Set headers for PDF download
+    const filename = `receipt-${donation.receiptNumber || donation._id}.pdf`;
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+
+    // Stream the file
+    const fileStream = fs.createReadStream(receiptPath);
+    fileStream.pipe(res);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to download receipt" });
   }
 };

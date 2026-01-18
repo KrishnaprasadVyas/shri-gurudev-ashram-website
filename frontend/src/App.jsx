@@ -41,6 +41,7 @@ import ExportsView from "./pages/admin/ExportsView";
 
 // Donation Module
 import DonationPage from "./modules/donation/DonationPage";
+import MyDonations from "./pages/MyDonations";
 
 // E-commerce Module
 import ShopPage from "./modules/ecommerce/ShopPage";
@@ -61,60 +62,73 @@ function App() {
               <AnnouncementProvider>
                 <DonationsProvider>
                   <Routes>
-          <Route path="/" element={<MainLayout />}>
-            {/* Main Pages */}
-            <Route index element={<Home />} />
-            <Route path="about" element={<About />} />
-            <Route path="gurudev" element={<Gurudev />} />
-            <Route path="activities" element={<Activities />} />
-            <Route path="activities/:id" element={<ActivityDetail />} />
-            <Route path="events" element={<Events />} />
-            <Route path="gallery" element={<Gallery />} />
-            <Route path="testimonials" element={<Testimonials />} />
-            <Route path="contact" element={<Contact />} />
-            <Route path="login" element={<Login />} />
-            <Route path="login/admin" element={<AdminLogin />} />
-            <Route path="signup" element={<Signup />} />
+                    <Route path="/" element={<MainLayout />}>
+                      {/* Main Pages */}
+                      <Route index element={<Home />} />
+                      <Route path="about" element={<About />} />
+                      <Route path="gurudev" element={<Gurudev />} />
+                      <Route path="activities" element={<Activities />} />
+                      <Route
+                        path="activities/:id"
+                        element={<ActivityDetail />}
+                      />
+                      <Route path="events" element={<Events />} />
+                      <Route path="gallery" element={<Gallery />} />
+                      <Route path="testimonials" element={<Testimonials />} />
+                      <Route path="contact" element={<Contact />} />
+                      <Route path="login" element={<Login />} />
+                      <Route path="login/admin" element={<AdminLogin />} />
+                      <Route path="signup" element={<Signup />} />
 
-            {/* Donation Module */}
-            <Route path="donate" element={<DonationPage />} />
+                      {/* Donation Module */}
+                      <Route path="donate" element={<DonationPage />} />
+                      <Route path="my-donations" element={<MyDonations />} />
 
-            {/* E-commerce Module */}
-            <Route path="shop" element={<ShopPage />} />
-            <Route path="shop/:id" element={<ProductDetailPage />} />
-            <Route path="cart" element={<CartPage />} />
-            <Route path="checkout" element={<CheckoutPage />} />
-            <Route
-              path="order-confirmation/:orderId"
-              element={<OrderConfirmationPage />}
-            />
-            <Route
-              path="track-order/:orderId"
-              element={<OrderTrackingPage />}
-            />
-            <Route path="track-order" element={<OrderTrackingPage />} />
-          </Route>
+                      {/* E-commerce Module */}
+                      <Route path="shop" element={<ShopPage />} />
+                      <Route path="shop/:id" element={<ProductDetailPage />} />
+                      <Route path="cart" element={<CartPage />} />
+                      <Route path="checkout" element={<CheckoutPage />} />
+                      <Route
+                        path="order-confirmation/:orderId"
+                        element={<OrderConfirmationPage />}
+                      />
+                      <Route
+                        path="track-order/:orderId"
+                        element={<OrderTrackingPage />}
+                      />
+                      <Route
+                        path="track-order"
+                        element={<OrderTrackingPage />}
+                      />
+                    </Route>
 
-          {/* Admin Routes */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminHome />} />
-            <Route path="website" element={<WebsiteAdminLayout />}>
-              <Route index element={<GalleryManager />} />
-              <Route path="gallery" element={<GalleryManager />} />
-              <Route path="events" element={<EventsManager />} />
-              <Route path="activities" element={<ActivitiesManager />} />
-              <Route path="announcement" element={<AnnouncementBannerManager />} />
-            </Route>
-            <Route path="system" element={<SystemAdminLayout />}>
-              <Route index element={<SystemOverview />} />
-              <Route path="overview" element={<SystemOverview />} />
-              <Route path="donations" element={<DonationsView />} />
-              <Route path="donors" element={<DonorsView />} />
-              <Route path="reports" element={<ReportsView />} />
-              <Route path="exports" element={<ExportsView />} />
-            </Route>
-          </Route>
-        </Routes>
+                    {/* Admin Routes */}
+                    <Route path="/admin" element={<AdminLayout />}>
+                      <Route index element={<AdminHome />} />
+                      <Route path="website" element={<WebsiteAdminLayout />}>
+                        <Route index element={<GalleryManager />} />
+                        <Route path="gallery" element={<GalleryManager />} />
+                        <Route path="events" element={<EventsManager />} />
+                        <Route
+                          path="activities"
+                          element={<ActivitiesManager />}
+                        />
+                        <Route
+                          path="announcement"
+                          element={<AnnouncementBannerManager />}
+                        />
+                      </Route>
+                      <Route path="system" element={<SystemAdminLayout />}>
+                        <Route index element={<SystemOverview />} />
+                        <Route path="overview" element={<SystemOverview />} />
+                        <Route path="donations" element={<DonationsView />} />
+                        <Route path="donors" element={<DonorsView />} />
+                        <Route path="reports" element={<ReportsView />} />
+                        <Route path="exports" element={<ExportsView />} />
+                      </Route>
+                    </Route>
+                  </Routes>
                 </DonationsProvider>
               </AnnouncementProvider>
             </ActivitiesProvider>
