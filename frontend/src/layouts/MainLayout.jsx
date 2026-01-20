@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import FloatingDonateButton from "../components/FloatingDonateButton";
 
 const MainLayout = () => {
   const location = useLocation();
@@ -13,6 +14,7 @@ const MainLayout = () => {
         <Outlet />
       </main>
       <Footer />
+      <FloatingDonateButton />
     </div>
   );
 };

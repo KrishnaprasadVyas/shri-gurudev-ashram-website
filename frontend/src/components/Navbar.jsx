@@ -9,8 +9,10 @@ const Navbar = ({ showAnnouncement = false }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isAboutDropdownOpen, setIsAboutDropdownOpen] = useState(false);
   const navRef = useRef(null);
   const profileRef = useRef(null);
+  const aboutRef = useRef(null);
   const location = useLocation();
   const { getCartItemCount } = useCart();
   const { user, isAuthenticated, logout } = useAuth();
@@ -24,6 +26,9 @@ const Navbar = ({ showAnnouncement = false }) => {
     const handleClickOutside = (event) => {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setIsProfileOpen(false);
+      }
+      if (aboutRef.current && !aboutRef.current.contains(event.target)) {
+        setIsAboutDropdownOpen(false);
       }
     };
 
@@ -68,13 +73,19 @@ const Navbar = ({ showAnnouncement = false }) => {
 
   const navLinks = [
     { path: "/", label: "HOME" },
-    { path: "/about", label: "ABOUT" },
+    { path: "/about", label: "ABOUT", hasDropdown: true },
     { path: "/gurudev", label: "GURUDEV" },
     { path: "/activities", label: "ACTIVITIES" },
     { path: "/events", label: "EVENTS" },
     { path: "/gallery", label: "GALLERY" },
     { path: "/testimonials", label: "TESTIMONIALS" },
     { path: "/contact", label: "CONTACT" },
+  ];
+
+  // About submenu items
+  const aboutSubMenu = [
+    { path: "/about", label: "Shri Gurudev Ashram", icon: "home" },
+    { path: "#", label: "Shanti Ashram", icon: "external", isExternal: true },
   ];
 
   return (
@@ -175,14 +186,9 @@ const Navbar = ({ showAnnouncement = false }) => {
                 <svg
                   className="w-4 h-4"
                   fill="currentColor"
-                  viewBox="0 0 20 20"
+                  viewBox="0 0 24 24"
                 >
-                  <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z"
-                    clipRule="evenodd"
-                  />
+                  <path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
                 </svg>
                 <span>Quick Donate</span>
               </Link>
@@ -430,21 +436,80 @@ const Navbar = ({ showAnnouncement = false }) => {
             {/* Desktop Navigation - Left Side */}
             <div className="flex items-center justify-between space-x-6">
               {navLinks.slice(0, 4).map((link) => (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className={`px-4 py-3 text-base font-medium uppercase tracking-wider transition-all duration-300 relative group ${
-                    isActive(link.path)
-                      ? "text-amber-700"
-                      : "text-gray-600 hover:text-amber-600"
-                  }`}
-                >
-                  {link.label}
-                  {isActive(link.path) && (
-                    <span className="absolute -bottom-0.5 left-0 right-0 h-1 bg-amber-500 rounded-full transform transition-all duration-300"></span>
-                  )}
-                  <span className="absolute -bottom-0.5 left-0 right-0 h-1 bg-amber-300 rounded-full transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
-                </Link>
+                link.hasDropdown ? (
+                  <div key={link.path} className="relative" ref={aboutRef}>
+                    <button
+                      onClick={() => setIsAboutDropdownOpen(!isAboutDropdownOpen)}
+                      onMouseEnter={() => setIsAboutDropdownOpen(true)}
+                      className={`px-4 py-3 text-base font-medium uppercase tracking-wider transition-all duration-300 relative group flex items-center gap-1 ${
+                        isActive(link.path) || isAboutDropdownOpen
+                          ? "text-amber-700"
+                          : "text-gray-600 hover:text-amber-600"
+                      }`}
+                    >
+                      {link.label}
+                      <svg className={`w-4 h-4 transition-transform duration-200 ${isAboutDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                      {(isActive(link.path)) && (
+                        <span className="absolute -bottom-0.5 left-0 right-0 h-1 bg-amber-500 rounded-full transform transition-all duration-300"></span>
+                      )}
+                      <span className="absolute -bottom-0.5 left-0 right-0 h-1 bg-amber-300 rounded-full transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+                    </button>
+                    {/* About Dropdown Menu */}
+                    {isAboutDropdownOpen && (
+                      <div 
+                        className="absolute top-full left-0 mt-1 w-56 bg-white rounded-lg shadow-xl border border-amber-100 py-2 z-50 animate-slideDown"
+                        onMouseLeave={() => setIsAboutDropdownOpen(false)}
+                      >
+                        {aboutSubMenu.map((item) => (
+                          item.isExternal ? (
+                            <a
+                              key={item.label}
+                              href={item.path}
+                              onClick={() => setIsAboutDropdownOpen(false)}
+                              className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition-colors"
+                            >
+                              <svg className="w-5 h-5 mr-3 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                              <span>{item.label}</span>
+                              <span className="ml-auto text-xs text-gray-400">Coming Soon</span>
+                            </a>
+                          ) : (
+                            <Link
+                              key={item.path}
+                              to={item.path}
+                              onClick={() => setIsAboutDropdownOpen(false)}
+                              className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition-colors"
+                            >
+                              <svg className="w-5 h-5 mr-3 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                              </svg>
+                              <span>{item.label}</span>
+                            </Link>
+                          )
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    className={`px-4 py-3 text-base font-medium uppercase tracking-wider transition-all duration-300 relative group ${
+                      isActive(link.path)
+                        ? "text-amber-700"
+                        : "text-gray-600 hover:text-amber-600"
+                    }`}
+                  >
+                    {link.label}
+                    {isActive(link.path) && (
+                      <span className="absolute -bottom-0.5 left-0 right-0 h-1 bg-amber-500 rounded-full transform transition-all duration-300"></span>
+                    )}
+                    <span className="absolute -bottom-0.5 left-0 right-0 h-1 bg-amber-300 rounded-full transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+                  </Link>
+                )
               ))}
             </div>
 
@@ -487,18 +552,68 @@ const Navbar = ({ showAnnouncement = false }) => {
         <div className="xl:hidden bg-amber-50/95 border-t border-amber-200/30 animate-slideDown">
           <div className="px-4 py-4 space-y-1">
             {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                onClick={() => setIsMenuOpen(false)}
-                className={`block px-4 py-3 rounded-md text-base font-semibold uppercase tracking-wide transition-all duration-300 ${
-                  isActive(link.path)
-                    ? "bg-amber-100 text-amber-700"
-                    : "text-gray-600 hover:bg-amber-100 hover:text-amber-600"
-                }`}
-              >
-                {link.label}
-              </Link>
+              link.hasDropdown ? (
+                <div key={link.path} className="space-y-1">
+                  <button
+                    onClick={() => setIsAboutDropdownOpen(!isAboutDropdownOpen)}
+                    className={`flex items-center justify-between w-full px-4 py-3 rounded-md text-base font-semibold uppercase tracking-wide transition-all duration-300 ${
+                      isActive(link.path)
+                        ? "bg-amber-100 text-amber-700"
+                        : "text-gray-600 hover:bg-amber-100 hover:text-amber-600"
+                    }`}
+                  >
+                    {link.label}
+                    <svg className={`w-4 h-4 transition-transform duration-200 ${isAboutDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {isAboutDropdownOpen && (
+                    <div className="pl-4 space-y-1">
+                      {aboutSubMenu.map((item) => (
+                        item.isExternal ? (
+                          <a
+                            key={item.label}
+                            href={item.path}
+                            onClick={() => setIsMenuOpen(false)}
+                            className="flex items-center px-4 py-2 text-sm text-gray-600 hover:bg-amber-100 hover:text-amber-600 rounded-md"
+                          >
+                            <svg className="w-4 h-4 mr-2 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                            {item.label}
+                            <span className="ml-auto text-xs text-gray-400">Soon</span>
+                          </a>
+                        ) : (
+                          <Link
+                            key={item.path}
+                            to={item.path}
+                            onClick={() => setIsMenuOpen(false)}
+                            className="flex items-center px-4 py-2 text-sm text-gray-600 hover:bg-amber-100 hover:text-amber-600 rounded-md"
+                          >
+                            <svg className="w-4 h-4 mr-2 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                            {item.label}
+                          </Link>
+                        )
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  onClick={() => setIsMenuOpen(false)}
+                  className={`block px-4 py-3 rounded-md text-base font-semibold uppercase tracking-wide transition-all duration-300 ${
+                    isActive(link.path)
+                      ? "bg-amber-100 text-amber-700"
+                      : "text-gray-600 hover:bg-amber-100 hover:text-amber-600"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              )
             ))}
             <div className="pt-4 border-t border-amber-200 space-y-2">
               <Link
