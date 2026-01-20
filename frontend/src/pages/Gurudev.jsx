@@ -3,25 +3,55 @@ import SectionHeading from "../components/SectionHeading";
 const Gurudev = () => {
   return (
     <>
-      <section className="py-16 px-4 bg-white">
-        <div className="max-w-5xl mx-auto">
-          <SectionHeading
-            title="Param Pujya Shri Swami Harichaitanyanand Saraswatiji Maharaj"
-            center={true}
-          />
-          <div className="prose prose-lg max-w-none">
-            <p className="text-gray-700 mb-4 text-center">
+      {/* Gurudev Profile Section - Spiritual & Elegant */}
+      <section className="py-16 px-4 bg-gradient-to-b from-amber-50 via-orange-50/30 to-amber-50/50">
+        <div className="max-w-4xl mx-auto">
+          {/* Centered Profile Card */}
+          <div className="flex flex-col items-center text-center">
+            {/* Portrait Image */}
+            <div className="relative mb-8">
+              <div className="w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 rounded-full overflow-hidden shadow-xl ring-4 ring-amber-100">
+                <img
+                  src="/assets/gurudev.jpg"
+                  alt="Param Pujya Shri Swami Harichaitanyanand Saraswatiji Maharaj"
+                  className="w-full h-full object-cover object-top"
+                />
+              </div>
+              {/* Subtle decorative ring */}
+              <div className="absolute inset-0 w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 rounded-full border-2 border-amber-200/50 -m-1 pointer-events-none"></div>
+            </div>
+
+            {/* Name in Serif Font */}
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-amber-900 mb-4 leading-tight">
+              Param Pujya Shri Swami
+              <br />
+              Harichaitanyanand Saraswatiji Maharaj
+            </h1>
+
+            {/* Thin Saffron Divider */}
+            <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent mb-6"></div>
+
+            {/* Short Description */}
+            <p className="text-gray-600 text-lg max-w-2xl leading-relaxed">
               श्री गुरुदेव आश्रम (पलसखेड सपकाल, चिखली, बुलडाणा) और स्वामी
-              हरिचैतन्य शान्ति आश्रम ट्रस्ट (दाताला, मलकापूर) Gurudev ji का
-              आध्यात्मिक और सेवा क्षेत्र है।
+              हरिचैतन्य शान्ति आश्रम ट्रस्ट (दाताला, मलकापूर) के संस्थापक एवं
+              आध्यात्मिक मार्गदर्शक
             </p>
-            <p className="text-gray-700 mb-4">
+          </div>
+        </div>
+      </section>
+
+      {/* About Gurudev Section */}
+      <section className="py-16 px-4 bg-white">
+        <div className="max-w-4xl mx-auto">
+          <div className="prose prose-lg max-w-none">
+            <p className="text-gray-700 mb-6 text-center text-lg leading-relaxed">
               Gurudev ji ने भक्ति, ज्ञान और निस्वार्थ सेवा को एक साथ जीने का
               मार्ग दिखाया है। आश्रम में दैनिक सत्संग, गीता पाठ, हरिपाठ,
               अन्नदान, शिक्षा, चिकित्सा, गौशाला, गुरुकुलम्, आदिवासी सेवा, अनाथ
               आश्रम और सेवा तीर्थ धाम के माध्यम से समाज की सेवा की जाती है।
             </p>
-            <p className="text-gray-700 mb-4">
+            <p className="text-gray-700 text-center text-lg leading-relaxed">
               हर सेवा कार्य का उद्देश्य मन की शुद्धि और समाज के उत्थान को साथ
               लेना है। Gurudev ji द्वारा प्रेरित शाखाएँ और सेवाएँ देश के अलग-अलग
               भागों में भक्तों को जोड़ती हैं।
