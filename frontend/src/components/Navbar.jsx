@@ -17,7 +17,8 @@ const Navbar = ({ showAnnouncement = false }) => {
   const { getCartItemCount } = useCart();
   const { user, isAuthenticated, logout } = useAuth();
 
-  const isAdmin = user?.role === "WEBSITE_ADMIN" || user?.role === "SYSTEM_ADMIN";
+  const isAdmin =
+    user?.role === "WEBSITE_ADMIN" || user?.role === "SYSTEM_ADMIN";
 
   const isActive = (path) => location.pathname === path;
 
@@ -62,7 +63,7 @@ const Navbar = ({ showAnnouncement = false }) => {
         const h = Math.ceil(navRef.current.getBoundingClientRect().height);
         document.documentElement.style.setProperty(
           "--app-nav-height",
-          `${h}px`
+          `${h}px`,
         );
       }
     };
@@ -192,17 +193,14 @@ const Navbar = ({ showAnnouncement = false }) => {
                 </svg>
                 <span>Quick Donate</span>
               </Link>
-              <Link
-                to="/shop"
-                className="px-4 py-2 border-2 border-amber-400 rounded-md text-amber-600 text-sm font-semibold hover:bg-amber-400 hover:text-white transition-all duration-300 flex items-center space-x-2 relative shadow-sm"
+              <button
+                type="button"
+                disabled
+                title="Shop coming soon"
+                className="px-4 py-2 border-2 border-amber-200 rounded-md text-amber-500 text-sm font-semibold bg-white cursor-not-allowed opacity-70 transition-all duration-300 flex items-center space-x-2 relative shadow-sm"
               >
-                <span>Shop</span>
-                {getCartItemCount() > 0 && (
-                  <span className="ml-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {getCartItemCount()}
-                  </span>
-                )}
-              </Link>
+                <span>Shop (Coming Soon)</span>
+              </button>
 
               {/* Auth Button / Profile Dropdown */}
               {isAuthenticated ? (
@@ -368,17 +366,14 @@ const Navbar = ({ showAnnouncement = false }) => {
                 >
                   Donate
                 </Link>
-                <Link
-                  to="/shop"
-                  className="px-3 py-1.5 border-2 border-amber-400 rounded-md text-amber-700 text-sm font-semibold hover:bg-amber-100 relative shadow-sm"
+                <button
+                  type="button"
+                  disabled
+                  title="Shop coming soon"
+                  className="px-3 py-1.5 border-2 border-amber-200 rounded-md text-amber-500 text-sm font-semibold bg-white cursor-not-allowed opacity-70 relative shadow-sm"
                 >
-                  Shop
-                  {getCartItemCount() > 0 && (
-                    <span className="ml-1 bg-red-500 text-white text-[11px] rounded-full w-5 h-5 inline-flex items-center justify-center">
-                      {getCartItemCount()}
-                    </span>
-                  )}
-                </Link>
+                  Shop (Coming Soon)
+                </button>
                 {isAuthenticated ? (
                   <button
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -435,11 +430,13 @@ const Navbar = ({ showAnnouncement = false }) => {
           <div className="hidden xl:flex justify-between items-center py-5 relative">
             {/* Desktop Navigation - Left Side */}
             <div className="flex items-center justify-between space-x-6">
-              {navLinks.slice(0, 4).map((link) => (
+              {navLinks.slice(0, 4).map((link) =>
                 link.hasDropdown ? (
                   <div key={link.path} className="relative" ref={aboutRef}>
                     <button
-                      onClick={() => setIsAboutDropdownOpen(!isAboutDropdownOpen)}
+                      onClick={() =>
+                        setIsAboutDropdownOpen(!isAboutDropdownOpen)
+                      }
                       onMouseEnter={() => setIsAboutDropdownOpen(true)}
                       className={`px-4 py-3 text-base font-medium uppercase tracking-wider transition-all duration-300 relative group flex items-center gap-1 ${
                         isActive(link.path) || isAboutDropdownOpen
@@ -448,21 +445,31 @@ const Navbar = ({ showAnnouncement = false }) => {
                       }`}
                     >
                       {link.label}
-                      <svg className={`w-4 h-4 transition-transform duration-200 ${isAboutDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      <svg
+                        className={`w-4 h-4 transition-transform duration-200 ${isAboutDropdownOpen ? "rotate-180" : ""}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
                       </svg>
-                      {(isActive(link.path)) && (
+                      {isActive(link.path) && (
                         <span className="absolute -bottom-0.5 left-0 right-0 h-1 bg-amber-500 rounded-full transform transition-all duration-300"></span>
                       )}
                       <span className="absolute -bottom-0.5 left-0 right-0 h-1 bg-amber-300 rounded-full transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
                     </button>
                     {/* About Dropdown Menu */}
                     {isAboutDropdownOpen && (
-                      <div 
+                      <div
                         className="absolute top-full left-0 mt-1 w-56 bg-white rounded-lg shadow-xl border border-amber-100 py-2 z-50 animate-slideDown"
                         onMouseLeave={() => setIsAboutDropdownOpen(false)}
                       >
-                        {aboutSubMenu.map((item) => (
+                        {aboutSubMenu.map((item) =>
                           item.isExternal ? (
                             <a
                               key={item.label}
@@ -470,11 +477,23 @@ const Navbar = ({ showAnnouncement = false }) => {
                               onClick={() => setIsAboutDropdownOpen(false)}
                               className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition-colors"
                             >
-                              <svg className="w-5 h-5 mr-3 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              <svg
+                                className="w-5 h-5 mr-3 text-amber-500"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                />
                               </svg>
                               <span>{item.label}</span>
-                              <span className="ml-auto text-xs text-gray-400">Coming Soon</span>
+                              <span className="ml-auto text-xs text-gray-400">
+                                Coming Soon
+                              </span>
                             </a>
                           ) : (
                             <Link
@@ -483,13 +502,23 @@ const Navbar = ({ showAnnouncement = false }) => {
                               onClick={() => setIsAboutDropdownOpen(false)}
                               className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition-colors"
                             >
-                              <svg className="w-5 h-5 mr-3 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                              <svg
+                                className="w-5 h-5 mr-3 text-amber-500"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                                />
                               </svg>
                               <span>{item.label}</span>
                             </Link>
-                          )
-                        ))}
+                          ),
+                        )}
                       </div>
                     )}
                   </div>
@@ -509,8 +538,8 @@ const Navbar = ({ showAnnouncement = false }) => {
                     )}
                     <span className="absolute -bottom-0.5 left-0 right-0 h-1 bg-amber-300 rounded-full transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
                   </Link>
-                )
-              ))}
+                ),
+              )}
             </div>
 
             {/* Center Title */}
@@ -551,7 +580,7 @@ const Navbar = ({ showAnnouncement = false }) => {
       {isMenuOpen && (
         <div className="xl:hidden bg-amber-50/95 border-t border-amber-200/30 animate-slideDown">
           <div className="px-4 py-4 space-y-1">
-            {navLinks.map((link) => (
+            {navLinks.map((link) =>
               link.hasDropdown ? (
                 <div key={link.path} className="space-y-1">
                   <button
@@ -563,13 +592,23 @@ const Navbar = ({ showAnnouncement = false }) => {
                     }`}
                   >
                     {link.label}
-                    <svg className={`w-4 h-4 transition-transform duration-200 ${isAboutDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <svg
+                      className={`w-4 h-4 transition-transform duration-200 ${isAboutDropdownOpen ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
                     </svg>
                   </button>
                   {isAboutDropdownOpen && (
                     <div className="pl-4 space-y-1">
-                      {aboutSubMenu.map((item) => (
+                      {aboutSubMenu.map((item) =>
                         item.isExternal ? (
                           <a
                             key={item.label}
@@ -577,11 +616,23 @@ const Navbar = ({ showAnnouncement = false }) => {
                             onClick={() => setIsMenuOpen(false)}
                             className="flex items-center px-4 py-2 text-sm text-gray-600 hover:bg-amber-100 hover:text-amber-600 rounded-md"
                           >
-                            <svg className="w-4 h-4 mr-2 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            <svg
+                              className="w-4 h-4 mr-2 text-amber-500"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                              />
                             </svg>
                             {item.label}
-                            <span className="ml-auto text-xs text-gray-400">Soon</span>
+                            <span className="ml-auto text-xs text-gray-400">
+                              Soon
+                            </span>
                           </a>
                         ) : (
                           <Link
@@ -590,13 +641,23 @@ const Navbar = ({ showAnnouncement = false }) => {
                             onClick={() => setIsMenuOpen(false)}
                             className="flex items-center px-4 py-2 text-sm text-gray-600 hover:bg-amber-100 hover:text-amber-600 rounded-md"
                           >
-                            <svg className="w-4 h-4 mr-2 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            <svg
+                              className="w-4 h-4 mr-2 text-amber-500"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                              />
                             </svg>
                             {item.label}
                           </Link>
-                        )
-                      ))}
+                        ),
+                      )}
                     </div>
                   )}
                 </div>
@@ -613,21 +674,16 @@ const Navbar = ({ showAnnouncement = false }) => {
                 >
                   {link.label}
                 </Link>
-              )
-            ))}
+              ),
+            )}
             <div className="pt-4 border-t border-amber-200 space-y-2">
-              <Link
-                to="/shop"
-                onClick={() => setIsMenuOpen(false)}
-                className="block px-4 py-3.5 bg-amber-500 text-white rounded-md text-center font-semibold hover:bg-amber-600 transition-colors relative"
+              <button
+                type="button"
+                disabled
+                className="block w-full px-4 py-3.5 bg-amber-200 text-amber-700 rounded-md text-center font-semibold cursor-not-allowed opacity-80 transition-colors relative"
               >
-                Shop
-                {getCartItemCount() > 0 && (
-                  <span className="ml-2 bg-white text-amber-600 text-xs rounded-full px-2 py-0.5">
-                    {getCartItemCount()}
-                  </span>
-                )}
-              </Link>
+                Shop (Coming Soon)
+              </button>
               <Link
                 to="/cart"
                 onClick={() => setIsMenuOpen(false)}

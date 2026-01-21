@@ -45,13 +45,8 @@ import ExportsView from "./pages/admin/ExportsView";
 import DonationPage from "./modules/donation/DonationPage";
 import MyDonations from "./pages/MyDonations";
 
-// E-commerce Module
-import ShopPage from "./modules/ecommerce/ShopPage";
-import ProductDetailPage from "./modules/ecommerce/ProductDetailPage";
-import CartPage from "./modules/ecommerce/CartPage";
-import CheckoutPage from "./modules/ecommerce/CheckoutPage";
-import OrderConfirmationPage from "./modules/ecommerce/OrderConfirmationPage";
-import OrderTrackingPage from "./modules/ecommerce/OrderTrackingPage";
+// E-commerce Module (disabled)
+import ShopComingSoon from "./pages/ShopComingSoon";
 
 function App() {
   return (
@@ -64,100 +59,99 @@ function App() {
               <ActivitiesProvider>
                 <AnnouncementProvider>
                   <DonationsProvider>
-                  <Routes>
-                    <Route path="/" element={<MainLayout />}>
-                      {/* Main Pages */}
-                      <Route index element={<Home />} />
-                      <Route path="about" element={<About />} />
-                      <Route path="gurudev" element={<Gurudev />} />
-                      <Route path="activities" element={<Activities />} />
-                      <Route
-                        path="activities/:id"
-                        element={<ActivityDetail />}
-                      />
-                      <Route path="events" element={<Events />} />
-                      <Route path="gallery" element={<Gallery />} />
-                      <Route path="testimonials" element={<Testimonials />} />
-                      <Route path="contact" element={<Contact />} />
-                      <Route path="login" element={<Login />} />
-                      <Route path="signup" element={<Signup />} />
-
-                      {/* Donation Module */}
-                      <Route path="donate" element={<DonationPage />} />
-                      <Route
-                        path="my-donations"
-                        element={
-                          <ProtectedRoute>
-                            <MyDonations />
-                          </ProtectedRoute>
-                        }
-                      />
-
-                      {/* E-commerce Module */}
-                      <Route path="shop" element={<ShopPage />} />
-                      <Route path="shop/:id" element={<ProductDetailPage />} />
-                      <Route path="cart" element={<CartPage />} />
-                      <Route path="checkout" element={<CheckoutPage />} />
-                      <Route
-                        path="order-confirmation/:orderId"
-                        element={<OrderConfirmationPage />}
-                      />
-                      <Route
-                        path="track-order/:orderId"
-                        element={<OrderTrackingPage />}
-                      />
-                      <Route
-                        path="track-order"
-                        element={<OrderTrackingPage />}
-                      />
-                    </Route>
-
-                    {/* Admin Routes - Protected */}
-                    <Route
-                      path="/admin"
-                      element={
-                        <AdminRoute>
-                          <AdminLayout />
-                        </AdminRoute>
-                      }
-                    >
-                      <Route index element={<AdminHome />} />
-                      <Route path="website" element={<WebsiteAdminLayout />}>
-                        <Route index element={<GalleryManager />} />
-                        <Route path="gallery" element={<GalleryManager />} />
-                        <Route path="events" element={<EventsManager />} />
+                    <Routes>
+                      <Route path="/" element={<MainLayout />}>
+                        {/* Main Pages */}
+                        <Route index element={<Home />} />
+                        <Route path="about" element={<About />} />
+                        <Route path="gurudev" element={<Gurudev />} />
+                        <Route path="activities" element={<Activities />} />
                         <Route
-                          path="activities"
-                          element={<ActivitiesManager />}
+                          path="activities/:id"
+                          element={<ActivityDetail />}
+                        />
+                        <Route path="events" element={<Events />} />
+                        <Route path="gallery" element={<Gallery />} />
+                        <Route path="testimonials" element={<Testimonials />} />
+                        <Route path="contact" element={<Contact />} />
+                        <Route path="login" element={<Login />} />
+                        <Route path="signup" element={<Signup />} />
+
+                        {/* Donation Module */}
+                        <Route path="donate" element={<DonationPage />} />
+                        <Route
+                          path="my-donations"
+                          element={
+                            <ProtectedRoute>
+                              <MyDonations />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        {/* E-commerce Module (coming soon) */}
+                        <Route path="shop/*" element={<ShopComingSoon />} />
+                        <Route path="cart" element={<ShopComingSoon />} />
+                        <Route path="checkout" element={<ShopComingSoon />} />
+                        <Route
+                          path="order-confirmation/:orderId"
+                          element={<ShopComingSoon />}
                         />
                         <Route
-                          path="announcement"
-                          element={<AnnouncementBannerManager />}
+                          path="track-order/:orderId"
+                          element={<ShopComingSoon />}
+                        />
+                        <Route
+                          path="track-order"
+                          element={<ShopComingSoon />}
                         />
                       </Route>
+
+                      {/* Admin Routes - Protected */}
                       <Route
-                        path="system"
+                        path="/admin"
                         element={
-                          <AdminRoute requiredRole="SYSTEM_ADMIN">
-                            <SystemAdminLayout />
+                          <AdminRoute>
+                            <AdminLayout />
                           </AdminRoute>
                         }
                       >
-                        <Route index element={<SystemOverview />} />
-                        <Route path="overview" element={<SystemOverview />} />
-                        <Route path="donations" element={<DonationsView />} />
-                        <Route path="donors" element={<DonorsView />} />
-                        <Route path="reports" element={<ReportsView />} />
-                        <Route path="exports" element={<ExportsView />} />
+                        <Route index element={<AdminHome />} />
+                        <Route path="website" element={<WebsiteAdminLayout />}>
+                          <Route index element={<GalleryManager />} />
+                          <Route path="gallery" element={<GalleryManager />} />
+                          <Route path="events" element={<EventsManager />} />
+                          <Route
+                            path="activities"
+                            element={<ActivitiesManager />}
+                          />
+                          <Route
+                            path="announcement"
+                            element={<AnnouncementBannerManager />}
+                          />
+                        </Route>
+                        <Route
+                          path="system"
+                          element={
+                            <AdminRoute requiredRole="SYSTEM_ADMIN">
+                              <SystemAdminLayout />
+                            </AdminRoute>
+                          }
+                        >
+                          <Route index element={<SystemOverview />} />
+                          <Route path="overview" element={<SystemOverview />} />
+                          <Route path="donations" element={<DonationsView />} />
+                          <Route path="donors" element={<DonorsView />} />
+                          <Route path="reports" element={<ReportsView />} />
+                          <Route path="exports" element={<ExportsView />} />
+                        </Route>
                       </Route>
-                    </Route>
-                  </Routes>
-                </DonationsProvider>
-              </AnnouncementProvider>
-            </ActivitiesProvider>
-          </EventsProvider>
-        </GalleryProvider>
-      </CartProvider>
+                    </Routes>
+                  </DonationsProvider>
+                </AnnouncementProvider>
+              </ActivitiesProvider>
+            </EventsProvider>
+          </GalleryProvider>
+        </CartProvider>
       </AuthProvider>
     </BrowserRouter>
   );

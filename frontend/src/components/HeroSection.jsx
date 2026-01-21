@@ -1,10 +1,10 @@
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
 
 const HeroSection = ({ title, subtitle, image, showCTA = true }) => {
   return (
     <div
       className={`relative h-[60vh] md:h-[70vh] flex ${
-        image ? 'items-start' : 'items-center'
+        image ? "items-start" : "items-center"
       } justify-center overflow-hidden`}
     >
       {/* Background Image */}
@@ -13,7 +13,7 @@ const HeroSection = ({ title, subtitle, image, showCTA = true }) => {
         style={{
           backgroundImage: image
             ? `url(${image})`
-            : 'linear-gradient(135deg, rgba(180, 83, 9, 0.8) 0%, rgba(146, 64, 14, 0.9) 100%)',
+            : "linear-gradient(135deg, rgba(180, 83, 9, 0.8) 0%, rgba(146, 64, 14, 0.9) 100%)",
         }}
       >
         {!image && (
@@ -24,18 +24,22 @@ const HeroSection = ({ title, subtitle, image, showCTA = true }) => {
       {/* Content */}
       <div
         className={`relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto ${
-          image ? 'pt-8 md:pt-12 lg:pt-16' : ''
+          image ? "pt-8 md:pt-12 lg:pt-16" : ""
         }`}
       >
         <h1
           className={`font-bold text-white mb-2 drop-shadow-lg ${
-            image ? 'text-3xl md:text-5xl whitespace-nowrap' : 'text-4xl md:text-6xl'
+            image
+              ? "text-3xl md:text-5xl whitespace-nowrap"
+              : "text-4xl md:text-6xl"
           }`}
         >
-          {title || 'Welcome to Gurudev Ashram'}
+          {title || "Welcome to Gurudev Ashram"}
         </h1>
         {subtitle && (
-          <p className={`text-lg md:text-xl text-amber-100 mb-6 drop-shadow-md ${image ? '' : 'mb-8'}`}>
+          <p
+            className={`text-lg md:text-xl text-amber-100 mb-6 drop-shadow-md ${image ? "" : "mb-8"}`}
+          >
             {subtitle}
           </p>
         )}
@@ -51,12 +55,15 @@ const HeroSection = ({ title, subtitle, image, showCTA = true }) => {
             >
               Donate Now
             </Link>
-            <Link
-              to="/shop"
-              className="px-8 py-3 bg-white text-amber-800 rounded-lg text-lg font-semibold hover:bg-amber-50 transition-colors shadow-lg"
+            <button
+              type="button"
+              disabled
+              className="px-8 py-3 bg-white text-amber-500 rounded-lg text-lg font-semibold shadow-lg cursor-not-allowed opacity-80"
+              aria-disabled="true"
+              title="Shop coming soon"
             >
-              Visit Shop
-            </Link>
+              Shop Coming Soon
+            </button>
           </div>
         </div>
       )}
@@ -70,12 +77,15 @@ const HeroSection = ({ title, subtitle, image, showCTA = true }) => {
             >
               Donate Now
             </Link>
-            <Link
-              to="/shop"
-              className="px-8 py-3 bg-white text-amber-800 rounded-lg text-lg font-semibold hover:bg-amber-50 transition-colors shadow-lg"
+            <button
+              type="button"
+              disabled
+              className="px-8 py-3 bg-white text-amber-500 rounded-lg text-lg font-semibold shadow-lg cursor-not-allowed opacity-80"
+              aria-disabled="true"
+              title="Shop coming soon"
             >
-              Visit Shop
-            </Link>
+              Shop Coming Soon
+            </button>
           </div>
         </div>
       )}
@@ -84,4 +94,3 @@ const HeroSection = ({ title, subtitle, image, showCTA = true }) => {
 };
 
 export default HeroSection;
-
