@@ -19,6 +19,7 @@ app.use("/receipts", express.static(path.join(__dirname, "../receipts")));
 app.use("/api/auth", require("./routes/auth.routes"));
 app.use("/api/test", require("./routes/test.routes"));
 app.use("/api/donations", require("./routes/donation.routes"));
+app.use("/api/public", require("./routes/public.routes")); // Public APIs (no auth)
 app.use("/api/webhooks", require("./routes/webhook.routes"));
 app.use("/api/contact", require("./routes/contact.routes"));
 app.use("/api/user", require("./routes/user.routes"));

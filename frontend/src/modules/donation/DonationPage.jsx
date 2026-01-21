@@ -1,9 +1,9 @@
-import { useRef, useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import SectionHeading from '../../components/SectionHeading';
-import DonationFlow from './DonationFlow';
-import DonorList from './DonorList';
-import { donationHeads, donationIcons, recentDonors } from '../../data/dummyData';
+import { useRef, useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import SectionHeading from "../../components/SectionHeading";
+import DonationFlow from "./DonationFlow";
+import DonorList from "./DonorList";
+import { donationHeads, donationIcons } from "../../data/dummyData";
 
 // Heart Icon for donate button
 const HeartIcon = ({ className }) => (
@@ -21,12 +21,9 @@ const HeartIcon = ({ className }) => (
 const CauseIcon = ({ iconKey, className }) => {
   const iconSvg = donationIcons[iconKey];
   if (!iconSvg) return null;
-  
+
   return (
-    <div 
-      className={className}
-      dangerouslySetInnerHTML={{ __html: iconSvg }}
-    />
+    <div className={className} dangerouslySetInnerHTML={{ __html: iconSvg }} />
   );
 };
 
@@ -38,15 +35,18 @@ const DonationPage = () => {
 
   // Check if Quick Donate was clicked (from header)
   useEffect(() => {
-    const quickDonate = searchParams.get('quick');
-    if (quickDonate === 'true') {
-      const generalSeva = donationHeads.find(h => h.name === "General Seva");
+    const quickDonate = searchParams.get("quick");
+    if (quickDonate === "true") {
+      const generalSeva = donationHeads.find((h) => h.name === "General Seva");
       if (generalSeva) {
         setSelectedCause(generalSeva);
         // Scroll to donation flow after component renders
         setTimeout(() => {
           if (donationFlowRef.current) {
-            donationFlowRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            donationFlowRef.current.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
           }
         }, 300);
       }
@@ -58,13 +58,16 @@ const DonationPage = () => {
     // Scroll to donation flow after component renders
     setTimeout(() => {
       if (donationFlowRef.current) {
-        donationFlowRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        donationFlowRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
       }
     }, 300);
   };
 
   const handleImageError = (headId) => {
-    setImageErrors(prev => ({ ...prev, [headId]: true }));
+    setImageErrors((prev) => ({ ...prev, [headId]: true }));
   };
 
   return (
@@ -85,8 +88,8 @@ const DonationPage = () => {
                 onClick={() => handleCauseSelect(head)}
                 className={`rounded-lg border transition-all text-left overflow-hidden ${
                   selectedCause?.id === head.id
-                    ? 'border-amber-600 border-4 bg-amber-50 shadow-lg'
-                    : 'border-amber-200 bg-amber-50 hover:border-amber-400 hover:shadow-md'
+                    ? "border-amber-600 border-4 bg-amber-50 shadow-lg"
+                    : "border-amber-200 bg-amber-50 hover:border-amber-400 hover:shadow-md"
                 }`}
               >
                 <div className="w-full aspect-[4/3] overflow-hidden bg-amber-100 flex items-center justify-center">
@@ -95,8 +98,8 @@ const DonationPage = () => {
                       {head.name.charAt(0)}
                     </div>
                   ) : (
-                    <img 
-                      src={head.image} 
+                    <img
+                      src={head.image}
                       alt={head.name}
                       className="w-full h-full object-cover"
                       onError={() => handleImageError(head.id)}
@@ -107,17 +110,27 @@ const DonationPage = () => {
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                       {head.icon && (
-                        <CauseIcon 
-                          iconKey={head.icon} 
-                          className="w-5 h-5 text-amber-600 flex-shrink-0 [&>svg]:w-full [&>svg]:h-full" 
+                        <CauseIcon
+                          iconKey={head.icon}
+                          className="w-5 h-5 text-amber-600 flex-shrink-0 [&>svg]:w-full [&>svg]:h-full"
                         />
                       )}
-                      <h3 className="text-lg font-bold text-amber-900">{head.name}</h3>
+                      <h3 className="text-lg font-bold text-amber-900">
+                        {head.name}
+                      </h3>
                     </div>
                     {selectedCause?.id === head.id && (
                       <span className="text-amber-600">
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        <svg
+                          className="w-5 h-5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clipRule="evenodd"
+                          />
                         </svg>
                       </span>
                     )}
@@ -125,7 +138,7 @@ const DonationPage = () => {
                   <p className="text-gray-600 text-sm">{head.description}</p>
                   {head.minAmount && (
                     <p className="text-xs text-amber-700 mt-1 font-medium">
-                      Min. donation: ₹{head.minAmount.toLocaleString('en-IN')}
+                      Min. donation: ₹{head.minAmount.toLocaleString("en-IN")}
                     </p>
                   )}
                 </div>
@@ -153,7 +166,7 @@ const DonationPage = () => {
           </div>
 
           {/* Live Donor List */}
-          <DonorList donors={recentDonors} />
+          <DonorList />
 
           {/* Donation Flow - Only show when a cause is selected */}
           {selectedCause && (
@@ -168,4 +181,3 @@ const DonationPage = () => {
 };
 
 export default DonationPage;
-

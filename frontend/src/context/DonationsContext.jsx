@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { recentDonors } from "../data/dummyData";
 
 const DonationsContext = createContext();
 
@@ -26,7 +25,7 @@ const getInitialDonations = () => {
       amount: 5000,
       cause: "General Seva",
       paymentStatus: "Success",
-      receiptAvailable: true
+      receiptAvailable: true,
     },
     {
       id: 2,
@@ -35,7 +34,7 @@ const getInitialDonations = () => {
       amount: 1000,
       cause: "Annadan Seva",
       paymentStatus: "Success",
-      receiptAvailable: true
+      receiptAvailable: true,
     },
     {
       id: 3,
@@ -44,7 +43,7 @@ const getInitialDonations = () => {
       amount: 2500,
       cause: "Education",
       paymentStatus: "Success",
-      receiptAvailable: true
+      receiptAvailable: true,
     },
     {
       id: 4,
@@ -53,7 +52,7 @@ const getInitialDonations = () => {
       amount: 500,
       cause: "Medical Seva",
       paymentStatus: "Pending",
-      receiptAvailable: false
+      receiptAvailable: false,
     },
     {
       id: 5,
@@ -62,7 +61,7 @@ const getInitialDonations = () => {
       amount: 10000,
       cause: "Goushala Seva",
       paymentStatus: "Success",
-      receiptAvailable: true
+      receiptAvailable: true,
     },
     {
       id: 6,
@@ -71,7 +70,7 @@ const getInitialDonations = () => {
       amount: 2000,
       cause: "Anath Seva",
       paymentStatus: "Success",
-      receiptAvailable: true
+      receiptAvailable: true,
     },
     {
       id: 7,
@@ -80,7 +79,7 @@ const getInitialDonations = () => {
       amount: 1500,
       cause: "General Seva",
       paymentStatus: "Success",
-      receiptAvailable: true
+      receiptAvailable: true,
     },
     {
       id: 8,
@@ -89,8 +88,8 @@ const getInitialDonations = () => {
       amount: 3000,
       cause: "Ashram Development",
       paymentStatus: "Success",
-      receiptAvailable: true
-    }
+      receiptAvailable: true,
+    },
   ];
 };
 
@@ -99,7 +98,7 @@ const getInitialDonors = () => {
   const donations = getInitialDonations();
   const donorMap = new Map();
 
-  donations.forEach(donation => {
+  donations.forEach((donation) => {
     if (donation.donorName !== "Anonymous") {
       if (!donorMap.has(donation.donorName)) {
         donorMap.set(donation.donorName, {
@@ -108,7 +107,7 @@ const getInitialDonors = () => {
           mobile: "", // Will be populated from donation flow
           governmentIdType: "PAN",
           governmentIdMasked: "AB****1A",
-          totalDonated: 0
+          totalDonated: 0,
         });
       }
       const donor = donorMap.get(donation.donorName);
@@ -118,12 +117,47 @@ const getInitialDonors = () => {
 
   // Add some mock data for donors
   const donors = Array.from(donorMap.values());
-  donors[0] = { ...donors[0], mobile: "9876543210", governmentIdType: "PAN", governmentIdMasked: maskGovtId("ABCDE1234F", "PAN") };
-  if (donors[1]) donors[1] = { ...donors[1], mobile: "9876543211", governmentIdType: "Aadhaar", governmentIdMasked: maskGovtId("123456789012", "Aadhaar") };
-  if (donors[2]) donors[2] = { ...donors[2], mobile: "9876543212", governmentIdType: "PAN", governmentIdMasked: maskGovtId("FGHIJ5678K", "PAN") };
-  if (donors[3]) donors[3] = { ...donors[3], mobile: "9876543213", governmentIdType: "Aadhaar", governmentIdMasked: maskGovtId("987654321098", "Aadhaar") };
-  if (donors[4]) donors[4] = { ...donors[4], mobile: "9876543214", governmentIdType: "PAN", governmentIdMasked: maskGovtId("LMNOP9012Q", "PAN") };
-  if (donors[5]) donors[5] = { ...donors[5], mobile: "9876543215", governmentIdType: "Aadhaar", governmentIdMasked: maskGovtId("456789012345", "Aadhaar") };
+  donors[0] = {
+    ...donors[0],
+    mobile: "9876543210",
+    governmentIdType: "PAN",
+    governmentIdMasked: maskGovtId("ABCDE1234F", "PAN"),
+  };
+  if (donors[1])
+    donors[1] = {
+      ...donors[1],
+      mobile: "9876543211",
+      governmentIdType: "Aadhaar",
+      governmentIdMasked: maskGovtId("123456789012", "Aadhaar"),
+    };
+  if (donors[2])
+    donors[2] = {
+      ...donors[2],
+      mobile: "9876543212",
+      governmentIdType: "PAN",
+      governmentIdMasked: maskGovtId("FGHIJ5678K", "PAN"),
+    };
+  if (donors[3])
+    donors[3] = {
+      ...donors[3],
+      mobile: "9876543213",
+      governmentIdType: "Aadhaar",
+      governmentIdMasked: maskGovtId("987654321098", "Aadhaar"),
+    };
+  if (donors[4])
+    donors[4] = {
+      ...donors[4],
+      mobile: "9876543214",
+      governmentIdType: "PAN",
+      governmentIdMasked: maskGovtId("LMNOP9012Q", "PAN"),
+    };
+  if (donors[5])
+    donors[5] = {
+      ...donors[5],
+      mobile: "9876543215",
+      governmentIdType: "Aadhaar",
+      governmentIdMasked: maskGovtId("456789012345", "Aadhaar"),
+    };
 
   return donors;
 };
@@ -166,43 +200,50 @@ export const DonationsProvider = ({ children }) => {
   const addDonation = (donationData) => {
     const newDonation = {
       id: Date.now(),
-      date: new Date().toISOString().split('T')[0],
-      donorName: donationData.anonymousDisplay ? "Anonymous" : (donationData.name || "Anonymous"),
+      date: new Date().toISOString().split("T")[0],
+      donorName: donationData.anonymousDisplay
+        ? "Anonymous"
+        : donationData.name || "Anonymous",
       amount: donationData.amount || 0,
       cause: donationData.donationHead?.name || "General Seva",
       paymentStatus: "Success", // Assume success after payment
-      receiptAvailable: true
+      receiptAvailable: true,
     };
 
-    setDonations(prev => [newDonation, ...prev]);
+    setDonations((prev) => [newDonation, ...prev]);
 
     // Update or create donor
     if (!donationData.anonymousDisplay && donationData.name) {
-      const existingDonorIndex = donors.findIndex(d => d.name === donationData.name);
-      
+      const existingDonorIndex = donors.findIndex(
+        (d) => d.name === donationData.name,
+      );
+
       if (existingDonorIndex >= 0) {
         // Update existing donor
         const updatedDonors = [...donors];
         updatedDonors[existingDonorIndex] = {
           ...updatedDonors[existingDonorIndex],
-          totalDonated: updatedDonors[existingDonorIndex].totalDonated + newDonation.amount,
-          mobile: donationData.mobile || updatedDonors[existingDonorIndex].mobile
+          totalDonated:
+            updatedDonors[existingDonorIndex].totalDonated + newDonation.amount,
+          mobile:
+            donationData.mobile || updatedDonors[existingDonorIndex].mobile,
         };
         setDonors(updatedDonors);
       } else {
         // Create new donor
-        const govtIdType = donationData.govtIdType === "aadhaar" ? "Aadhaar" : "PAN";
+        const govtIdType =
+          donationData.govtIdType === "aadhaar" ? "Aadhaar" : "PAN";
         const govtId = donationData.aadhaar || donationData.pan || "";
-        
+
         const newDonor = {
           id: Date.now() + 1,
           name: donationData.name,
           mobile: donationData.mobile || "",
           governmentIdType: govtIdType,
           governmentIdMasked: maskGovtId(govtId, govtIdType),
-          totalDonated: newDonation.amount
+          totalDonated: newDonation.amount,
         };
-        setDonors(prev => [...prev, newDonor]);
+        setDonors((prev) => [...prev, newDonor]);
       }
     }
   };
@@ -211,7 +252,7 @@ export const DonationsProvider = ({ children }) => {
     donations,
     donors,
     addDonation,
-    maskGovtId
+    maskGovtId,
   };
 
   return (
