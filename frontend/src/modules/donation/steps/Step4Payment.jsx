@@ -73,13 +73,15 @@ const Step4Payment = ({ data, updateData, nextStep, prevStep }) => {
       idNumber: data.govtIdType === "aadhaar" ? data.aadhaar : data.pan,
     };
 
+    // Validate donationHead exists before proceeding
+    if (!data.donationHead || !data.donationHead.id || !data.donationHead.name) {
+      throw new Error("Please select a donation cause before proceeding");
+    }
+
     // Build donationHead object (not just ID)
     const donationHead = {
-      id:
-        data.donationHead?.id ||
-        data.donationHead?.name ||
-        String(data.donationHead),
-      name: data.donationHead?.name || String(data.donationHead),
+      id: String(data.donationHead.id),
+      name: data.donationHead.name,
     };
 
     const payload = {

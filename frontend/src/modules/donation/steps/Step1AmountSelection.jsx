@@ -48,6 +48,11 @@ const Step1AmountSelection = ({ data, updateData, nextStep }) => {
   const handleSubmit = () => {
     const newErrors = {};
 
+    // Validate donation cause is selected
+    if (!data.donationHead || !data.donationHead.id || !data.donationHead.name) {
+      newErrors.cause = "Please select a donation cause first";
+    }
+
     if (!data.amount || data.amount < 1) {
       newErrors.amount = "Please enter a donation amount";
     } else if (data.amount < minAmount) {
@@ -118,6 +123,9 @@ const Step1AmountSelection = ({ data, updateData, nextStep }) => {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
+          {errors.cause && (
+            <p className="mt-2 text-sm text-red-600">{errors.cause}</p>
+          )}
           {errors.amount && (
             <p className="mt-2 text-sm text-red-600">{errors.amount}</p>
           )}
@@ -139,7 +147,7 @@ const Step1AmountSelection = ({ data, updateData, nextStep }) => {
         <div className="pt-4">
           <PrimaryButton
             onClick={handleSubmit}
-            disabled={!data.amount || data.amount < minAmount}
+            disabled={!data.amount || data.amount < minAmount || !data.donationHead}
             className="w-full"
           >
             Continue

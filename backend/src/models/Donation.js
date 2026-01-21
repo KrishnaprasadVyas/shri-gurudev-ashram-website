@@ -13,7 +13,7 @@ const donationSchema = new mongoose.Schema(
     // === DONOR SNAPSHOT (captured at donation time) ===
     donor: {
       name: { type: String, required: true },
-      mobile: { type: String, required: true },
+      mobile: { type: String, required: true }, // Can be "N/A" for cash donations
       email: { type: String },
       emailOptIn: { type: Boolean, default: false },
       emailVerified: { type: Boolean, default: false },
@@ -32,6 +32,11 @@ const donationSchema = new mongoose.Schema(
     amount: { type: Number, required: true },
 
     // === PAYMENT INFO ===
+    paymentMethod: {
+      type: String,
+      enum: ["ONLINE", "CASH"],
+      default: "ONLINE",
+    },
     razorpayOrderId: String,
     paymentId: String,
     status: {
@@ -49,6 +54,9 @@ const donationSchema = new mongoose.Schema(
 
     // === OTP VERIFICATION ===
     otpVerified: { type: Boolean, default: false },
+
+    // === ADMIN INFO (for cash donations) ===
+    addedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true },
 );
@@ -57,5 +65,7 @@ const donationSchema = new mongoose.Schema(
 donationSchema.index({ user: 1, createdAt: -1 });
 donationSchema.index({ "donor.mobile": 1 });
 donationSchema.index({ status: 1 });
+donationSchema.index({ paymentMethod: 1 });
+donationSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model("Donation", donationSchema);

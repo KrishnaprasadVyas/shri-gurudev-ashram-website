@@ -179,9 +179,15 @@ exports.createDonation = async (req, res) => {
         .json({ message: "Missing required donor details" });
     }
 
-    // Validate donationHead object
-    if (!donationHead.id || !donationHead.name) {
-      return res.status(400).json({ message: "Invalid donation head format" });
+    // Validate donationHead object - must have valid id and name (not empty, not "null" string)
+    if (!donationHead || 
+        !donationHead.id || 
+        !donationHead.name || 
+        donationHead.id === "null" || 
+        donationHead.name === "null" ||
+        donationHead.id.trim() === "" ||
+        donationHead.name.trim() === "") {
+      return res.status(400).json({ message: "Please select a valid donation cause" });
     }
 
     // Validate government ID
@@ -197,6 +203,7 @@ exports.createDonation = async (req, res) => {
     }
 
     // Create donation with donor snapshot
+    
     const donation = await Donation.create({
       user: req.user?.id || null,
       donor: {
@@ -216,6 +223,7 @@ exports.createDonation = async (req, res) => {
         name: donationHead.name,
       },
       amount,
+      paymentMethod: "ONLINE",
       otpVerified: otpVerified || false,
       status: "PENDING",
     });

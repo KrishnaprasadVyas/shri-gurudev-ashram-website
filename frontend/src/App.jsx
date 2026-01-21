@@ -33,6 +33,7 @@ import GalleryManager from "./pages/admin/GalleryManager";
 import EventsManager from "./pages/admin/EventsManager";
 import ActivitiesManager from "./pages/admin/ActivitiesManager";
 import AnnouncementBannerManager from "./pages/admin/AnnouncementBannerManager";
+import TestimonialsManager from "./pages/admin/TestimonialsManager";
 import SystemAdmin from "./pages/admin/SystemAdmin";
 import SystemAdminLayout from "./layouts/SystemAdminLayout";
 import SystemOverview from "./pages/admin/SystemOverview";
@@ -40,6 +41,7 @@ import DonationsView from "./pages/admin/DonationsView";
 import DonorsView from "./pages/admin/DonorsView";
 import ReportsView from "./pages/admin/ReportsView";
 import ExportsView from "./pages/admin/ExportsView";
+import CashDonationForm from "./pages/admin/CashDonationForm";
 
 // Donation Module
 import DonationPage from "./modules/donation/DonationPage";
@@ -128,6 +130,10 @@ function App() {
                             path="announcement"
                             element={<AnnouncementBannerManager />}
                           />
+                          <Route
+                            path="testimonials"
+                            element={<TestimonialsManager />}
+                          />
                         </Route>
                         <Route
                           path="system"
@@ -143,6 +149,7 @@ function App() {
                           <Route path="donors" element={<DonorsView />} />
                           <Route path="reports" element={<ReportsView />} />
                           <Route path="exports" element={<ExportsView />} />
+                          <Route path="cash-donation" element={<CashDonationForm />} />
                         </Route>
                       </Route>
                     </Routes>

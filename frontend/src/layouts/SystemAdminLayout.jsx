@@ -7,6 +7,7 @@ const SystemAdminLayout = () => {
   const navItems = [
     { path: "/admin/system/overview", label: "Overview", active: false, disabled: false },
     { path: "/admin/system/donations", label: "Donations", active: false, disabled: false },
+    { path: "/admin/system/cash-donation", label: "Add Cash Donation", active: false, disabled: false, indent: true },
     { path: "/admin/system/donors", label: "Donors", active: false, disabled: false },
     { path: "/admin/system/reports", label: "Reports", active: false, disabled: false },
     { path: "/admin/system/exports", label: "Exports", active: false, disabled: false },
@@ -37,13 +38,15 @@ const SystemAdminLayout = () => {
           <aside className="w-64 flex-shrink-0">
             <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
               <h2 className="text-lg font-bold text-gray-900 mb-4">System Admin</h2>
-              <nav className="space-y-2">
+              <nav className="space-y-1">
                 {navItems.map((item) => (
                   <button
                     key={item.path}
                     onClick={() => !item.disabled && navigate(item.path)}
                     disabled={item.disabled}
                     className={`w-full text-left px-4 py-2 rounded-md transition-colors ${
+                      item.indent ? "pl-8 text-sm" : ""
+                    } ${
                       isActive(item.path)
                         ? "bg-amber-600 text-white"
                         : item.disabled

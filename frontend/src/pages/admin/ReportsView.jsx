@@ -1,59 +1,91 @@
-import { useMemo } from "react";
-import { useDonations } from "../../context/DonationsContext";
+import { useState, useEffect, useMemo } from "react";
 import { formatCurrency } from "../../utils/helpers";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 const ReportsView = () => {
-  const { donations, donors } = useDonations();
+  const [donations, setDonations] = useState([]);
+  const [reports, setReports] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setError("Authentication required");
+          return;
+        }
+
+        const [donationsRes, reportsRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/admin/system/donations`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${API_BASE_URL}/admin/system/reports`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        if (!donationsRes.ok || !reportsRes.ok) {
+          throw new Error("Failed to fetch data");
+        }
+
+        const donationsData = await donationsRes.json();
+        const reportsData = await reportsRes.json();
+
+        setDonations(donationsData);
+        setReports(reportsData);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   // Get current month donations
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
   const currentMonthDonations = useMemo(() => {
     return donations.filter(donation => {
-      const donationDate = new Date(donation.date);
+      const donationDate = new Date(donation.createdAt);
       return donationDate.getMonth() === currentMonth && donationDate.getFullYear() === currentYear;
     });
   }, [donations, currentMonth, currentYear]);
 
   // Calculate summary metrics
   const totalDonationsLifetime = donations.length;
-  const totalAmountLifetime = donations.reduce((sum, d) => sum + d.amount, 0);
+  const totalAmountLifetime = reports?.totalAmount || 0;
   const totalDonationsCurrentMonth = currentMonthDonations.length;
-  const totalAmountCurrentMonth = currentMonthDonations.reduce((sum, d) => sum + d.amount, 0);
-  const totalDonors = donors.length;
+  const totalAmountCurrentMonth = currentMonthDonations
+    .filter(d => d.status === "SUCCESS")
+    .reduce((sum, d) => sum + d.amount, 0);
+  
+  // Unique donors count
+  const totalDonors = new Set(donations.map(d => d.donor?.name).filter(Boolean)).size;
 
-  // Top donation cause
-  const topCause = useMemo(() => {
-    const causeStats = donations.reduce((acc, donation) => {
-      acc[donation.cause] = (acc[donation.cause] || 0) + donation.amount;
-      return acc;
-    }, {});
-    const sorted = Object.entries(causeStats).sort((a, b) => b[1] - a[1]);
-    return sorted.length > 0 ? { cause: sorted[0][0], amount: sorted[0][1] } : null;
-  }, [donations]);
+  // Top donation cause from reports
+  const topCause = reports?.byDonationHead?.[0] || null;
 
-  // Cause-wise donation summary
-  const causeSummary = useMemo(() => {
-    const causeStats = donations.reduce((acc, donation) => {
-      if (!acc[donation.cause]) {
-        acc[donation.cause] = { count: 0, amount: 0 };
-      }
-      acc[donation.cause].count += 1;
-      acc[donation.cause].amount += donation.amount;
-      return acc;
-    }, {});
-    return Object.entries(causeStats)
-      .map(([cause, stats]) => ({ cause, ...stats }))
-      .sort((a, b) => b.amount - a.amount);
-  }, [donations]);
+  // Cause-wise donation summary from reports
+  const causeSummary = reports?.byDonationHead?.map(item => ({
+    cause: item._id,
+    count: item.count,
+    amount: item.sum,
+  })) || [];
 
   // Monthly donation summary (last 12 months)
   const monthlySummary = useMemo(() => {
     const monthStats = {};
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     
-    donations.forEach(donation => {
-      const date = new Date(donation.date);
+    donations.filter(d => d.status === "SUCCESS").forEach(donation => {
+      const date = new Date(donation.createdAt);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth()).padStart(2, '0')}`;
       const monthLabel = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
       
@@ -71,14 +103,41 @@ const ReportsView = () => {
   }, [donations]);
 
   // Anonymous vs Named donations
-  const anonymousCount = donations.filter(d => d.donorName === "Anonymous").length;
-  const namedCount = donations.length - anonymousCount;
+  const anonymousCount = donations.filter(d => d.donor?.anonymousDisplay === true && d.status === "SUCCESS").length;
+  const namedCount = donations.filter(d => d.donor?.anonymousDisplay !== true && d.status === "SUCCESS").length;
   const anonymousAmount = donations
-    .filter(d => d.donorName === "Anonymous")
+    .filter(d => d.donor?.anonymousDisplay === true && d.status === "SUCCESS")
     .reduce((sum, d) => sum + d.amount, 0);
   const namedAmount = donations
-    .filter(d => d.donorName !== "Anonymous")
+    .filter(d => d.donor?.anonymousDisplay !== true && d.status === "SUCCESS")
     .reduce((sum, d) => sum + d.amount, 0);
+
+  // Payment method breakdown
+  const onlineStats = reports?.byPaymentMethod?.ONLINE || { amount: 0, count: 0 };
+  const cashStats = reports?.byPaymentMethod?.CASH || { amount: 0, count: 0 };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
+        <span className="ml-3 text-gray-600">Loading reports...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-600 mb-4">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -118,10 +177,27 @@ const ReportsView = () => {
         <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
           <div className="text-sm font-medium text-gray-500 mb-1">Top Cause</div>
           <div className="text-lg font-bold text-gray-900 mb-1 truncate">
-            {topCause ? topCause.cause : "N/A"}
+            {topCause ? topCause._id : "N/A"}
           </div>
           <div className="text-sm font-semibold text-amber-900 mt-2">
-            {topCause ? formatCurrency(topCause.amount) : formatCurrency(0)}
+            {topCause ? formatCurrency(topCause.sum) : formatCurrency(0)}
+          </div>
+        </div>
+      </div>
+
+      {/* Payment Method Breakdown */}
+      <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Payment Method Breakdown</h2>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="text-sm font-medium text-blue-700 mb-1">Online Payments</div>
+            <div className="text-2xl font-bold text-blue-900">{onlineStats.count}</div>
+            <div className="text-sm text-blue-600 mt-1">{formatCurrency(onlineStats.amount)}</div>
+          </div>
+          <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+            <div className="text-sm font-medium text-purple-700 mb-1">Cash Payments</div>
+            <div className="text-2xl font-bold text-purple-900">{cashStats.count}</div>
+            <div className="text-sm text-purple-600 mt-1">{formatCurrency(cashStats.amount)}</div>
           </div>
         </div>
       </div>

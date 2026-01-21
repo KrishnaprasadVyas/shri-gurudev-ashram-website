@@ -11,6 +11,13 @@ router.get(
   adminController.getAllDonations
 );
 
+router.post(
+  "/donations/cash",
+  auth,
+  authorize("SYSTEM_ADMIN"),
+  adminController.createCashDonation
+);
+
 router.get(
   "/donors",
   auth,

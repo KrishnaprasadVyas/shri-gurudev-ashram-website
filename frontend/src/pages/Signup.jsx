@@ -1,330 +1,420 @@
 import SectionHeading from "../components/SectionHeading";
 import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
-import { Link } from "react-router-dom";
-import { validateEmail, validatePhone } from "../utils/helpers";
+import { Link, useNavigate } from "react-router-dom";
+import { validateEmail } from "../utils/helpers";
+import { useAuth } from "../context/AuthContext";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const Signup = () => {
-  const [formData, setFormData] = useState({
-    name: "",
-    mobile: "",
-    password: "",
-    confirmPassword: "",
-    emailOptIn: false,
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
+  // Step: 1 = Enter mobile, 2 = Enter OTP + Profile
+  const [step, setStep] = useState(1);
+  const [mobile, setMobile] = useState("");
+  const [otp, setOtp] = useState("");
+  const [profile, setProfile] = useState({
+    fullName: "",
     email: "",
-    emailVerified: false,
+    address: "",
+    whatsapp: "",
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [errors, setErrors] = useState({});
-  const [showEmailInput, setShowEmailInput] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+  const fullMobile = `+91${mobile}`;
 
-    if (type === "checkbox") {
-      if (name === "emailOptIn") {
-        setShowEmailInput(checked);
-        setFormData((prev) => ({
-          ...prev,
-          emailOptIn: checked,
-          email: checked ? prev.email : "",
-          emailVerified: false,
-        }));
+  // Step 1: Send OTP
+  const handleSendOtp = async (e) => {
+    e.preventDefault();
+
+    if (mobile.length !== 10) {
+      setError("Please enter a valid 10-digit mobile number");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobile: fullMobile }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to send OTP");
       }
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
 
-      // Clear error for this field
-      if (errors[name]) {
-        setErrors((prev) => ({ ...prev, [name]: "" }));
+      setSuccessMessage("OTP sent successfully! Check your phone.");
+      setStep(2);
+    } catch (err) {
+      setError(err.message || "Failed to send OTP. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Step 2: Verify OTP and complete profile
+  const handleVerifyAndComplete = async (e) => {
+    e.preventDefault();
+
+    // Validate profile fields
+    const newErrors = {};
+    if (!profile.fullName.trim()) newErrors.fullName = "Full name is required";
+    if (!profile.address.trim()) newErrors.address = "Address is required";
+    if (profile.email && !validateEmail(profile.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+
+    if (otp.length !== 6) {
+      setError("Please enter a valid 6-digit OTP");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      // Verify OTP and login
+      const response = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobile: fullMobile, otp }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Invalid OTP");
       }
 
-      // Simulate email verification when email is entered
-      if (name === "email" && value && validateEmail(value)) {
-        setTimeout(() => {
-          setFormData((prev) => ({ ...prev, emailVerified: true }));
-        }, 1000);
-      } else if (name === "email" && value) {
-        setFormData((prev) => ({ ...prev, emailVerified: false }));
+      // Login with token
+      await login(data.token);
+
+      // Update user profile
+      const updateResponse = await fetch(`${API_BASE_URL}/user/profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${data.token}`,
+        },
+        body: JSON.stringify(profile),
+      });
+
+      if (!updateResponse.ok) {
+        console.error("Failed to update profile");
       }
+
+      // Redirect to home
+      navigate("/", { replace: true });
+    } catch (err) {
+      setError(err.message || "Verification failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleProfileChange = (e) => {
+    const { name, value } = e.target;
+    setProfile((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
   const handleMobileChange = (e) => {
-    const mobile = e.target.value.replace(/\D/g, "").slice(0, 10);
-    setFormData((prev) => ({ ...prev, mobile }));
-    if (errors.mobile) {
-      setErrors((prev) => ({ ...prev, mobile: "" }));
-    }
+    const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+    setMobile(value);
+    setError("");
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const newErrors = {};
+  const handleOtpChange = (e) => {
+    const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+    setOtp(value);
+    setError("");
+  };
 
-    // Full Name validation
-    if (!formData.name.trim()) {
-      newErrors.name = "Full name is required";
-    }
-
-    // Mobile Number validation
-    if (!formData.mobile.trim()) {
-      newErrors.mobile = "Mobile number is required";
-    } else if (!validatePhone(formData.mobile)) {
-      newErrors.mobile = "Please enter a valid 10-digit mobile number";
-    }
-
-    // Password validation
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
-
-    // Confirm Password validation
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
-
-    // Email validation (only if opted in)
-    if (showEmailInput && formData.email) {
-      if (!validateEmail(formData.email)) {
-        newErrors.email = "Please enter a valid email address";
-      }
-    }
-
-    setErrors(newErrors);
-
-    if (Object.keys(newErrors).length === 0) {
-      // Handle signup (placeholder)
-      console.log("Signup data:", formData);
-      alert("Account creation functionality will be implemented with backend integration");
-    }
+  const handleResendOtp = async () => {
+    setOtp("");
+    setError("");
+    await handleSendOtp({ preventDefault: () => {} });
   };
 
   return (
-    <section className="py-16 px-4 bg-white">
+    <section className="py-16 px-4 bg-white min-h-[60vh]">
       <div className="max-w-md mx-auto bg-amber-50 border border-amber-200 rounded-lg shadow-sm p-6">
         <SectionHeading
-          title="Create Account"
-          subtitle="Sign up to get started"
+          title={step === 1 ? "Create Account" : "Complete Your Profile"}
+          subtitle={
+            step === 1
+              ? "Enter your mobile number to get started"
+              : "Enter OTP and tell us about yourself"
+          }
           center={true}
         />
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <div className="space-y-3">
-            {/* Full Name */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-1">
-                Full Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Enter your full name"
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                  errors.name
-                    ? "border-red-300 focus:ring-red-500"
-                    : "border-amber-200 focus:ring-amber-500"
-                }`}
-              />
-              {errors.name && (
-                <p className="mt-1 text-xs text-red-600">{errors.name}</p>
-              )}
-            </div>
-
-            {/* Mobile Number */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-1">
-                Mobile Number <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="tel"
-                name="mobile"
-                value={formData.mobile}
-                onChange={handleMobileChange}
-                placeholder="Enter 10-digit mobile number"
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                  errors.mobile
-                    ? "border-red-300 focus:ring-red-500"
-                    : "border-amber-200 focus:ring-amber-500"
-                }`}
-              />
-              {errors.mobile && (
-                <p className="mt-1 text-xs text-red-600">{errors.mobile}</p>
-              )}
-            </div>
-
-            {/* Password */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-1">
-                Password <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Enter password"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 pr-10 ${
-                    errors.password
-                      ? "border-red-300 focus:ring-red-500"
-                      : "border-amber-200 focus:ring-amber-500"
-                  }`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="mt-1 text-xs text-red-600">{errors.password}</p>
-              )}
-            </div>
-
-            {/* Confirm Password */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-1">
-                Confirm Password <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  placeholder="Confirm password"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 pr-10 ${
-                    errors.confirmPassword
-                      ? "border-red-300 focus:ring-red-500"
-                      : "border-amber-200 focus:ring-amber-500"
-                  }`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800"
-                  aria-label={
-                    showConfirmPassword ? "Hide password" : "Show password"
-                  }
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff size={20} />
-                  ) : (
-                    <Eye size={20} />
-                  )}
-                </button>
-              </div>
-              {errors.confirmPassword && (
-                <p className="mt-1 text-xs text-red-600">
-                  {errors.confirmPassword}
-                </p>
-              )}
-            </div>
-
-            {/* Email Opt-in Checkbox */}
-            <div>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  name="emailOptIn"
-                  checked={formData.emailOptIn}
-                  onChange={handleChange}
-                  className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
-                />
-                <span className="text-sm text-gray-700">
-                  Add email ID for receipts & updates
-                </span>
-              </label>
-
-              {/* Email Input (only if checkbox is checked) */}
-              {showEmailInput && (
-                <div className="mt-3">
-                  <label className="block text-sm font-semibold text-gray-800 mb-1">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="Enter your email"
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                      errors.email
-                        ? "border-red-300 focus:ring-red-500"
-                        : "border-amber-200 focus:ring-amber-500"
-                    }`}
-                  />
-                  {errors.email && (
-                    <p className="mt-1 text-xs text-red-600">{errors.email}</p>
-                  )}
-                  {formData.email && (
-                    <div className="mt-2 flex items-center space-x-2">
-                      {formData.emailVerified ? (
-                        <span className="text-sm text-green-600 flex items-center">
-                          <svg
-                            className="w-4 h-4 mr-1"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                          Email verified
-                        </span>
-                      ) : (
-                        <span className="text-sm text-amber-600 flex items-center">
-                          <svg
-                            className="w-4 h-4 mr-1"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                          Email verification required
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+        {/* Error Message */}
+        {error && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+            {error}
           </div>
+        )}
 
-          <button
-            type="submit"
-            className="w-full py-3 bg-amber-600 text-white font-semibold rounded-md hover:bg-amber-700 transition-colors"
-          >
-            Create Account
-          </button>
+        {/* Success Message */}
+        {successMessage && step === 2 && (
+          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-700 text-sm">
+            {successMessage}
+          </div>
+        )}
 
-          <p className="text-sm text-center text-gray-600">
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              className="text-amber-600 hover:text-amber-700 font-medium"
-            >
-              Login
-            </Link>
-          </p>
-        </form>
+        <div className="mt-6 space-y-4">
+          {/* Step 1: Mobile Number Entry */}
+          {step === 1 && (
+            <form onSubmit={handleSendOtp} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  Mobile Number <span className="text-red-500">*</span>
+                </label>
+                <div className="flex gap-2">
+                  <div className="w-20 px-3 py-2 border border-amber-200 rounded-md bg-gray-50 flex items-center justify-center font-medium text-gray-700">
+                    +91
+                  </div>
+                  <input
+                    type="tel"
+                    value={mobile}
+                    onChange={handleMobileChange}
+                    placeholder="10-digit number"
+                    disabled={isLoading}
+                    className="flex-1 px-3 py-2 border border-amber-200 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading || mobile.length !== 10}
+                className="w-full py-3 bg-amber-600 text-white font-semibold rounded-md hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              >
+                {isLoading ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    Sending OTP...
+                  </>
+                ) : (
+                  "Send OTP"
+                )}
+              </button>
+
+              <p className="text-sm text-center text-gray-600">
+                Already have an account?{" "}
+                <Link
+                  to="/login"
+                  className="text-amber-600 hover:text-amber-700 font-medium"
+                >
+                  Login
+                </Link>
+              </p>
+            </form>
+          )}
+
+          {/* Step 2: OTP + Profile Form */}
+          {step === 2 && (
+            <form onSubmit={handleVerifyAndComplete} className="space-y-4">
+              {/* OTP Field */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-semibold text-gray-800">
+                    Enter OTP <span className="text-red-500">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStep(1);
+                      setOtp("");
+                      setError("");
+                      setSuccessMessage("");
+                    }}
+                    className="text-sm text-amber-600 hover:text-amber-700"
+                  >
+                    Change Number
+                  </button>
+                </div>
+                <p className="text-xs text-gray-600 mb-2">Sent to {fullMobile}</p>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={otp}
+                  onChange={handleOtpChange}
+                  placeholder="Enter 6-digit OTP"
+                  disabled={isLoading}
+                  className="w-full px-3 py-3 border border-amber-200 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-center text-xl tracking-widest font-mono disabled:opacity-50"
+                  maxLength={6}
+                  autoFocus
+                />
+                <div className="mt-2 text-center">
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    disabled={isLoading}
+                    className="text-sm text-amber-600 hover:text-amber-700 disabled:opacity-50"
+                  >
+                    Didn't receive OTP? Resend
+                  </button>
+                </div>
+              </div>
+
+              <hr className="border-amber-200" />
+
+              {/* Profile Fields */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-1">
+                  Full Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="fullName"
+                  value={profile.fullName}
+                  onChange={handleProfileChange}
+                  placeholder="Enter your full name"
+                  disabled={isLoading}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 disabled:opacity-50 ${
+                    errors.fullName
+                      ? "border-red-300 focus:ring-red-500"
+                      : "border-amber-200 focus:ring-amber-500"
+                  }`}
+                />
+                {errors.fullName && (
+                  <p className="mt-1 text-xs text-red-600">{errors.fullName}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-1">
+                  Address <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  name="address"
+                  value={profile.address}
+                  onChange={handleProfileChange}
+                  placeholder="Enter your address"
+                  rows={3}
+                  disabled={isLoading}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 disabled:opacity-50 ${
+                    errors.address
+                      ? "border-red-300 focus:ring-red-500"
+                      : "border-amber-200 focus:ring-amber-500"
+                  }`}
+                />
+                {errors.address && (
+                  <p className="mt-1 text-xs text-red-600">{errors.address}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-1">
+                  Email (Optional)
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={profile.email}
+                  onChange={handleProfileChange}
+                  placeholder="your@email.com"
+                  disabled={isLoading}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 disabled:opacity-50 ${
+                    errors.email
+                      ? "border-red-300 focus:ring-red-500"
+                      : "border-amber-200 focus:ring-amber-500"
+                  }`}
+                />
+                {errors.email && (
+                  <p className="mt-1 text-xs text-red-600">{errors.email}</p>
+                )}
+                <p className="mt-1 text-xs text-gray-500">
+                  We'll send donation receipts to this email
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-1">
+                  WhatsApp Number (Optional)
+                </label>
+                <input
+                  type="tel"
+                  name="whatsapp"
+                  value={profile.whatsapp}
+                  onChange={handleProfileChange}
+                  placeholder="WhatsApp number"
+                  disabled={isLoading}
+                  className="w-full px-3 py-2 border border-amber-200 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 bg-amber-600 text-white font-semibold rounded-md hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              >
+                {isLoading ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    Creating Account...
+                  </>
+                ) : (
+                  "Complete Signup"
+                )}
+              </button>
+            </form>
+          )}
+        </div>
       </div>
     </section>
   );
