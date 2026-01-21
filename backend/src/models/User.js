@@ -4,6 +4,10 @@ const userSchema = new mongoose.Schema(
   {
     fullName: String,
     email: String,
+    // Email verification fields
+    emailVerified: { type: Boolean, default: false },
+    emailVerificationToken: String, // Hashed token stored here
+    emailVerificationExpiry: Date, // Token expiry timestamp
     mobile: { type: String, required: true },
     whatsapp: String,
     address: String,
@@ -13,7 +17,7 @@ const userSchema = new mongoose.Schema(
       default: "USER",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 userSchema.index({ role: 1 });

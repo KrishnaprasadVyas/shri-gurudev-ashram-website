@@ -50,6 +50,9 @@ import MyDonations from "./pages/MyDonations";
 // E-commerce Module (disabled)
 import ShopComingSoon from "./pages/ShopComingSoon";
 
+// Email Verification
+import VerifyEmail from "./pages/VerifyEmail";
+
 function App() {
   return (
     <BrowserRouter>
@@ -78,6 +81,9 @@ function App() {
                         <Route path="contact" element={<Contact />} />
                         <Route path="login" element={<Login />} />
                         <Route path="signup" element={<Signup />} />
+
+                        {/* Email Verification - public route */}
+                        <Route path="verify-email" element={<VerifyEmail />} />
 
                         {/* Donation Module */}
                         <Route path="donate" element={<DonationPage />} />
@@ -149,7 +155,10 @@ function App() {
                           <Route path="donors" element={<DonorsView />} />
                           <Route path="reports" element={<ReportsView />} />
                           <Route path="exports" element={<ExportsView />} />
-                          <Route path="cash-donation" element={<CashDonationForm />} />
+                          <Route
+                            path="cash-donation"
+                            element={<CashDonationForm />}
+                          />
                         </Route>
                       </Route>
                     </Routes>

@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import FormInput from '../../../components/FormInput';
-import PrimaryButton from '../../../components/PrimaryButton';
-import { validateEmail, validatePhone } from '../../../utils/helpers';
+import { useState } from "react";
+import FormInput from "../../../components/FormInput";
+import PrimaryButton from "../../../components/PrimaryButton";
+import { validateEmail, validatePhone } from "../../../utils/helpers";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -9,37 +9,143 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
   const [errors, setErrors] = useState({});
   const [showEmailInput, setShowEmailInput] = useState(data.emailOptIn);
   const [editingGovtId, setEditingGovtId] = useState(false);
-  
+
   // OTP state
-  const [otpStep, setOtpStep] = useState('form'); // 'form' | 'otp'
-  const [otp, setOtp] = useState('');
-  const [otpError, setOtpError] = useState('');
+  const [otpStep, setOtpStep] = useState("form"); // 'form' | 'otp'
+  const [otp, setOtp] = useState("");
+  const [otpError, setOtpError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
 
+  // Email verification state
+  const [emailVerifying, setEmailVerifying] = useState(false);
+  const [emailVerificationSent, setEmailVerificationSent] = useState(false);
+  const [emailVerificationError, setEmailVerificationError] = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0); // Cooldown timer in seconds
+
+  /**
+   * Get JWT token from localStorage for authenticated requests
+   */
+  const getAuthToken = () => localStorage.getItem("token");
+
+  /**
+   * Request email verification - sends verification link to email
+   */
+  const handleRequestEmailVerification = async () => {
+    if (!data.email || !validateEmail(data.email)) {
+      setEmailVerificationError("Please enter a valid email address first");
+      return;
+    }
+
+    const token = getAuthToken();
+    if (!token) {
+      setEmailVerificationError("Please login to verify your email");
+      return;
+    }
+
+    setEmailVerifying(true);
+    setEmailVerificationError("");
+    setEmailVerificationSent(false);
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/auth/request-email-verification`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ email: data.email }),
+        },
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to send verification email");
+      }
+
+      if (result.alreadyVerified) {
+        // Email already verified
+        updateData({ emailVerified: true });
+      } else {
+        setEmailVerificationSent(true);
+        // Start 60 second cooldown for resend
+        setResendCooldown(60);
+        const timer = setInterval(() => {
+          setResendCooldown((prev) => {
+            if (prev <= 1) {
+              clearInterval(timer);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      }
+    } catch (err) {
+      setEmailVerificationError(
+        err.message || "Failed to send verification email",
+      );
+    } finally {
+      setEmailVerifying(false);
+    }
+  };
+
+  /**
+   * Check email verification status (poll from backend)
+   */
+  const checkEmailStatus = async () => {
+    const token = getAuthToken();
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/email-status`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.email === data.email && result.emailVerified) {
+          updateData({ emailVerified: true });
+          setEmailVerificationSent(false);
+        }
+      }
+    } catch (err) {
+      // Silent fail
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
-    if (type === 'checkbox') {
-      if (name === 'emailOptIn') {
+
+    if (type === "checkbox") {
+      if (name === "emailOptIn") {
         setShowEmailInput(checked);
-        updateData({ emailOptIn: checked, email: checked ? data.email : '', emailVerified: false });
-      } else if (name === 'anonymousDisplay') {
+        updateData({
+          emailOptIn: checked,
+          email: checked ? data.email : "",
+          emailVerified: false,
+        });
+        // Reset email verification state
+        setEmailVerificationSent(false);
+        setEmailVerificationError("");
+      } else if (name === "anonymousDisplay") {
         updateData({ anonymousDisplay: checked });
       }
     } else {
       updateData({ [name]: value });
       if (errors[name]) {
-        setErrors(prev => ({ ...prev, [name]: '' }));
+        setErrors((prev) => ({ ...prev, [name]: "" }));
       }
-      
-      // Simulate email verification when email is entered
-      if (name === 'email' && value && validateEmail(value)) {
-        setTimeout(() => {
-          updateData({ emailVerified: true });
-        }, 1000);
-      } else if (name === 'email' && value) {
+
+      // Reset email verified status when email changes
+      if (name === "email") {
         updateData({ emailVerified: false });
+        setEmailVerificationSent(false);
+        setEmailVerificationError("");
       }
     }
   };
@@ -48,7 +154,7 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
     updateData({ govtIdType: type });
     setEditingGovtId(true);
     if (errors.govtId) {
-      setErrors(prev => ({ ...prev, govtId: '' }));
+      setErrors((prev) => ({ ...prev, govtId: "" }));
     }
   };
 
@@ -60,33 +166,36 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
   const handleGovtIdChange = (e) => {
     const { name, value } = e.target;
     let formattedValue = value;
-    
-    if (name === 'aadhaar') {
-      formattedValue = value.replace(/\D/g, '').slice(0, 12);
-    } else if (name === 'pan') {
-      formattedValue = value.replace(/[^A-Z0-9]/gi, '').slice(0, 10).toUpperCase();
+
+    if (name === "aadhaar") {
+      formattedValue = value.replace(/\D/g, "").slice(0, 12);
+    } else if (name === "pan") {
+      formattedValue = value
+        .replace(/[^A-Z0-9]/gi, "")
+        .slice(0, 10)
+        .toUpperCase();
     }
-    
+
     updateData({ [name]: formattedValue });
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
   const handleDOBChange = (e) => {
     updateData({ dateOfBirth: e.target.value });
     if (errors.dateOfBirth) {
-      setErrors(prev => ({ ...prev, dateOfBirth: '' }));
+      setErrors((prev) => ({ ...prev, dateOfBirth: "" }));
     }
   };
 
   const maskGovtId = (value, type) => {
-    if (!value) return '';
+    if (!value) return "";
     if (editingGovtId) return value;
-    if (type === 'aadhaar' && value.length > 4) {
-      return '**** **** ' + value.slice(-4);
-    } else if (type === 'pan' && value.length > 4) {
-      return '****' + value.slice(-4);
+    if (type === "aadhaar" && value.length > 4) {
+      return "**** **** " + value.slice(-4);
+    } else if (type === "pan" && value.length > 4) {
+      return "****" + value.slice(-4);
     }
     return value;
   };
@@ -101,48 +210,48 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
 
     // Full Name
     if (!data.name.trim()) {
-      newErrors.name = 'Full name is required';
+      newErrors.name = "Full name is required";
     }
 
     // Mobile Number
     if (!data.mobile.trim()) {
-      newErrors.mobile = 'Mobile number is required';
+      newErrors.mobile = "Mobile number is required";
     } else if (!validatePhone(data.mobile)) {
-      newErrors.mobile = 'Please enter a valid 10-digit mobile number';
+      newErrors.mobile = "Please enter a valid 10-digit mobile number";
     }
 
     // Email (optional)
     if (showEmailInput && data.email) {
       if (!validateEmail(data.email)) {
-        newErrors.email = 'Please enter a valid email address';
+        newErrors.email = "Please enter a valid email address";
       }
     }
 
     // Address
     if (!data.address.trim()) {
-      newErrors.address = 'Address is required';
+      newErrors.address = "Address is required";
     }
 
     // Government ID
     if (!data.govtIdType) {
-      newErrors.govtId = 'Please select a government ID type';
+      newErrors.govtId = "Please select a government ID type";
     } else {
-      if (data.govtIdType === 'aadhaar') {
+      if (data.govtIdType === "aadhaar") {
         if (!data.aadhaar || data.aadhaar.length !== 12) {
-          newErrors.aadhaar = 'Please enter a valid 12-digit Aadhaar number';
+          newErrors.aadhaar = "Please enter a valid 12-digit Aadhaar number";
         }
-      } else if (data.govtIdType === 'pan') {
+      } else if (data.govtIdType === "pan") {
         if (!data.pan || data.pan.length !== 10) {
-          newErrors.pan = 'Please enter a valid 10-character PAN number';
+          newErrors.pan = "Please enter a valid 10-character PAN number";
         } else if (!validatePAN(data.pan)) {
-          newErrors.pan = 'PAN must be in format: AAAAA9999A';
+          newErrors.pan = "PAN must be in format: AAAAA9999A";
         }
       }
     }
 
     // DOB
     if (!data.dateOfBirth) {
-      newErrors.dateOfBirth = 'Date of Birth is required';
+      newErrors.dateOfBirth = "Date of Birth is required";
     }
 
     setErrors(newErrors);
@@ -153,25 +262,25 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
 
     // Send OTP
     setIsLoading(true);
-    setOtpError('');
+    setOtpError("");
 
     try {
       const response = await fetch(`${API_BASE_URL}/donations/send-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mobile: data.mobile }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || 'Failed to send OTP');
+        throw new Error(result.message || "Failed to send OTP");
       }
 
       setOtpSent(true);
-      setOtpStep('otp');
+      setOtpStep("otp");
     } catch (err) {
-      setOtpError(err.message || 'Failed to send OTP. Please try again.');
+      setOtpError(err.message || "Failed to send OTP. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -184,31 +293,31 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
     e.preventDefault();
 
     if (otp.length !== 6) {
-      setOtpError('Please enter a valid 6-digit OTP');
+      setOtpError("Please enter a valid 6-digit OTP");
       return;
     }
 
     setIsLoading(true);
-    setOtpError('');
+    setOtpError("");
 
     try {
       const response = await fetch(`${API_BASE_URL}/donations/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mobile: data.mobile, otp }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || 'Invalid OTP');
+        throw new Error(result.message || "Invalid OTP");
       }
 
       // Mark OTP as verified and proceed
       updateData({ otpVerified: true });
       nextStep();
     } catch (err) {
-      setOtpError(err.message || 'OTP verification failed');
+      setOtpError(err.message || "OTP verification failed");
     } finally {
       setIsLoading(false);
     }
@@ -218,24 +327,24 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
    * Resend OTP
    */
   const handleResendOtp = async () => {
-    setOtp('');
-    setOtpError('');
+    setOtp("");
+    setOtpError("");
     setIsLoading(true);
 
     try {
       const response = await fetch(`${API_BASE_URL}/donations/send-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mobile: data.mobile }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || 'Failed to resend OTP');
+        throw new Error(result.message || "Failed to resend OTP");
       }
 
-      setOtpError('');
+      setOtpError("");
     } catch (err) {
       setOtpError(err.message);
     } finally {
@@ -247,13 +356,13 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
    * Go back to form
    */
   const handleBackToForm = () => {
-    setOtpStep('form');
-    setOtp('');
-    setOtpError('');
+    setOtpStep("form");
+    setOtp("");
+    setOtpError("");
   };
 
   // OTP Verification Screen
-  if (otpStep === 'otp') {
+  if (otpStep === "otp") {
     return (
       <div className="max-w-md mx-auto">
         <h2 className="text-2xl font-bold text-amber-900 mb-2 text-center">
@@ -285,9 +394,9 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
               inputMode="numeric"
               value={otp}
               onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                const value = e.target.value.replace(/\D/g, "").slice(0, 6);
                 setOtp(value);
-                setOtpError('');
+                setOtpError("");
               }}
               placeholder="Enter 6-digit OTP"
               disabled={isLoading}
@@ -302,7 +411,7 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
             disabled={isLoading || otp.length !== 6}
             className="w-full"
           >
-            {isLoading ? 'Verifying...' : 'Verify & Continue'}
+            {isLoading ? "Verifying..." : "Verify & Continue"}
           </PrimaryButton>
 
           <div className="flex justify-between items-center text-sm">
@@ -359,10 +468,10 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
           name="mobile"
           value={data.mobile}
           onChange={(e) => {
-            const mobile = e.target.value.replace(/\D/g, '').slice(0, 10);
+            const mobile = e.target.value.replace(/\D/g, "").slice(0, 10);
             updateData({ mobile });
             if (errors.mobile) {
-              setErrors(prev => ({ ...prev, mobile: '' }));
+              setErrors((prev) => ({ ...prev, mobile: "" }));
             }
           }}
           placeholder="Enter your 10-digit mobile number"
@@ -384,7 +493,7 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
               Add email ID to receive receipt & updates
             </span>
           </label>
-          
+
           {showEmailInput && (
             <div>
               <FormInput
@@ -396,24 +505,131 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
                 placeholder="Enter your email"
                 error={errors.email}
               />
-              {data.email && (
-                <div className="mt-2 flex items-center space-x-2">
+              {data.email && validateEmail(data.email) && (
+                <div className="mt-2 space-y-2">
                   {data.emailVerified ? (
-                    <span className="text-sm text-green-600 flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    // Verified state
+                    <div className="flex items-center text-sm text-green-600">
+                      <svg
+                        className="w-4 h-4 mr-1"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                       Email verified
-                    </span>
+                    </div>
+                  ) : emailVerificationSent ? (
+                    // Verification sent - waiting for user to click link
+                    <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                      <div className="flex items-start space-x-2">
+                        <svg
+                          className="w-5 h-5 text-blue-600 mt-0.5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                          <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                        </svg>
+                        <div className="flex-1">
+                          <p className="text-sm text-blue-800 font-medium">
+                            Verification email sent!
+                          </p>
+                          <p className="text-xs text-blue-600 mt-1">
+                            Check your inbox and click the link to verify. Link
+                            expires in 15 minutes.
+                          </p>
+                          <div className="flex items-center gap-3 mt-2">
+                            <button
+                              type="button"
+                              onClick={checkEmailStatus}
+                              className="text-xs text-blue-700 underline hover:text-blue-800"
+                            >
+                              I've verified, check now
+                            </button>
+                            <span className="text-xs text-gray-400">|</span>
+                            <button
+                              type="button"
+                              onClick={handleRequestEmailVerification}
+                              disabled={emailVerifying || resendCooldown > 0}
+                              className="text-xs text-blue-700 underline hover:text-blue-800 disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed"
+                            >
+                              {emailVerifying
+                                ? "Sending..."
+                                : resendCooldown > 0
+                                  ? `Resend in ${resendCooldown}s`
+                                  : "Resend email"}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   ) : (
-                    <span className="text-sm text-amber-600 flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                      </svg>
-                      Email verification required
-                    </span>
+                    // Not verified - show verify button
+                    <div>
+                      <button
+                        type="button"
+                        onClick={handleRequestEmailVerification}
+                        disabled={emailVerifying}
+                        className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-100 border border-amber-300 rounded-md hover:bg-amber-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {emailVerifying ? (
+                          <>
+                            <svg
+                              className="animate-spin w-4 h-4 mr-2"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            <svg
+                              className="w-4 h-4 mr-1"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                            </svg>
+                            Verify Email
+                          </>
+                        )}
+                      </button>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Click to receive a verification link
+                      </p>
+                      {emailVerificationError && (
+                        <p className="text-xs text-red-600 mt-1">
+                          {emailVerificationError}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
+              )}
+              {data.email && !validateEmail(data.email) && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Enter a valid email to verify
+                </p>
               )}
             </div>
           )}
@@ -435,7 +651,7 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
           <label className="block text-sm font-medium text-gray-700 mb-3">
             Government ID <span className="text-red-500">*</span>
           </label>
-          
+
           {/* Radio selection for ID type */}
           <div className="flex space-x-4 mb-3">
             <label className="flex items-center space-x-2">
@@ -443,8 +659,8 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
                 type="radio"
                 name="govtIdType"
                 value="aadhaar"
-                checked={data.govtIdType === 'aadhaar'}
-                onChange={(e) => handleGovtIdTypeChange('aadhaar')}
+                checked={data.govtIdType === "aadhaar"}
+                onChange={(e) => handleGovtIdTypeChange("aadhaar")}
                 className="w-4 h-4 text-amber-600 border-gray-300 focus:ring-amber-500"
               />
               <span className="text-sm text-gray-700">Aadhaar</span>
@@ -454,8 +670,8 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
                 type="radio"
                 name="govtIdType"
                 value="pan"
-                checked={data.govtIdType === 'pan'}
-                onChange={(e) => handleGovtIdTypeChange('pan')}
+                checked={data.govtIdType === "pan"}
+                onChange={(e) => handleGovtIdTypeChange("pan")}
                 className="w-4 h-4 text-amber-600 border-gray-300 focus:ring-amber-500"
               />
               <span className="text-sm text-gray-700">PAN</span>
@@ -463,13 +679,13 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
           </div>
 
           {/* Show selected ID input */}
-          {data.govtIdType === 'aadhaar' && (
+          {data.govtIdType === "aadhaar" && (
             <div>
               <FormInput
                 label="Aadhaar Number"
                 type="text"
                 name="aadhaar"
-                value={maskGovtId(data.aadhaar, 'aadhaar')}
+                value={maskGovtId(data.aadhaar, "aadhaar")}
                 onChange={handleGovtIdChange}
                 onFocus={() => setEditingGovtId(true)}
                 onBlur={() => {
@@ -492,14 +708,14 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
             </div>
           )}
 
-          {data.govtIdType === 'pan' && (
+          {data.govtIdType === "pan" && (
             <div className="space-y-3">
               <div>
                 <FormInput
                   label="PAN Number"
                   type="text"
                   name="pan"
-                  value={maskGovtId(data.pan, 'pan')}
+                  value={maskGovtId(data.pan, "pan")}
                   onChange={handleGovtIdChange}
                   onFocus={() => setEditingGovtId(true)}
                   onBlur={() => {
@@ -524,7 +740,8 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
               {/* Helper Text for PAN */}
               <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
                 <p className="text-xs text-blue-700">
-                  Required for statutory donation records. Your information is kept confidential.
+                  Required for statutory donation records. Your information is
+                  kept confidential.
                 </p>
               </div>
             </div>
@@ -545,11 +762,11 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
             name="dateOfBirth"
             value={data.dateOfBirth}
             onChange={handleDOBChange}
-            max={new Date().toISOString().split('T')[0]}
+            max={new Date().toISOString().split("T")[0]}
             className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
               errors.dateOfBirth
-                ? 'border-red-300 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-amber-500'
+                ? "border-red-300 focus:ring-red-500"
+                : "border-gray-300 focus:ring-amber-500"
             }`}
           />
           {errors.dateOfBirth && (
@@ -572,7 +789,8 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
             </span>
           </label>
           <p className="text-xs text-gray-500 mt-1 ml-6">
-            This only affects public donation lists. All details are still collected internally.
+            This only affects public donation lists. All details are still
+            collected internally.
           </p>
         </div>
 
@@ -587,7 +805,7 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
             Back
           </PrimaryButton>
           <PrimaryButton type="submit" className="flex-1" disabled={isLoading}>
-            {isLoading ? 'Sending OTP...' : 'Send OTP & Continue'}
+            {isLoading ? "Sending OTP..." : "Send OTP & Continue"}
           </PrimaryButton>
         </div>
       </form>
