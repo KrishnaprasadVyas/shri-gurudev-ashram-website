@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const path = require("path");
 const connectDB = require("./config/db");
@@ -8,10 +9,24 @@ const app = express();
 
 connectDB();
 
-app.use(cors());
+// Trust proxy for Nginx reverse proxy (correct client IP for rate limiting)
+app.set("trust proxy", 1);
+
+// Security headers
+app.use(helmet());
+
+// CORS configuration for production
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || "https://shrigurudevashram.org",
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+app.use(cors(corsOptions));
+
 app.use(cookieParser());
-app.use("/api/webhooks/razorpay", express.raw({ type: "application/json" }));
-app.use(express.json());
+app.use("/api/webhooks/razorpay", express.raw({ type: "application/json", limit: "1mb" }));
+app.use(express.json({ limit: "1mb" }));
 
 // Serve receipts as static files
 app.use("/receipts", express.static(path.join(__dirname, "../receipts")));

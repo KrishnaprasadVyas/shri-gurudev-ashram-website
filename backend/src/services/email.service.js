@@ -122,17 +122,23 @@ exports.sendDonationReceiptEmail = async (toEmail, receiptPath) => {
 /* ---------------- Contact Us Email ---------------- */
 
 exports.sendContactEmail = async ({ name, email, phone, subject, message }) => {
-  await transporter.sendMail({
-    from: `"Gurudev Ashram Website" <${process.env.SMTP_USER}>`,
-    to: process.env.CONTACT_RECEIVER_EMAIL,
-    replyTo: email,
-    subject: `[Contact Form] ${subject}`,
-    html: `
-      <h3>New Contact Message</h3>
-      <p><strong>Name:</strong> ${name}</p>
-      <p><strong>Email:</strong> ${email}</p>
-      <p><strong>Phone:</strong> ${phone}</p>
-      <p><strong>Message:</strong><br/>${message}</p>
-    `,
-  });
+  try {
+    await transporter.sendMail({
+      from: `"Gurudev Ashram Website" <${process.env.SMTP_USER}>`,
+      to: process.env.CONTACT_RECEIVER_EMAIL,
+      replyTo: email,
+      subject: `[Contact Form] ${subject}`,
+      html: `
+        <h3>New Contact Message</h3>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Phone:</strong> ${phone}</p>
+        <p><strong>Message:</strong><br/>${message}</p>
+      `,
+    });
+    return true;
+  } catch (error) {
+    console.error("Contact email failed:", error.message);
+    throw error; // Re-throw so controller can handle
+  }
 };

@@ -9,12 +9,13 @@ const {
 } = require("../controllers/auth.controller");
 const {
   otpLimiter,
+  mobileOtpLimiter,
   emailVerificationLimiter,
 } = require("../middlewares/rateLimit");
 const authMiddleware = require("../middlewares/auth.middleware");
 
-// Mobile OTP auth
-router.post("/send-otp", otpLimiter, sendOtp);
+// Mobile OTP auth (rate limited by IP + mobile number)
+router.post("/send-otp", otpLimiter, mobileOtpLimiter, sendOtp);
 router.post("/verify-otp", verifyOtp);
 router.get("/me", authMiddleware, getMe);
 

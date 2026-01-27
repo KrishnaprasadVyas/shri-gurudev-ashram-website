@@ -259,10 +259,6 @@ exports.createDonationOrder = async (req, res) => {
       receipt: donation._id.toString().slice(-12),
     };
 
-    console.log("Creating Razorpay order with options:", options);
-    console.log("Donation amount (rupees):", donation.amount);
-    console.log("Order amount (paise):", options.amount);
-
     const order = await razorpay.orders.create(options);
 
     donation.razorpayOrderId = order.id;

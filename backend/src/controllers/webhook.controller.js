@@ -25,7 +25,6 @@ exports.handleRazorpayWebhook = async (req, res) => {
 
     const event = JSON.parse(req.body.toString());
     const eventType = event.event;
-    console.log(event);
 
     console.log("Webhook received:", eventType);
 
@@ -36,30 +35,27 @@ exports.handleRazorpayWebhook = async (req, res) => {
       const orderId = payment.order_id;
       const paymentId = payment.id;
 
-      const donation = await Donation.findOne({
-        razorpayOrderId: orderId,
-      });
+      // Atomic update to prevent race condition on duplicate webhooks
+      const receiptNumber = `GRD-${new Date().getFullYear()}-${Date.now().toString(36).toUpperCase()}`;
+      
+      const donation = await Donation.findOneAndUpdate(
+        { razorpayOrderId: orderId, status: "PENDING" },
+        {
+          $set: {
+            status: "SUCCESS",
+            paymentId: paymentId,
+            transactionRef: paymentId,
+            receiptNumber: receiptNumber,
+          },
+        },
+        { new: true }
+      );
 
       if (!donation) {
-        console.log("No donation found for order:", orderId);
+        // Either not found or already processed
+        console.log("Donation not found or already processed for order:", orderId);
         return res.json({ status: "ok" });
       }
-
-      if (donation.status === "SUCCESS") {
-        console.log("Donation already SUCCESS:", donation._id);
-        return res.json({ status: "ok" });
-      }
-
-      donation.status = "SUCCESS";
-      donation.paymentId = paymentId;
-      donation.transactionRef = paymentId;
-
-      donation.receiptNumber = `GRD-${new Date().getFullYear()}-${donation._id
-        .toString()
-        .slice(-6)
-        .toUpperCase()}`;
-
-      await donation.save();
 
       // Generate receipt PDF (returns full filesystem path)
       let receiptPath = null;

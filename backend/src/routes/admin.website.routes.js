@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middlewares/auth.middleware");
 const { authorize } = require("../middlewares/authorize");
+const validateObjectId = require("../middlewares/validateObjectId");
 
 /**
  * ADMIN WEBSITE ROUTES
@@ -21,6 +22,9 @@ const productController = require("../controllers/product.controller");
 // All routes require auth and WEBSITE_ADMIN or SYSTEM_ADMIN role
 const adminAuth = [auth, authorize("WEBSITE_ADMIN", "SYSTEM_ADMIN")];
 
+// Helper: Add ObjectId validation to adminAuth for routes with :id param
+const adminAuthWithId = [...adminAuth, validateObjectId("id")];
+
 // ==================== ANNOUNCEMENTS ====================
 
 router.get(
@@ -30,7 +34,7 @@ router.get(
 );
 router.get(
   "/announcements/:id",
-  adminAuth,
+  adminAuthWithId,
   announcementController.getAnnouncementById,
 );
 router.post(
@@ -40,30 +44,30 @@ router.post(
 );
 router.put(
   "/announcements/:id",
-  adminAuth,
+  adminAuthWithId,
   announcementController.updateAnnouncement,
 );
 router.delete(
   "/announcements/:id",
-  adminAuth,
+  adminAuthWithId,
   announcementController.deleteAnnouncement,
 );
 router.patch(
   "/announcements/:id/toggle",
-  adminAuth,
+  adminAuthWithId,
   announcementController.toggleAnnouncementStatus,
 );
 
 // ==================== ACTIVITIES ====================
 
 router.get("/activities", adminAuth, activityController.getAllActivities);
-router.get("/activities/:id", adminAuth, activityController.getActivityById);
+router.get("/activities/:id", adminAuthWithId, activityController.getActivityById);
 router.post("/activities", adminAuth, activityController.createActivity);
-router.put("/activities/:id", adminAuth, activityController.updateActivity);
-router.delete("/activities/:id", adminAuth, activityController.deleteActivity);
+router.put("/activities/:id", adminAuthWithId, activityController.updateActivity);
+router.delete("/activities/:id", adminAuthWithId, activityController.deleteActivity);
 router.patch(
   "/activities/:id/toggle",
-  adminAuth,
+  adminAuthWithId,
   activityController.toggleActivityVisibility,
 );
 router.put(
@@ -75,35 +79,35 @@ router.put(
 // Activity subitems
 router.post(
   "/activities/:id/subitems",
-  adminAuth,
+  adminAuthWithId,
   activityController.addSubitem,
 );
 router.put(
   "/activities/:id/subitems/:subitemId",
-  adminAuth,
+  adminAuthWithId,
   activityController.updateSubitem,
 );
 router.delete(
   "/activities/:id/subitems/:subitemId",
-  adminAuth,
+  adminAuthWithId,
   activityController.deleteSubitem,
 );
 
 // ==================== EVENTS ====================
 
 router.get("/events", adminAuth, eventController.getAllEvents);
-router.get("/events/:id", adminAuth, eventController.getEventById);
+router.get("/events/:id", adminAuthWithId, eventController.getEventById);
 router.post("/events", adminAuth, eventController.createEvent);
-router.put("/events/:id", adminAuth, eventController.updateEvent);
-router.delete("/events/:id", adminAuth, eventController.deleteEvent);
+router.put("/events/:id", adminAuthWithId, eventController.updateEvent);
+router.delete("/events/:id", adminAuthWithId, eventController.deleteEvent);
 router.patch(
   "/events/:id/publish",
-  adminAuth,
+  adminAuthWithId,
   eventController.toggleEventPublish,
 );
 router.patch(
   "/events/:id/feature",
-  adminAuth,
+  adminAuthWithId,
   eventController.toggleEventFeatured,
 );
 router.post(
@@ -126,7 +130,7 @@ router.get(
 );
 router.get(
   "/testimonials/:id",
-  adminAuth,
+  adminAuthWithId,
   testimonialController.getTestimonialById,
 );
 router.post(
@@ -136,32 +140,32 @@ router.post(
 );
 router.put(
   "/testimonials/:id",
-  adminAuth,
+  adminAuthWithId,
   testimonialController.updateTestimonial,
 );
 router.delete(
   "/testimonials/:id",
-  adminAuth,
+  adminAuthWithId,
   testimonialController.deleteTestimonial,
 );
 router.patch(
   "/testimonials/:id/toggle",
-  adminAuth,
+  adminAuthWithId,
   testimonialController.toggleTestimonialApproval,
 );
 router.patch(
   "/testimonials/:id/approve",
-  adminAuth,
+  adminAuthWithId,
   testimonialController.approveTestimonial,
 );
 router.patch(
   "/testimonials/:id/reject",
-  adminAuth,
+  adminAuthWithId,
   testimonialController.rejectTestimonial,
 );
 router.patch(
   "/testimonials/:id/feature",
-  adminAuth,
+  adminAuthWithId,
   testimonialController.toggleTestimonialFeatured,
 );
 router.put(
@@ -179,7 +183,7 @@ router.get(
 );
 router.get(
   "/donation-heads/:id",
-  adminAuth,
+  adminAuthWithId,
   donationHeadController.getDonationHeadById,
 );
 router.post(
@@ -189,17 +193,17 @@ router.post(
 );
 router.put(
   "/donation-heads/:id",
-  adminAuth,
+  adminAuthWithId,
   donationHeadController.updateDonationHead,
 );
 router.delete(
   "/donation-heads/:id",
-  adminAuth,
+  adminAuthWithId,
   donationHeadController.deleteDonationHead,
 );
 router.patch(
   "/donation-heads/:id/toggle",
-  adminAuth,
+  adminAuthWithId,
   donationHeadController.toggleDonationHeadStatus,
 );
 router.put(
@@ -211,29 +215,29 @@ router.put(
 // Donation head sub-causes
 router.post(
   "/donation-heads/:id/sub-causes",
-  adminAuth,
+  adminAuthWithId,
   donationHeadController.addSubCause,
 );
 router.delete(
   "/donation-heads/:id/sub-causes/:subCauseId",
-  adminAuth,
+  adminAuthWithId,
   donationHeadController.deleteSubCause,
 );
 
 // ==================== GALLERY ====================
 
 router.get("/gallery", adminAuth, galleryController.getAllGalleryCategories);
-router.get("/gallery/:id", adminAuth, galleryController.getGalleryCategoryById);
+router.get("/gallery/:id", adminAuthWithId, galleryController.getGalleryCategoryById);
 router.post("/gallery", adminAuth, galleryController.createGalleryCategory);
-router.put("/gallery/:id", adminAuth, galleryController.updateGalleryCategory);
+router.put("/gallery/:id", adminAuthWithId, galleryController.updateGalleryCategory);
 router.delete(
   "/gallery/:id",
-  adminAuth,
+  adminAuthWithId,
   galleryController.deleteGalleryCategory,
 );
 router.patch(
   "/gallery/:id/toggle",
-  adminAuth,
+  adminAuthWithId,
   galleryController.toggleGalleryCategoryVisibility,
 );
 router.put(
@@ -245,22 +249,22 @@ router.put(
 // Gallery images management
 router.post(
   "/gallery/:id/images",
-  adminAuth,
+  adminAuthWithId,
   galleryController.addImagesToGalleryCategory,
 );
 router.put(
   "/gallery/:id/images/:imageId",
-  adminAuth,
+  adminAuthWithId,
   galleryController.updateGalleryImage,
 );
 router.delete(
   "/gallery/:id/images/:imageId",
-  adminAuth,
+  adminAuthWithId,
   galleryController.deleteGalleryImage,
 );
 router.put(
   "/gallery/:id/images/reorder",
-  adminAuth,
+  adminAuthWithId,
   galleryController.reorderGalleryImages,
 );
 
@@ -272,18 +276,18 @@ router.get(
   adminAuth,
   productController.getAllCategories,
 );
-router.get("/products/:id", adminAuth, productController.getProductById);
+router.get("/products/:id", adminAuthWithId, productController.getProductById);
 router.post("/products", adminAuth, productController.createProduct);
-router.put("/products/:id", adminAuth, productController.updateProduct);
-router.delete("/products/:id", adminAuth, productController.deleteProduct);
+router.put("/products/:id", adminAuthWithId, productController.updateProduct);
+router.delete("/products/:id", adminAuthWithId, productController.deleteProduct);
 router.patch(
   "/products/:id/toggle",
-  adminAuth,
+  adminAuthWithId,
   productController.toggleProductStatus,
 );
 router.patch(
   "/products/:id/stock",
-  adminAuth,
+  adminAuthWithId,
   productController.updateProductStock,
 );
 
@@ -295,12 +299,12 @@ router.post(
 );
 router.put(
   "/products/categories/:id",
-  adminAuth,
+  adminAuthWithId,
   productController.updateCategory,
 );
 router.delete(
   "/products/categories/:id",
-  adminAuth,
+  adminAuthWithId,
   productController.deleteCategory,
 );
 
