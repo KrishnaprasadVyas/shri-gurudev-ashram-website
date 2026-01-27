@@ -1,151 +1,365 @@
-import { createContext, useContext, useState, useEffect } from "react";
-import { galleryImages } from "../data/dummyData";
-import { brochureGalleryImages } from "../data/brochureData";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+import { galleryApi } from "../services/adminApi";
 
 const GalleryContext = createContext();
 
-// Helper to migrate existing gallery data to new format
-const migrateGalleryData = () => {
-  // Use brochureGalleryImages if available, otherwise use galleryImages
-  const sourceImages = brochureGalleryImages.length > 0 
-    ? brochureGalleryImages 
-    : galleryImages;
-  
-  return sourceImages.map((img, index) => ({
-    id: img.id || index + 1,
-    title: img.title || "Untitled",
-    category: img.category || "general",
-    imageUrl: img.src || img.imageUrl || "",
-    visible: true,
-    order: index + 1
-  }));
-};
-
 export const GalleryProvider = ({ children }) => {
-  const [galleryItems, setGalleryItems] = useState(() => {
-    // Initialize with migrated data
-    const saved = localStorage.getItem("galleryItems");
-    let currentItems = [];
-    
-    if (saved) {
-      try {
-        currentItems = JSON.parse(saved);
-      } catch (e) {
-        currentItems = migrateGalleryData();
-      }
-    } else {
-      currentItems = migrateGalleryData();
-    }
-    
-    // Sync: Ensure all brochure images are present (add missing ones)
-    const brochureImageUrls = new Set(brochureGalleryImages.map(img => img.src));
-    const existingImageUrls = new Set(currentItems.map(item => item.imageUrl));
-    
-    // Find missing images
-    const missingImages = brochureGalleryImages.filter(img => !existingImageUrls.has(img.src));
-    
-    if (missingImages.length > 0) {
-      // Add missing images
-      const newItems = missingImages.map((img, index) => ({
-        id: Date.now() + index, // Temporary ID, will be unique
-        title: img.title || "Untitled",
-        category: img.category || "general",
-        imageUrl: img.src,
-        visible: true,
-        order: currentItems.length + index + 1
+  const [galleryCategories, setGalleryCategories] = useState([]);
+  const [galleryItems, setGalleryItems] = useState([]); // Flattened images for backward compatibility
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  /**
+   * Fetch all gallery categories from API (for admin)
+   */
+  const fetchGalleryCategories = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await galleryApi.getAll();
+      const categories = (response.data || []).map((cat, index) => ({
+        ...cat,
+        id: cat._id,
+        order: cat.order || index,
+        visible: cat.isVisible !== false,
       }));
-      
-      currentItems = [...currentItems, ...newItems];
+      setGalleryCategories(categories);
+
+      // Flatten images for backward compatibility
+      const flattenedImages = [];
+      categories.forEach((cat) => {
+        (cat.images || []).forEach((img, imgIndex) => {
+          flattenedImages.push({
+            id: img._id || `${cat._id}-${imgIndex}`,
+            categoryId: cat._id,
+            category: cat.slug || cat.name,
+            categoryName: cat.name,
+            imageUrl: img.url,
+            title: img.title || cat.name,
+            order: flattenedImages.length + 1,
+            visible: img.isVisible !== false && cat.isVisible !== false,
+          });
+        });
+      });
+      setGalleryItems(flattenedImages);
+    } catch (err) {
+      console.error("Error fetching gallery categories:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-    
-    return currentItems;
-  });
+  }, []);
 
-  // Save to localStorage whenever galleryItems change
-  useEffect(() => {
-    localStorage.setItem("galleryItems", JSON.stringify(galleryItems));
-  }, [galleryItems]);
+  /**
+   * Fetch visible gallery from API (for public)
+   */
+  const fetchVisibleGallery = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await galleryApi.getVisible();
+      const categories = (response.data || []).map((cat, index) => ({
+        ...cat,
+        id: cat._id,
+        order: cat.order || index,
+        visible: true,
+      }));
+      setGalleryCategories(categories);
 
-  const addGalleryItem = (item) => {
-    const newItem = {
-      ...item,
-      id: Date.now(), // Simple ID generation
-      order: galleryItems.length + 1,
-      visible: item.visible !== undefined ? item.visible : true
-    };
-    setGalleryItems([...galleryItems, newItem]);
-  };
-
-  const updateGalleryItem = (id, updates) => {
-    setGalleryItems(galleryItems.map(item => 
-      item.id === id ? { ...item, ...updates } : item
-    ));
-  };
-
-  const deleteGalleryItem = (id) => {
-    setGalleryItems(galleryItems.filter(item => item.id !== id));
-  };
-
-  const toggleVisibility = (id) => {
-    setGalleryItems(galleryItems.map(item => 
-      item.id === id ? { ...item, visible: !item.visible } : item
-    ));
-  };
-
-  const moveItem = (id, direction) => {
-    const items = [...galleryItems];
-    const index = items.findIndex(item => item.id === id);
-    
-    if (index === -1) return;
-    
-    if (direction === "up" && index > 0) {
-      [items[index], items[index - 1]] = [items[index - 1], items[index]];
-    } else if (direction === "down" && index < items.length - 1) {
-      [items[index], items[index + 1]] = [items[index + 1], items[index]];
+      // Flatten images for backward compatibility
+      const flattenedImages = [];
+      categories.forEach((cat) => {
+        (cat.images || []).forEach((img, imgIndex) => {
+          flattenedImages.push({
+            id: img._id || `${cat._id}-${imgIndex}`,
+            categoryId: cat._id,
+            category: cat.slug || cat.name,
+            categoryName: cat.name,
+            imageUrl: img.url,
+            title: img.title || cat.name,
+            order: flattenedImages.length + 1,
+            visible: true,
+          });
+        });
+      });
+      setGalleryItems(flattenedImages);
+    } catch (err) {
+      console.error("Error fetching visible gallery:", err);
+      setGalleryCategories([]);
+      setGalleryItems([]);
+    } finally {
+      setLoading(false);
     }
-    
-    // Update order numbers
-    items.forEach((item, idx) => {
-      item.order = idx + 1;
-    });
-    
-    setGalleryItems(items);
-  };
+  }, []);
 
-  // Get visible items sorted by order (for public gallery)
-  const getVisibleItems = () => {
+  /**
+   * Create a new gallery category
+   */
+  const createCategory = useCallback(async (categoryData) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await galleryApi.create(categoryData);
+      const newCategory = {
+        ...response.data,
+        id: response.data._id,
+        visible: response.data.isVisible !== false,
+      };
+      setGalleryCategories((prev) => [...prev, newCategory]);
+      return newCategory;
+    } catch (err) {
+      console.error("Error creating category:", err);
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Update a gallery category
+   */
+  const updateCategory = useCallback(async (id, updates) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await galleryApi.update(id, updates);
+      setGalleryCategories((prev) =>
+        prev.map((cat) =>
+          cat.id === id || cat._id === id
+            ? {
+                ...cat,
+                ...response.data,
+                id: response.data._id,
+                visible: response.data.isVisible !== false,
+              }
+            : cat,
+        ),
+      );
+      return response.data;
+    } catch (err) {
+      console.error("Error updating category:", err);
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Delete a gallery category
+   */
+  const deleteCategory = useCallback(async (id) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await galleryApi.delete(id);
+      setGalleryCategories((prev) =>
+        prev.filter((cat) => cat.id !== id && cat._id !== id),
+      );
+      // Also remove flattened images for this category
+      setGalleryItems((prev) => prev.filter((item) => item.categoryId !== id));
+    } catch (err) {
+      console.error("Error deleting category:", err);
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Toggle category visibility
+   */
+  const toggleCategoryVisibility = useCallback(async (id) => {
+    setError(null);
+    try {
+      const response = await galleryApi.toggle(id);
+      setGalleryCategories((prev) =>
+        prev.map((cat) =>
+          cat.id === id || cat._id === id
+            ? {
+                ...cat,
+                visible: response.data.isVisible,
+                isVisible: response.data.isVisible,
+              }
+            : cat,
+        ),
+      );
+      return response.data;
+    } catch (err) {
+      console.error("Error toggling category visibility:", err);
+      setError(err.message);
+      throw err;
+    }
+  }, []);
+
+  /**
+   * Add images to a category
+   */
+  const addImagesToCategory = useCallback(
+    async (categoryId, images) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await galleryApi.addImages(categoryId, images);
+        // Refresh categories to get updated data
+        await fetchGalleryCategories();
+        return response.data;
+      } catch (err) {
+        console.error("Error adding images:", err);
+        setError(err.message);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchGalleryCategories],
+  );
+
+  /**
+   * Delete an image from a category
+   */
+  const deleteImage = useCallback(
+    async (categoryId, imageId) => {
+      setError(null);
+      try {
+        await galleryApi.deleteImage(categoryId, imageId);
+        // Refresh categories
+        await fetchGalleryCategories();
+      } catch (err) {
+        console.error("Error deleting image:", err);
+        setError(err.message);
+        throw err;
+      }
+    },
+    [fetchGalleryCategories],
+  );
+
+  // Legacy methods for backward compatibility with GalleryManager
+  const addGalleryItem = useCallback(
+    async (item) => {
+      // For backward compatibility - add as a new category with single image
+      try {
+        await createCategory({
+          name: item.category || "New Category",
+          images: [{ url: item.imageUrl, title: item.title }],
+          isVisible: item.visible !== false,
+        });
+      } catch (err) {
+        console.error("Error adding gallery item:", err);
+      }
+    },
+    [createCategory],
+  );
+
+  const updateGalleryItem = useCallback(async (id, updates) => {
+    // Legacy method - not fully implemented for new structure
+    console.warn("updateGalleryItem is deprecated for new gallery structure");
+  }, []);
+
+  const deleteGalleryItem = useCallback(async (id) => {
+    // Legacy method - not fully implemented for new structure
+    console.warn("deleteGalleryItem is deprecated for new gallery structure");
+  }, []);
+
+  const toggleVisibility = useCallback(
+    async (id) => {
+      // Try to find if it's a category
+      const category = galleryCategories.find(
+        (cat) => cat.id === id || cat._id === id,
+      );
+      if (category) {
+        await toggleCategoryVisibility(id);
+      }
+    },
+    [galleryCategories, toggleCategoryVisibility],
+  );
+
+  const moveItem = useCallback(
+    (id, direction) => {
+      // Local reorder for backward compatibility
+      const items = [...galleryItems];
+      const index = items.findIndex((item) => item.id === id);
+
+      if (index === -1) return;
+
+      if (direction === "up" && index > 0) {
+        [items[index], items[index - 1]] = [items[index - 1], items[index]];
+      } else if (direction === "down" && index < items.length - 1) {
+        [items[index], items[index + 1]] = [items[index + 1], items[index]];
+      }
+
+      items.forEach((item, idx) => {
+        item.order = idx + 1;
+      });
+
+      setGalleryItems(items);
+    },
+    [galleryItems],
+  );
+
+  /**
+   * Get visible items sorted by order (for public gallery)
+   */
+  const getVisibleItems = useCallback(() => {
     return galleryItems
-      .filter(item => item.visible)
+      .filter((item) => item.visible)
       .sort((a, b) => a.order - b.order)
-      .map(item => ({
+      .map((item) => ({
         id: item.id,
         src: item.imageUrl,
         title: item.title,
-        category: item.category
+        category: item.category,
       }));
-  };
+  }, [galleryItems]);
 
-  // Get all unique categories
-  const getCategories = () => {
-    const categories = new Set(galleryItems.map(item => item.category));
-    return Array.from(categories).filter(Boolean);
-  };
+  /**
+   * Get all unique categories
+   */
+  const getCategories = useCallback(() => {
+    return galleryCategories
+      .filter((cat) => cat.visible)
+      .map((cat) => cat.slug || cat.name?.toLowerCase());
+  }, [galleryCategories]);
+
+  // Fetch visible gallery on mount (for public pages)
+  useEffect(() => {
+    fetchVisibleGallery();
+  }, [fetchVisibleGallery]);
 
   const value = {
+    // State
+    galleryCategories,
     galleryItems,
+    loading,
+    error,
+    // Category actions
+    fetchGalleryCategories,
+    fetchVisibleGallery,
+    createCategory,
+    updateCategory,
+    deleteCategory,
+    toggleCategoryVisibility,
+    addImagesToCategory,
+    deleteImage,
+    // Legacy actions for backward compatibility
     addGalleryItem,
     updateGalleryItem,
     deleteGalleryItem,
     toggleVisibility,
     moveItem,
     getVisibleItems,
-    getCategories
+    getCategories,
   };
 
   return (
-    <GalleryContext.Provider value={value}>
-      {children}
-    </GalleryContext.Provider>
+    <GalleryContext.Provider value={value}>{children}</GalleryContext.Provider>
   );
 };
 

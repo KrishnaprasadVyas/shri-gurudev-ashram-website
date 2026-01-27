@@ -1,131 +1,255 @@
-import { createContext, useContext, useState, useEffect } from "react";
-import { events } from "../data/dummyData";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+import { eventsApi } from "../services/adminApi";
 
 const EventsContext = createContext();
 
-// Helper to migrate existing events data to new format
-const migrateEventsData = () => {
-  return events.map((event, index) => ({
-    id: event.id || index + 1,
-    title: event.title || "Untitled Event",
-    description: event.description || "",
-    date: event.date || new Date().toISOString().split('T')[0],
-    imageUrl: event.image || "",
-    visible: true,
-    order: index + 1,
-    // Preserve additional fields for compatibility
-    time: event.time || "",
-    location: event.location || ""
-  }));
-};
-
 export const EventsProvider = ({ children }) => {
-  const [eventsItems, setEventsItems] = useState(() => {
-    // Initialize with migrated data
-    const saved = localStorage.getItem("eventsItems");
-    if (saved) {
+  const [eventsItems, setEventsItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  /**
+   * Fetch all events from API (for admin)
+   */
+  const fetchEvents = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await eventsApi.getAll();
+      const events = (response.data || []).map((event, index) => ({
+        ...event,
+        id: event._id,
+        order: event.order || index + 1,
+        visible: event.isPublished !== false,
+      }));
+      setEventsItems(events);
+    } catch (err) {
+      console.error("Error fetching events:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Fetch published events from API (for public)
+   */
+  const fetchPublishedEvents = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await eventsApi.getPublished();
+      const events = (response.data || []).map((event, index) => ({
+        ...event,
+        id: event._id,
+        order: index + 1,
+        visible: true,
+      }));
+      setEventsItems(events);
+    } catch (err) {
+      console.error("Error fetching published events:", err);
+      setEventsItems([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Add a new event
+   */
+  const addEvent = useCallback(
+    async (eventData) => {
+      setLoading(true);
+      setError(null);
       try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return migrateEventsData();
+        const response = await eventsApi.create({
+          title: eventData.title,
+          description: eventData.description,
+          date: eventData.date,
+          time: eventData.time,
+          location: eventData.location,
+          imageUrl: eventData.imageUrl,
+          isPublished: eventData.visible !== false,
+        });
+        const newEvent = {
+          ...response.data,
+          id: response.data._id,
+          order: eventsItems.length + 1,
+          visible: response.data.isPublished !== false,
+        };
+        setEventsItems((prev) => [...prev, newEvent]);
+        return newEvent;
+      } catch (err) {
+        console.error("Error creating event:", err);
+        setError(err.message);
+        throw err;
+      } finally {
+        setLoading(false);
       }
+    },
+    [eventsItems.length],
+  );
+
+  /**
+   * Update an event
+   */
+  const updateEvent = useCallback(async (id, updates) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await eventsApi.update(id, {
+        ...updates,
+        isPublished: updates.visible !== false,
+      });
+      setEventsItems((prev) =>
+        prev.map((item) =>
+          item.id === id || item._id === id
+            ? {
+                ...item,
+                ...response.data,
+                id: response.data._id,
+                visible: response.data.isPublished !== false,
+              }
+            : item,
+        ),
+      );
+      return response.data;
+    } catch (err) {
+      console.error("Error updating event:", err);
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
     }
-    return migrateEventsData();
-  });
+  }, []);
 
-  // Save to localStorage whenever eventsItems change
-  useEffect(() => {
-    localStorage.setItem("eventsItems", JSON.stringify(eventsItems));
-  }, [eventsItems]);
-
-  const addEvent = (event) => {
-    const newEvent = {
-      ...event,
-      id: Date.now(), // Simple ID generation
-      order: eventsItems.length + 1,
-      visible: event.visible !== undefined ? event.visible : true,
-      time: event.time || "",
-      location: event.location || ""
-    };
-    setEventsItems([...eventsItems, newEvent]);
-  };
-
-  const updateEvent = (id, updates) => {
-    setEventsItems(eventsItems.map(item => 
-      item.id === id ? { ...item, ...updates } : item
-    ));
-  };
-
-  const deleteEvent = (id) => {
-    setEventsItems(eventsItems.filter(item => item.id !== id));
-  };
-
-  const toggleVisibility = (id) => {
-    setEventsItems(eventsItems.map(item => 
-      item.id === id ? { ...item, visible: !item.visible } : item
-    ));
-  };
-
-  const moveEvent = (id, direction) => {
-    const items = [...eventsItems];
-    const index = items.findIndex(item => item.id === id);
-    
-    if (index === -1) return;
-    
-    if (direction === "up" && index > 0) {
-      [items[index], items[index - 1]] = [items[index - 1], items[index]];
-    } else if (direction === "down" && index < items.length - 1) {
-      [items[index], items[index + 1]] = [items[index + 1], items[index]];
+  /**
+   * Delete an event
+   */
+  const deleteEvent = useCallback(async (id) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await eventsApi.delete(id);
+      setEventsItems((prev) =>
+        prev.filter((item) => item.id !== id && item._id !== id),
+      );
+    } catch (err) {
+      console.error("Error deleting event:", err);
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
     }
-    
-    // Update order numbers
-    items.forEach((item, idx) => {
-      item.order = idx + 1;
-    });
-    
-    setEventsItems(items);
-  };
+  }, []);
 
-  // Get visible events sorted by order (for public events page)
-  const getVisibleEvents = () => {
+  /**
+   * Toggle event visibility/publish status
+   */
+  const toggleVisibility = useCallback(async (id) => {
+    setError(null);
+    try {
+      const response = await eventsApi.togglePublish(id);
+      setEventsItems((prev) =>
+        prev.map((item) =>
+          item.id === id || item._id === id
+            ? {
+                ...item,
+                visible: response.data.isPublished,
+                isPublished: response.data.isPublished,
+              }
+            : item,
+        ),
+      );
+      return response.data;
+    } catch (err) {
+      console.error("Error toggling event visibility:", err);
+      setError(err.message);
+      throw err;
+    }
+  }, []);
+
+  /**
+   * Move event order (local only for now, can be extended with reorder API)
+   */
+  const moveEvent = useCallback(
+    (id, direction) => {
+      const items = [...eventsItems];
+      const index = items.findIndex(
+        (item) => item.id === id || item._id === id,
+      );
+
+      if (index === -1) return;
+
+      if (direction === "up" && index > 0) {
+        [items[index], items[index - 1]] = [items[index - 1], items[index]];
+      } else if (direction === "down" && index < items.length - 1) {
+        [items[index], items[index + 1]] = [items[index + 1], items[index]];
+      }
+
+      items.forEach((item, idx) => {
+        item.order = idx + 1;
+      });
+
+      setEventsItems(items);
+    },
+    [eventsItems],
+  );
+
+  /**
+   * Get visible events sorted by order (for public events page)
+   */
+  const getVisibleEvents = useCallback(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     return eventsItems
-      .filter(item => item.visible)
+      .filter((item) => item.visible)
       .sort((a, b) => a.order - b.order)
-      .map(item => {
+      .map((item) => {
         const eventDate = new Date(item.date);
         eventDate.setHours(0, 0, 0, 0);
         const isUpcoming = eventDate >= today;
-        
+
         return {
-          id: item.id,
+          id: item.id || item._id,
           title: item.title,
           description: item.description,
           date: item.date,
           time: item.time,
           location: item.location,
-          image: item.imageUrl, // Map imageUrl to image for EventCard compatibility
-          status: isUpcoming ? "upcoming" : "past"
+          image: item.imageUrl,
+          status: item.status || (isUpcoming ? "upcoming" : "past"),
         };
       });
-  };
+  }, [eventsItems]);
+
+  // Fetch published events on mount (for public pages)
+  useEffect(() => {
+    fetchPublishedEvents();
+  }, [fetchPublishedEvents]);
 
   const value = {
     eventsItems,
+    loading,
+    error,
+    fetchEvents,
+    fetchPublishedEvents,
     addEvent,
     updateEvent,
     deleteEvent,
     toggleVisibility,
     moveEvent,
-    getVisibleEvents
+    getVisibleEvents,
   };
 
   return (
-    <EventsContext.Provider value={value}>
-      {children}
-    </EventsContext.Provider>
+    <EventsContext.Provider value={value}>{children}</EventsContext.Provider>
   );
 };
 

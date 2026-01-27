@@ -13,7 +13,9 @@
  * - This script is idempotent (won't duplicate data if run multiple times)
  */
 
-require("dotenv").config({ path: require("path").join(__dirname, "../.env.local") });
+require("dotenv").config({
+  path: require("path").join(__dirname, "../.env.local"),
+});
 const mongoose = require("mongoose");
 const connectDB = require("../src/config/db");
 
@@ -21,13 +23,11 @@ const connectDB = require("../src/config/db");
 const Announcement = require("../src/models/Announcement");
 const Activity = require("../src/models/Activity");
 const Event = require("../src/models/Event");
-const Gallery = require("../src/models/Gallery");
 const GalleryCategory = require("../src/models/GalleryCategory");
 const Testimonial = require("../src/models/Testimonial");
 const DonationHead = require("../src/models/DonationHead");
 const Product = require("../src/models/Product");
 const ProductCategory = require("../src/models/ProductCategory");
-const BrochureCategory = require("../src/models/BrochureCategory");
 
 // ==================== SEED DATA ====================
 // Migrated from frontend/src/data/dummyData.js and brochureData.js
@@ -65,7 +65,8 @@ const activitiesData = [
       {
         key: "janmashtami",
         title: "Janmashtami",
-        description: "Devotional programs and celebrations on Lord Krishna's birth.",
+        description:
+          "Devotional programs and celebrations on Lord Krishna's birth.",
         order: 0,
         isVisible: true,
       },
@@ -187,8 +188,10 @@ const eventsData = [
     date: new Date("2026-03-15"),
     time: "6:00 PM",
     location: "Main Hall",
-    description: "A special spiritual gathering with Gurudev's divine discourse",
-    imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+    description:
+      "A special spiritual gathering with Gurudev's divine discourse",
+    imageUrl:
+      "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
     status: "upcoming",
     isPublished: true,
     isFeatured: true,
@@ -210,7 +213,8 @@ const eventsData = [
     time: "7:00 AM",
     location: "Yoga Hall",
     description: "Learn traditional yoga practices and meditation techniques",
-    imageUrl: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800",
+    imageUrl:
+      "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800",
     status: "past",
     isPublished: true,
     isFeatured: false,
@@ -221,76 +225,11 @@ const eventsData = [
     time: "All Day",
     location: "Ashram Grounds",
     description: "A day-long spiritual retreat with meditation and satsang",
-    imageUrl: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800",
+    imageUrl:
+      "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800",
     status: "past",
     isPublished: true,
     isFeatured: false,
-  },
-];
-
-const galleryCategoriesData = [
-  { name: "Satsang", slug: "satsang", order: 0, isVisible: true },
-  { name: "Seva", slug: "seva", order: 1, isVisible: true },
-  { name: "Yoga", slug: "yoga", order: 2, isVisible: true },
-  { name: "Events", slug: "events", order: 3, isVisible: true },
-];
-
-const galleryData = [
-  {
-    imageUrl: "/assets/gallery_images/1.png",
-    category: "satsang",
-    title: "Satsang Gathering",
-    order: 0,
-    isVisible: true,
-  },
-  {
-    imageUrl: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=800",
-    category: "seva",
-    title: "Annadan Seva",
-    order: 0,
-    isVisible: true,
-  },
-  {
-    imageUrl: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800",
-    category: "yoga",
-    title: "Yoga Session",
-    order: 0,
-    isVisible: true,
-  },
-  {
-    imageUrl: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800",
-    category: "events",
-    title: "Festival Celebration",
-    order: 0,
-    isVisible: true,
-  },
-  {
-    imageUrl: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800",
-    category: "satsang",
-    title: "Evening Aarti",
-    order: 1,
-    isVisible: true,
-  },
-  {
-    imageUrl: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800",
-    category: "seva",
-    title: "Community Service",
-    order: 1,
-    isVisible: true,
-  },
-  {
-    imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800",
-    category: "yoga",
-    title: "Meditation Class",
-    order: 1,
-    isVisible: true,
-  },
-  {
-    imageUrl: "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=800",
-    category: "events",
-    title: "Special Program",
-    order: 1,
-    isVisible: true,
   },
 ];
 
@@ -439,7 +378,7 @@ const productCategoriesData = [
   { name: "Media", slug: "media", order: 4, isVisible: true },
 ];
 
-const brochureCategoriesData = [
+const galleryCategoriesData = [
   {
     name: "Adivasi",
     slug: "adivasi",
@@ -555,7 +494,10 @@ const brochureCategoriesData = [
     order: 8,
     isVisible: true,
     images: [
-      { url: "/assets/Brochure/Vaishanvi Mata/Vaishanvi Temple_.png", order: 0 },
+      {
+        url: "/assets/Brochure/Vaishanvi Mata/Vaishanvi Temple_.png",
+        order: 0,
+      },
     ],
   },
 ];
@@ -618,23 +560,18 @@ async function seedGallery(reset = false) {
 
   if (reset) {
     await GalleryCategory.deleteMany({});
-    await Gallery.deleteMany({});
   }
 
-  const catCount = await GalleryCategory.countDocuments();
-  const imgCount = await Gallery.countDocuments();
+  const count = await GalleryCategory.countDocuments();
 
-  if (catCount > 0 || imgCount > 0) {
-    console.log(
-      `   ⏭️  Skipped (${catCount} categories, ${imgCount} images already exist)`
-    );
+  if (count > 0) {
+    console.log(`   ⏭️  Skipped (${count} gallery categories already exist)`);
     return;
   }
 
   await GalleryCategory.insertMany(galleryCategoriesData);
-  await Gallery.insertMany(galleryData);
   console.log(
-    `   ✅ Created ${galleryCategoriesData.length} categories, ${galleryData.length} images`
+    `   ✅ Created ${galleryCategoriesData.length} gallery categories`,
   );
 }
 
@@ -686,24 +623,9 @@ async function seedProductCategories(reset = false) {
   }
 
   await ProductCategory.insertMany(productCategoriesData);
-  console.log(`   ✅ Created ${productCategoriesData.length} product categories`);
-}
-
-async function seedBrochureCategories(reset = false) {
-  console.log("📁 Seeding brochure categories...");
-
-  if (reset) {
-    await BrochureCategory.deleteMany({});
-  }
-
-  const count = await BrochureCategory.countDocuments();
-  if (count > 0) {
-    console.log(`   ⏭️  Skipped (${count} brochure categories already exist)`);
-    return;
-  }
-
-  await BrochureCategory.insertMany(brochureCategoriesData);
-  console.log(`   ✅ Created ${brochureCategoriesData.length} brochure categories`);
+  console.log(
+    `   ✅ Created ${productCategoriesData.length} product categories`,
+  );
 }
 
 // ==================== MAIN EXECUTION ====================
@@ -739,7 +661,6 @@ async function seed() {
       testimonials: seedTestimonials,
       "donation-heads": seedDonationHeads,
       "product-categories": seedProductCategories,
-      brochure: seedBrochureCategories,
     };
 
     const collectionsToSeed = onlyCollections || Object.keys(seedMap);

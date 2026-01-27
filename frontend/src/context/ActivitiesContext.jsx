@@ -1,123 +1,267 @@
-import { createContext, useContext, useState, useEffect } from "react";
-import { activities } from "../data/dummyData";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+import { activitiesApi } from "../services/adminApi";
 
 const ActivitiesContext = createContext();
 
-// Helper to migrate existing activities data to new format
-const migrateActivitiesData = () => {
-  return activities.map((activity, index) => ({
-    id: activity.id || index + 1,
-    title: activity.title || "Untitled Activity",
-    shortDescription: activity.description || "",
-    imageUrl: activity.image || "",
-    visible: true,
-    order: index + 1,
-    // Preserve additional fields for compatibility
-    category: activity.category || "spiritual",
-    icon: activity.icon || "",
-    subitems: activity.subitems || []
-  }));
-};
-
 export const ActivitiesProvider = ({ children }) => {
-  const [activitiesItems, setActivitiesItems] = useState(() => {
-    // Initialize with migrated data
-    const saved = localStorage.getItem("activitiesItems");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return migrateActivitiesData();
-      }
-    }
-    return migrateActivitiesData();
-  });
+  const [activitiesItems, setActivitiesItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Save to localStorage whenever activitiesItems change
-  useEffect(() => {
-    localStorage.setItem("activitiesItems", JSON.stringify(activitiesItems));
+  /**
+   * Fetch all activities from API (for admin)
+   */
+  const fetchActivities = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await activitiesApi.getAll();
+      const activities = (response.data || []).map((activity, index) => ({
+        ...activity,
+        id: activity._id,
+        order: activity.order || index + 1,
+        visible: activity.isVisible !== false,
+        shortDescription: activity.description || "",
+        imageUrl: activity.imageUrl || "",
+      }));
+      setActivitiesItems(activities);
+    } catch (err) {
+      console.error("Error fetching activities:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Fetch visible activities from API (for public)
+   */
+  const fetchVisibleActivities = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await activitiesApi.getVisible();
+      const activities = (response.data || []).map((activity, index) => ({
+        ...activity,
+        id: activity._id,
+        order: activity.order || index + 1,
+        visible: true,
+        shortDescription: activity.description || "",
+        imageUrl: activity.imageUrl || "",
+      }));
+      setActivitiesItems(activities);
+    } catch (err) {
+      console.error("Error fetching visible activities:", err);
+      setActivitiesItems([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Add a new activity
+   */
+  const addActivity = useCallback(
+    async (activityData) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await activitiesApi.create({
+          title: activityData.title,
+          description: activityData.shortDescription,
+          iconKey: activityData.icon || activityData.iconKey,
+          category: activityData.category,
+          isVisible: activityData.visible !== false,
+          subitems: activityData.subitems || [],
+        });
+        const newActivity = {
+          ...response.data,
+          id: response.data._id,
+          order: activitiesItems.length + 1,
+          visible: response.data.isVisible !== false,
+          shortDescription: response.data.description || "",
+        };
+        setActivitiesItems((prev) => [...prev, newActivity]);
+        return newActivity;
+      } catch (err) {
+        console.error("Error creating activity:", err);
+        setError(err.message);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [activitiesItems.length],
+  );
+
+  /**
+   * Update an activity
+   */
+  const updateActivity = useCallback(async (id, updates) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await activitiesApi.update(id, {
+        title: updates.title,
+        description: updates.shortDescription,
+        iconKey: updates.icon || updates.iconKey,
+        category: updates.category,
+        isVisible: updates.visible !== false,
+        subitems: updates.subitems,
+      });
+      setActivitiesItems((prev) =>
+        prev.map((item) =>
+          item.id === id || item._id === id
+            ? {
+                ...item,
+                ...response.data,
+                id: response.data._id,
+                visible: response.data.isVisible !== false,
+                shortDescription: response.data.description || "",
+              }
+            : item,
+        ),
+      );
+      return response.data;
+    } catch (err) {
+      console.error("Error updating activity:", err);
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Delete an activity
+   */
+  const deleteActivity = useCallback(async (id) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await activitiesApi.delete(id);
+      setActivitiesItems((prev) =>
+        prev.filter((item) => item.id !== id && item._id !== id),
+      );
+    } catch (err) {
+      console.error("Error deleting activity:", err);
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Toggle activity visibility
+   */
+  const toggleVisibility = useCallback(async (id) => {
+    setError(null);
+    try {
+      const response = await activitiesApi.toggle(id);
+      setActivitiesItems((prev) =>
+        prev.map((item) =>
+          item.id === id || item._id === id
+            ? {
+                ...item,
+                visible: response.data.isVisible,
+                isVisible: response.data.isVisible,
+              }
+            : item,
+        ),
+      );
+      return response.data;
+    } catch (err) {
+      console.error("Error toggling activity visibility:", err);
+      setError(err.message);
+      throw err;
+    }
+  }, []);
+
+  /**
+   * Move activity order
+   */
+  const moveActivity = useCallback(
+    async (id, direction) => {
+      const items = [...activitiesItems];
+      const index = items.findIndex(
+        (item) => item.id === id || item._id === id,
+      );
+
+      if (index === -1) return;
+
+      if (direction === "up" && index > 0) {
+        [items[index], items[index - 1]] = [items[index - 1], items[index]];
+      } else if (direction === "down" && index < items.length - 1) {
+        [items[index], items[index + 1]] = [items[index + 1], items[index]];
+      }
+
+      items.forEach((item, idx) => {
+        item.order = idx + 1;
+      });
+
+      setActivitiesItems(items);
+
+      // Persist reorder to backend
+      try {
+        const orderedIds = items.map((item) => item.id || item._id);
+        await activitiesApi.reorder(orderedIds);
+      } catch (err) {
+        console.error("Error reordering activities:", err);
+      }
+    },
+    [activitiesItems],
+  );
+
+  /**
+   * Get visible activities sorted by order (for public)
+   */
+  const getVisibleActivities = useCallback(() => {
+    return activitiesItems
+      .filter((item) => item.visible)
+      .sort((a, b) => a.order - b.order)
+      .map((item) => ({
+        id: item.id || item._id,
+        title: item.title,
+        description: item.shortDescription || item.description,
+        image: item.imageUrl,
+        icon: item.icon || item.iconKey,
+        category: item.category,
+        subitems: item.subitems || [],
+      }));
   }, [activitiesItems]);
 
-  const addActivity = (activity) => {
-    const newActivity = {
-      ...activity,
-      id: Date.now(), // Simple ID generation
-      order: activitiesItems.length + 1,
-      visible: activity.visible !== undefined ? activity.visible : true,
-      category: activity.category || "spiritual",
-      icon: activity.icon || "",
-      subitems: activity.subitems || []
-    };
-    setActivitiesItems([...activitiesItems, newActivity]);
-  };
-
-  const updateActivity = (id, updates) => {
-    setActivitiesItems(activitiesItems.map(item => 
-      item.id === id ? { ...item, ...updates } : item
-    ));
-  };
-
-  const deleteActivity = (id) => {
-    setActivitiesItems(activitiesItems.filter(item => item.id !== id));
-  };
-
-  const toggleVisibility = (id) => {
-    setActivitiesItems(activitiesItems.map(item => 
-      item.id === id ? { ...item, visible: !item.visible } : item
-    ));
-  };
-
-  const moveActivity = (id, direction) => {
-    const items = [...activitiesItems];
-    const index = items.findIndex(item => item.id === id);
-    
-    if (index === -1) return;
-    
-    if (direction === "up" && index > 0) {
-      [items[index], items[index - 1]] = [items[index - 1], items[index]];
-    } else if (direction === "down" && index < items.length - 1) {
-      [items[index], items[index + 1]] = [items[index + 1], items[index]];
-    }
-    
-    // Update order numbers
-    items.forEach((item, idx) => {
-      item.order = idx + 1;
-    });
-    
-    setActivitiesItems(items);
-  };
-
-  // Get visible activities sorted by order (for public activities page)
-  const getVisibleActivities = () => {
-    return activitiesItems
-      .filter(item => item.visible)
-      .sort((a, b) => a.order - b.order)
-      .map(item => ({
-        id: item.id,
-        title: item.title,
-        description: item.shortDescription, // Map shortDescription to description for ProgramCard compatibility
-        image: item.imageUrl, // Map imageUrl to image for ProgramCard compatibility
-        icon: item.icon,
-        category: item.category,
-        subitems: item.subitems
-      }));
-  };
-
-  // Get all unique categories
-  const getCategories = () => {
-    const categories = new Set(activitiesItems.map(item => item.category));
+  /**
+   * Get all unique categories
+   */
+  const getCategories = useCallback(() => {
+    const categories = new Set(activitiesItems.map((item) => item.category));
     return Array.from(categories).filter(Boolean);
-  };
+  }, [activitiesItems]);
+
+  // Fetch visible activities on mount (for public pages)
+  useEffect(() => {
+    fetchVisibleActivities();
+  }, [fetchVisibleActivities]);
 
   const value = {
     activitiesItems,
+    loading,
+    error,
+    fetchActivities,
+    fetchVisibleActivities,
     addActivity,
     updateActivity,
     deleteActivity,
     toggleVisibility,
     moveActivity,
     getVisibleActivities,
-    getCategories
+    getCategories,
   };
 
   return (

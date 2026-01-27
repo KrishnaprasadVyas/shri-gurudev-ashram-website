@@ -1,60 +1,186 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGallery } from "../../context/GalleryContext";
+import {
+  Loader2,
+  Plus,
+  Edit2,
+  Trash2,
+  Eye,
+  EyeOff,
+  ChevronDown,
+  ChevronUp,
+  Image,
+} from "lucide-react";
 
 const GalleryManager = () => {
   const {
-    galleryItems,
-    addGalleryItem,
-    updateGalleryItem,
-    deleteGalleryItem,
-    toggleVisibility,
-    moveItem
+    galleryCategories,
+    loading,
+    error,
+    fetchGalleryCategories,
+    createCategory,
+    updateCategory,
+    deleteCategory,
+    toggleCategoryVisibility,
+    addImagesToCategory,
+    deleteImage,
   } = useGallery();
 
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingItem, setEditingItem] = useState(null);
-  const [formData, setFormData] = useState({
-    title: "",
-    category: "",
-    imageUrl: "",
-    visible: true
+  const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [expandedCategory, setExpandedCategory] = useState(null);
+  const [showImageForm, setShowImageForm] = useState(null); // category ID to add images to
+  const [submitting, setSubmitting] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  const [categoryForm, setCategoryForm] = useState({
+    name: "",
+    description: "",
+    coverImageUrl: "",
+    isVisible: true,
   });
 
-  const sortedItems = [...galleryItems].sort((a, b) => a.order - b.order);
+  const [imageForm, setImageForm] = useState({
+    url: "",
+    title: "",
+    altText: "",
+  });
 
-  const handleAdd = () => {
-    setEditingItem(null);
-    setFormData({ title: "", category: "", imageUrl: "", visible: true });
-    setShowAddForm(true);
+  // Fetch gallery categories on mount
+  useEffect(() => {
+    fetchGalleryCategories();
+  }, [fetchGalleryCategories]);
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
   };
 
-  const handleEdit = (item) => {
-    setEditingItem(item);
-    setFormData({
-      title: item.title,
-      category: item.category,
-      imageUrl: item.imageUrl,
-      visible: item.visible
+  const sortedCategories = [...galleryCategories].sort(
+    (a, b) => (a.order || 0) - (b.order || 0),
+  );
+
+  const handleAddCategory = () => {
+    setEditingCategory(null);
+    setCategoryForm({
+      name: "",
+      description: "",
+      coverImageUrl: "",
+      isVisible: true,
     });
-    setShowAddForm(true);
+    setShowCategoryForm(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleEditCategory = (category) => {
+    setEditingCategory(category);
+    setCategoryForm({
+      name: category.name,
+      description: category.description || "",
+      coverImageUrl: category.coverImageUrl || "",
+      isVisible: category.visible !== false,
+    });
+    setShowCategoryForm(true);
+  };
+
+  const handleCategorySubmit = async (e) => {
     e.preventDefault();
-    if (editingItem) {
-      updateGalleryItem(editingItem.id, formData);
-    } else {
-      addGalleryItem(formData);
+    if (!categoryForm.name.trim()) {
+      showToast("Category name is required", "error");
+      return;
     }
-    setShowAddForm(false);
-    setEditingItem(null);
-    setFormData({ title: "", category: "", imageUrl: "", visible: true });
+
+    setSubmitting(true);
+    try {
+      if (editingCategory) {
+        await updateCategory(
+          editingCategory.id || editingCategory._id,
+          categoryForm,
+        );
+        showToast("Category updated successfully");
+      } else {
+        await createCategory(categoryForm);
+        showToast("Category created successfully");
+      }
+      setShowCategoryForm(false);
+      setEditingCategory(null);
+      setCategoryForm({
+        name: "",
+        description: "",
+        coverImageUrl: "",
+        isVisible: true,
+      });
+    } catch (err) {
+      console.error("Error saving category:", err);
+      showToast("Failed to save category", "error");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleCancel = () => {
-    setShowAddForm(false);
-    setEditingItem(null);
-    setFormData({ title: "", category: "", imageUrl: "", visible: true });
+  const handleDeleteCategory = async (category) => {
+    if (
+      window.confirm(`Delete category "${category.name}" and all its images?`)
+    ) {
+      try {
+        await deleteCategory(category.id || category._id);
+        showToast("Category deleted successfully");
+      } catch (err) {
+        console.error("Error deleting category:", err);
+        showToast("Failed to delete category", "error");
+      }
+    }
+  };
+
+  const handleToggleVisibility = async (category) => {
+    try {
+      await toggleCategoryVisibility(category.id || category._id);
+      showToast("Visibility updated");
+    } catch (err) {
+      console.error("Error toggling visibility:", err);
+      showToast("Failed to update visibility", "error");
+    }
+  };
+
+  const handleAddImage = (categoryId) => {
+    setShowImageForm(categoryId);
+    setImageForm({ url: "", title: "", altText: "" });
+  };
+
+  const handleImageSubmit = async (e) => {
+    e.preventDefault();
+    if (!imageForm.url.trim()) {
+      showToast("Image URL is required", "error");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await addImagesToCategory(showImageForm, [imageForm]);
+      showToast("Image added successfully");
+      setShowImageForm(null);
+      setImageForm({ url: "", title: "", altText: "" });
+    } catch (err) {
+      console.error("Error adding image:", err);
+      showToast("Failed to add image", "error");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteImage = async (categoryId, imageId) => {
+    if (window.confirm("Delete this image?")) {
+      try {
+        await deleteImage(categoryId, imageId);
+        showToast("Image deleted successfully");
+      } catch (err) {
+        console.error("Error deleting image:", err);
+        showToast("Failed to delete image", "error");
+      }
+    }
+  };
+
+  const toggleExpanded = (categoryId) => {
+    setExpandedCategory(expandedCategory === categoryId ? null : categoryId);
   };
 
   return (
@@ -63,204 +189,392 @@ const GalleryManager = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Gallery Manager</h1>
           <p className="text-gray-600 text-sm mt-1">
-            Manage gallery items for the public website
+            Manage gallery categories and images for the public website
           </p>
         </div>
         <button
-          onClick={handleAdd}
-          className="px-4 py-2 bg-amber-600 text-white font-semibold rounded-md hover:bg-amber-700 transition-colors"
+          onClick={handleAddCategory}
+          className="inline-flex items-center px-4 py-2 bg-amber-600 text-white font-semibold rounded-md hover:bg-amber-700 transition-colors"
         >
-          + Add Gallery Item
+          <Plus className="w-5 h-5 mr-2" />
+          Add Category
         </button>
       </div>
 
-      {/* Gallery Items List */}
+      {/* Error message */}
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">
+          {error}
+        </div>
+      )}
+
+      {/* Categories List */}
       <div className="space-y-4">
-        {sortedItems.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-amber-600" />
+            <span className="ml-2 text-gray-600">Loading gallery...</span>
+          </div>
+        ) : sortedCategories.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
-            No gallery items yet. Click "Add Gallery Item" to get started.
+            No gallery categories yet. Click "Add Category" to get started.
           </div>
         ) : (
-          sortedItems.map((item, index) => (
+          sortedCategories.map((category) => (
             <div
-              key={item.id}
-              className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+              key={category.id || category._id}
+              className={`border rounded-lg transition-all ${
+                category.visible !== false
+                  ? "border-gray-200 bg-white"
+                  : "border-gray-100 bg-gray-50 opacity-70"
+              }`}
             >
-              {/* Thumbnail */}
-              <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
-                {item.imageUrl ? (
-                  <img
-                    src={item.imageUrl}
-                    alt={item.title}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23ddd' width='100' height='100'/%3E%3Ctext fill='%23999' font-family='sans-serif' font-size='14' dy='10.5' font-weight='bold' x='50%25' y='50%25' text-anchor='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                    No Image
+              {/* Category Header */}
+              <div className="flex items-center gap-4 p-4">
+                {/* Cover Image */}
+                <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                  {category.coverImageUrl ? (
+                    <img
+                      src={category.coverImageUrl}
+                      alt={category.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.src =
+                          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23ddd' width='100' height='100'/%3E%3Ctext fill='%23999' font-family='sans-serif' font-size='12' dy='10.5' font-weight='bold' x='50%25' y='50%25' text-anchor='middle'%3ENo Cover%3C/text%3E%3C/svg%3E";
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                      <Image className="w-8 h-8" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Category Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-gray-900">
+                      {category.name}
+                    </h3>
+                    {category.visible === false && (
+                      <span className="px-2 py-0.5 text-xs bg-gray-200 text-gray-600 rounded">
+                        Hidden
+                      </span>
+                    )}
                   </div>
-                )}
-              </div>
+                  {category.description && (
+                    <p className="text-sm text-gray-600 truncate">
+                      {category.description}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    {(category.images || []).length} images • Order:{" "}
+                    {category.order || 0}
+                  </p>
+                </div>
 
-              {/* Item Info */}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-gray-900 truncate">
-                  {item.title}
-                </h3>
-                <p className="text-sm text-gray-600 capitalize">
-                  Category: {item.category}
-                </p>
-                <p className="text-xs text-gray-500">Order: {item.order}</p>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-2">
-                {/* Visibility Toggle */}
-                <button
-                  onClick={() => toggleVisibility(item.id)}
-                  className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                    item.visible
-                      ? "bg-green-100 text-green-700 hover:bg-green-200"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  {item.visible ? "Show" : "Hide"}
-                </button>
-
-                {/* Move Up */}
-                <button
-                  onClick={() => moveItem(item.id, "up")}
-                  disabled={index === 0}
-                  className="p-2 text-gray-600 hover:text-amber-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  title="Move Up"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                  </svg>
-                </button>
-
-                {/* Move Down */}
-                <button
-                  onClick={() => moveItem(item.id, "down")}
-                  disabled={index === sortedItems.length - 1}
-                  className="p-2 text-gray-600 hover:text-amber-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  title="Move Down"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-
-                {/* Edit */}
-                <button
-                  onClick={() => handleEdit(item)}
-                  className="px-3 py-1 text-xs font-medium text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-md transition-colors"
-                >
-                  Edit
-                </button>
-
-                {/* Delete */}
-                <button
-                  onClick={() => {
-                    if (window.confirm(`Delete "${item.title}"?`)) {
-                      deleteGalleryItem(item.id);
+                {/* Actions */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => toggleExpanded(category.id || category._id)}
+                    className="p-2 text-gray-600 hover:text-amber-600 transition-colors"
+                    title="View images"
+                  >
+                    {expandedCategory === (category.id || category._id) ? (
+                      <ChevronUp className="w-5 h-5" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleToggleVisibility(category)}
+                    className={`p-2 rounded-md transition-colors ${
+                      category.visible !== false
+                        ? "text-green-600 hover:bg-green-50"
+                        : "text-gray-400 hover:bg-gray-100"
+                    }`}
+                    title={
+                      category.visible !== false
+                        ? "Hide category"
+                        : "Show category"
                     }
-                  }}
-                  className="px-3 py-1 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
-                >
-                  Delete
-                </button>
+                  >
+                    {category.visible !== false ? (
+                      <Eye className="w-5 h-5" />
+                    ) : (
+                      <EyeOff className="w-5 h-5" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleEditCategory(category)}
+                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                    title="Edit category"
+                  >
+                    <Edit2 className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteCategory(category)}
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                    title="Delete category"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
+
+              {/* Expanded Images Section */}
+              {expandedCategory === (category.id || category._id) && (
+                <div className="border-t border-gray-200 p-4 bg-gray-50">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-medium text-gray-800">Images</h4>
+                    <button
+                      onClick={() =>
+                        handleAddImage(category.id || category._id)
+                      }
+                      className="inline-flex items-center px-3 py-1 text-sm bg-amber-100 text-amber-700 rounded-md hover:bg-amber-200 transition-colors"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Add Image
+                    </button>
+                  </div>
+
+                  {(category.images || []).length === 0 ? (
+                    <p className="text-sm text-gray-500 text-center py-4">
+                      No images in this category yet.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                      {(category.images || []).map((img, imgIndex) => (
+                        <div
+                          key={img._id || imgIndex}
+                          className="relative group rounded-lg overflow-hidden bg-gray-200"
+                        >
+                          <img
+                            src={img.url}
+                            alt={
+                              img.title ||
+                              img.altText ||
+                              `Image ${imgIndex + 1}`
+                            }
+                            className="w-full h-24 object-cover"
+                            onError={(e) => {
+                              e.target.src =
+                                "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23ddd' width='100' height='100'/%3E%3Ctext fill='%23999' font-family='sans-serif' font-size='10' dy='10.5' x='50%25' y='50%25' text-anchor='middle'%3EError%3C/text%3E%3C/svg%3E";
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button
+                              onClick={() =>
+                                handleDeleteImage(
+                                  category.id || category._id,
+                                  img._id,
+                                )
+                              }
+                              className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors"
+                              title="Delete image"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                          {img.title && (
+                            <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1 truncate">
+                              {img.title}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ))
         )}
       </div>
 
-      {/* Add/Edit Form Modal */}
-      {showAddForm && (
+      {/* Add/Edit Category Form Modal */}
+      {showCategoryForm && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">
-              {editingItem ? "Edit Gallery Item" : "Add Gallery Item"}
+              {editingCategory ? "Edit Category" : "Add Category"}
             </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleCategorySubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-1">
-                  Title *
+                  Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  required
-                  value={formData.title}
+                  value={categoryForm.name}
                   onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
+                    setCategoryForm({ ...categoryForm, name: e.target.value })
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  placeholder="Enter title"
+                  placeholder="e.g., Goushala"
                 />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-1">
-                  Category *
+                  Description
                 </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.category}
+                <textarea
+                  value={categoryForm.description}
                   onChange={(e) =>
-                    setFormData({ ...formData, category: e.target.value })
+                    setCategoryForm({
+                      ...categoryForm,
+                      description: e.target.value,
+                    })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  placeholder="Enter category"
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+                  placeholder="Brief description of this category"
                 />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-1">
-                  Image URL *
+                  Cover Image URL
                 </label>
                 <input
                   type="url"
-                  required
-                  value={formData.imageUrl}
+                  value={categoryForm.coverImageUrl}
                   onChange={(e) =>
-                    setFormData({ ...formData, imageUrl: e.target.value })
+                    setCategoryForm({
+                      ...categoryForm,
+                      coverImageUrl: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  placeholder="https://example.com/cover.jpg"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="catVisible"
+                  checked={categoryForm.isVisible}
+                  onChange={(e) =>
+                    setCategoryForm({
+                      ...categoryForm,
+                      isVisible: e.target.checked,
+                    })
+                  }
+                  className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+                />
+                <label htmlFor="catVisible" className="text-sm text-gray-700">
+                  Visible on website
+                </label>
+              </div>
+              <div className="flex gap-3 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCategoryForm(false);
+                    setEditingCategory(null);
+                  }}
+                  disabled={submitting}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-md hover:bg-gray-300 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-amber-600 text-white font-semibold rounded-md hover:bg-amber-700 transition-colors disabled:opacity-50"
+                >
+                  {submitting && (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  )}
+                  {editingCategory ? "Update" : "Create"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Image Form Modal */}
+      {showImageForm && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Add Image</h2>
+            <form onSubmit={handleImageSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-1">
+                  Image URL <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="url"
+                  value={imageForm.url}
+                  onChange={(e) =>
+                    setImageForm({ ...imageForm, url: e.target.value })
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
                   placeholder="https://example.com/image.jpg"
                 />
               </div>
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="visible"
-                  checked={formData.visible}
-                  onChange={(e) =>
-                    setFormData({ ...formData, visible: e.target.checked })
-                  }
-                  className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
-                />
-                <label htmlFor="visible" className="ml-2 text-sm text-gray-700">
-                  Visible on public website
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-1">
+                  Title
                 </label>
+                <input
+                  type="text"
+                  value={imageForm.title}
+                  onChange={(e) =>
+                    setImageForm({ ...imageForm, title: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  placeholder="Image title (optional)"
+                />
               </div>
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-amber-600 text-white font-semibold rounded-md hover:bg-amber-700 transition-colors"
-                >
-                  {editingItem ? "Update" : "Add"}
-                </button>
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-1">
+                  Alt Text
+                </label>
+                <input
+                  type="text"
+                  value={imageForm.altText}
+                  onChange={(e) =>
+                    setImageForm({ ...imageForm, altText: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  placeholder="Description for accessibility"
+                />
+              </div>
+              <div className="flex gap-3 pt-4 border-t">
                 <button
                   type="button"
-                  onClick={handleCancel}
-                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-md hover:bg-gray-300 transition-colors"
+                  onClick={() => setShowImageForm(null)}
+                  disabled={submitting}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-md hover:bg-gray-300 transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-amber-600 text-white font-semibold rounded-md hover:bg-amber-700 transition-colors disabled:opacity-50"
+                >
+                  {submitting && (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  )}
+                  Add Image
+                </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-4 right-4 z-50 animate-in fade-in slide-in-from-bottom-5">
+          <div
+            className={`${
+              toast.type === "error" ? "bg-red-600" : "bg-green-600"
+            } text-white px-6 py-3 rounded-lg shadow-lg`}
+          >
+            <span className="font-medium">{toast.message}</span>
           </div>
         </div>
       )}

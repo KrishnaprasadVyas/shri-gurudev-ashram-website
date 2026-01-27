@@ -99,7 +99,7 @@ const Navbar = ({ showAnnouncement = false }) => {
     >
       {/* Top Bar - Social Media, Heading & Action Buttons */}
       <div className="bg-amber-50/90 border-b border-amber-200/30">
-        <div className="max-w-6xl mx-auto px-8 sm:px-12 lg:px-16 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="hidden xl:flex justify-between items-center h-24 py-8">
             {/* Social Media Icons */}
             <div className="flex items-center space-x-4">
@@ -165,7 +165,7 @@ const Navbar = ({ showAnnouncement = false }) => {
               </a>
             </div>
             {/* Logo */}
-            <div className="flex justify-center flex-1 xl:ml-24">
+            <div className="flex justify-center">
               <Link
                 to="/"
                 className="group transition-transform duration-300 hover:scale-105"
@@ -335,7 +335,7 @@ const Navbar = ({ showAnnouncement = false }) => {
 
       {/* Main Navbar - Logo & Navigation */}
       <div className="bg-amber-50/95 border-b border-amber-200/40">
-        <div className="max-w-1xl px-8 sm:px-12 lg:px-16 xl:mx-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Mobile row with centered heading+logo block and airy spacing */}
           <div className="flex xl:hidden items-center justify-between py-3 px-3 gap-3">
             <div className="flex flex-col items-center justify-center gap-1">

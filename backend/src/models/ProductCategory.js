@@ -77,7 +77,7 @@ const productCategorySchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Indexes
@@ -86,14 +86,13 @@ productCategorySchema.index({ isVisible: 1, order: 1 });
 productCategorySchema.index({ parent: 1 });
 
 // Pre-save middleware to generate slug if not provided
-productCategorySchema.pre("save", function (next) {
+productCategorySchema.pre("save", function () {
   if (!this.slug && this.name) {
     this.slug = this.name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
   }
-  next();
 });
 
 // Virtual for product count (populated separately)
