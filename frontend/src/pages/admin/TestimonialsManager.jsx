@@ -1,50 +1,10 @@
-import { useState, useEffect } from "react";
-import { Star, Edit2, Trash2, Plus, X, Check } from "lucide-react";
-
-// Initial testimonials from dummyData structure
-const getInitialTestimonials = () => {
-  const stored = localStorage.getItem("admin_testimonials");
-  if (stored) {
-    return JSON.parse(stored);
-  }
-  return [
-    {
-      id: 1,
-      name: "Rajesh Kumar",
-      city: "Mumbai",
-      message: "The ashram has transformed my life. Gurudev's teachings have brought peace and purpose to my existence.",
-      rating: 5,
-      visible: true,
-    },
-    {
-      id: 2,
-      name: "Priya Sharma",
-      city: "Delhi",
-      message: "I am grateful for the Annadan Seva program. It's heartwarming to see so many families being fed daily.",
-      rating: 5,
-      visible: true,
-    },
-    {
-      id: 3,
-      name: "Amit Patel",
-      city: "Ahmedabad",
-      message: "The spiritual atmosphere here is divine. Every visit fills my heart with joy and gratitude.",
-      rating: 5,
-      visible: true,
-    },
-    {
-      id: 4,
-      name: "Sunita Devi",
-      city: "Bangalore",
-      message: "Gurudev's wisdom has guided me through difficult times. This place is truly blessed.",
-      rating: 5,
-      visible: true,
-    },
-  ];
-};
+import { useState, useEffect, useCallback } from "react";
+import { Star, Edit2, Trash2, Plus, X, Check, Loader2 } from "lucide-react";
+import { testimonialsApi } from "../../services/adminApi";
 
 const TestimonialsManager = () => {
-  const [testimonials, setTestimonials] = useState(getInitialTestimonials);
+  const [testimonials, setTestimonials] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({
@@ -55,11 +15,31 @@ const TestimonialsManager = () => {
     visible: true,
   });
   const [toast, setToast] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  // Save to localStorage whenever testimonials change
+  // Fetch testimonials from API
+  const fetchTestimonials = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await testimonialsApi.getAll();
+      const data = (response.data || []).map((item) => ({
+        ...item,
+        id: item._id,
+        visible: item.isApproved !== false,
+      }));
+      setTestimonials(data);
+    } catch (err) {
+      console.error("Error fetching testimonials:", err);
+      showToast("Failed to load testimonials", "error");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Fetch on mount
   useEffect(() => {
-    localStorage.setItem("admin_testimonials", JSON.stringify(testimonials));
-  }, [testimonials]);
+    fetchTestimonials();
+  }, [fetchTestimonials]);
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -84,42 +64,112 @@ const TestimonialsManager = () => {
     setShowForm(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this testimonial?")) {
-      setTestimonials((prev) => prev.filter((t) => t.id !== id));
-      showToast("Testimonial deleted successfully");
+      try {
+        await testimonialsApi.delete(id);
+        setTestimonials((prev) =>
+          prev.filter((t) => t.id !== id && t._id !== id),
+        );
+        showToast("Testimonial deleted successfully");
+      } catch (err) {
+        console.error("Error deleting testimonial:", err);
+        showToast("Failed to delete testimonial", "error");
+      }
     }
   };
 
-  const toggleVisibility = (id) => {
-    setTestimonials((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, visible: !t.visible } : t))
-    );
-    showToast("Visibility updated");
+  const toggleVisibility = async (id) => {
+    try {
+      const response = await testimonialsApi.toggle(id);
+      setTestimonials((prev) =>
+        prev.map((t) =>
+          t.id === id || t._id === id
+            ? {
+                ...t,
+                visible: response.data.isApproved,
+                isApproved: response.data.isApproved,
+              }
+            : t,
+        ),
+      );
+      showToast("Visibility updated");
+    } catch (err) {
+      console.error("Error toggling visibility:", err);
+      showToast("Failed to update visibility", "error");
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!formData.name.trim() || !formData.city.trim() || !formData.message.trim()) {
+
+    if (
+      !formData.name.trim() ||
+      !formData.city.trim() ||
+      !formData.message.trim()
+    ) {
       showToast("Please fill all required fields", "error");
       return;
     }
 
-    if (editingItem) {
-      setTestimonials((prev) =>
-        prev.map((t) => (t.id === editingItem.id ? { ...t, ...formData } : t))
-      );
-      showToast("Testimonial updated successfully");
-    } else {
-      const newId = Math.max(0, ...testimonials.map((t) => t.id)) + 1;
-      setTestimonials((prev) => [...prev, { id: newId, ...formData }]);
-      showToast("Testimonial added successfully");
-    }
+    setSubmitting(true);
+    try {
+      const payload = {
+        name: formData.name,
+        city: formData.city,
+        message: formData.message,
+        rating: formData.rating,
+        isApproved: formData.visible,
+      };
 
-    setShowForm(false);
-    setEditingItem(null);
-    setFormData({ name: "", city: "", message: "", rating: 5, visible: true });
+      if (editingItem) {
+        const response = await testimonialsApi.update(
+          editingItem.id || editingItem._id,
+          payload,
+        );
+        setTestimonials((prev) =>
+          prev.map((t) =>
+            t.id === editingItem.id || t._id === editingItem._id
+              ? {
+                  ...response.data,
+                  id: response.data._id,
+                  visible: response.data.isApproved,
+                }
+              : t,
+          ),
+        );
+        showToast("Testimonial updated successfully");
+      } else {
+        const response = await testimonialsApi.create(payload);
+        const newItem = {
+          ...response.data,
+          id: response.data._id,
+          visible: response.data.isApproved,
+        };
+        setTestimonials((prev) => [...prev, newItem]);
+        showToast("Testimonial added successfully");
+      }
+
+      setShowForm(false);
+      setEditingItem(null);
+      setFormData({
+        name: "",
+        city: "",
+        message: "",
+        rating: 5,
+        visible: true,
+      });
+    } catch (err) {
+      console.error("Error saving testimonial:", err);
+      showToast(
+        editingItem
+          ? "Failed to update testimonial"
+          : "Failed to add testimonial",
+        "error",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleCancel = () => {
@@ -141,7 +191,9 @@ const TestimonialsManager = () => {
           >
             <Star
               className={`w-5 h-5 ${
-                star <= rating ? "fill-amber-400 text-amber-400" : "text-gray-300"
+                star <= rating
+                  ? "fill-amber-400 text-amber-400"
+                  : "text-gray-300"
               }`}
             />
           </button>
@@ -154,7 +206,9 @@ const TestimonialsManager = () => {
     <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Testimonials Manager</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Testimonials Manager
+          </h1>
           <p className="text-gray-600 text-sm mt-1">
             Manage testimonials displayed on the website
           </p>
@@ -170,7 +224,12 @@ const TestimonialsManager = () => {
 
       {/* Testimonials List */}
       <div className="space-y-4">
-        {testimonials.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-amber-600" />
+            <span className="ml-2 text-gray-600">Loading testimonials...</span>
+          </div>
+        ) : testimonials.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             No testimonials yet. Click "Add Testimonial" to get started.
           </div>
@@ -195,9 +254,7 @@ const TestimonialsManager = () => {
                       </span>
                     )}
                   </div>
-                  <div className="mb-2">
-                    {renderStars(item.rating)}
-                  </div>
+                  <div className="mb-2">{renderStars(item.rating)}</div>
                   <p className="text-gray-700 text-sm">{item.message}</p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -208,7 +265,9 @@ const TestimonialsManager = () => {
                         ? "text-green-600 hover:bg-green-50"
                         : "text-gray-400 hover:bg-gray-100"
                     }`}
-                    title={item.visible ? "Hide testimonial" : "Show testimonial"}
+                    title={
+                      item.visible ? "Hide testimonial" : "Show testimonial"
+                    }
                   >
                     {item.visible ? (
                       <Check className="w-5 h-5" />
@@ -289,7 +348,7 @@ const TestimonialsManager = () => {
                   Rating
                 </label>
                 {renderStars(formData.rating, true, (rating) =>
-                  setFormData((prev) => ({ ...prev, rating }))
+                  setFormData((prev) => ({ ...prev, rating })),
                 )}
               </div>
 
@@ -300,7 +359,10 @@ const TestimonialsManager = () => {
                 <textarea
                   value={formData.message}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, message: e.target.value }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      message: e.target.value,
+                    }))
                   }
                   rows={4}
                   placeholder="Enter the testimonial message..."
@@ -314,7 +376,10 @@ const TestimonialsManager = () => {
                   id="visible"
                   checked={formData.visible}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, visible: e.target.checked }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      visible: e.target.checked,
+                    }))
                   }
                   className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
                 />
@@ -327,14 +392,19 @@ const TestimonialsManager = () => {
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="px-4 py-2 text-gray-700 font-semibold hover:bg-gray-100 rounded-md transition-colors"
+                  disabled={submitting}
+                  className="px-4 py-2 text-gray-700 font-semibold hover:bg-gray-100 rounded-md transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-amber-600 text-white font-semibold rounded-md hover:bg-amber-700 transition-colors"
+                  disabled={submitting}
+                  className="px-4 py-2 bg-amber-600 text-white font-semibold rounded-md hover:bg-amber-700 transition-colors disabled:opacity-50 inline-flex items-center"
                 >
+                  {submitting && (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  )}
                   {editingItem ? "Update" : "Add"} Testimonial
                 </button>
               </div>

@@ -1,12 +1,15 @@
 import { Link } from "react-router-dom";
 
 const ProgramCard = ({ program }) => {
+  // Support both imageUrl and image properties
+  const imageSource = program.imageUrl || program.image;
+
   return (
     <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden border border-amber-100">
-      {program.image ? (
+      {imageSource ? (
         <div className="relative h-44 overflow-hidden">
           <img
-            src={program.image}
+            src={imageSource}
             alt={program.title}
             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
           />
@@ -16,8 +19,10 @@ const ProgramCard = ({ program }) => {
           <div className="text-3xl text-amber-700">{program.icon || null}</div>
         </div>
       )}
-        <div className="p-5">
-        <h3 className="text-xl font-bold text-amber-900 mb-2">{program.title}</h3>
+      <div className="p-5">
+        <h3 className="text-xl font-bold text-amber-900 mb-2">
+          {program.title}
+        </h3>
         <p className="text-gray-700 mb-4 line-clamp-2">{program.description}</p>
         <Link
           to={`/activities/${program.id}`}
@@ -31,4 +36,3 @@ const ProgramCard = ({ program }) => {
 };
 
 export default ProgramCard;
-

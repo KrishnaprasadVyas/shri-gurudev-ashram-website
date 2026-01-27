@@ -18,8 +18,7 @@ const activityController = require("../controllers/activity.controller");
 const eventController = require("../controllers/event.controller");
 const testimonialController = require("../controllers/testimonial.controller");
 const donationHeadController = require("../controllers/donationHead.controller");
-const galleryController = require("../controllers/galleryNew.controller");
-const brochureController = require("../controllers/brochure.controller");
+const galleryController = require("../controllers/gallery.controller");
 const productController = require("../controllers/product.controller");
 
 // Optional auth middleware for authenticated public submissions
@@ -69,7 +68,11 @@ router.get("/events/:id", eventController.getEventByIdPublic);
 router.get("/testimonials", testimonialController.getApprovedTestimonials);
 
 // POST /api/public/testimonials - Submit new testimonial (optional auth)
-router.post("/testimonials", optionalAuth, testimonialController.submitTestimonial);
+router.post(
+  "/testimonials",
+  optionalAuth,
+  testimonialController.submitTestimonial,
+);
 
 // ==================== DONATION HEADS / CAUSES ====================
 
@@ -77,38 +80,33 @@ router.post("/testimonials", optionalAuth, testimonialController.submitTestimoni
 router.get("/donation-heads", donationHeadController.getActiveDonationHeads);
 
 // GET /api/public/donation-heads/featured - Get featured donation heads
-router.get("/donation-heads/featured", donationHeadController.getFeaturedDonationHeads);
+router.get(
+  "/donation-heads/featured",
+  donationHeadController.getFeaturedDonationHeads,
+);
 
 // GET /api/public/donation-heads/:key - Get donation head by key
 router.get("/donation-heads/:key", donationHeadController.getDonationHeadByKey);
 
 // GET /api/public/donation-heads/:key/stats - Get donation stats for a cause
-router.get("/donation-heads/:key/stats", donationHeadController.getDonationHeadStats);
+router.get(
+  "/donation-heads/:key/stats",
+  donationHeadController.getDonationHeadStats,
+);
 
 // ==================== GALLERY ====================
 
-// GET /api/public/gallery - Get visible gallery images
-router.get("/gallery", galleryController.getVisibleGalleryImages);
+// GET /api/public/gallery - Get all visible gallery categories with images
+router.get("/gallery", galleryController.getVisibleGalleryCategories);
 
-// GET /api/public/gallery/categories - Get visible gallery categories
-router.get("/gallery/categories", galleryController.getVisibleCategories);
+// GET /api/public/gallery/categories - Get gallery category names only
+router.get("/gallery/categories", galleryController.getGalleryCategoryNames);
 
-// GET /api/public/gallery/by-category - Get images grouped by category
-router.get("/gallery/by-category", galleryController.getImagesGroupedByCategory);
+// GET /api/public/gallery/all-images - Get all gallery images flattened
+router.get("/gallery/all-images", galleryController.getAllGalleryImages);
 
-// ==================== BROCHURE (Folder-based Gallery) ====================
-
-// GET /api/public/brochure - Get all brochure categories with images
-router.get("/brochure", brochureController.getVisibleBrochureCategories);
-
-// GET /api/public/brochure/categories - Get brochure category names
-router.get("/brochure/categories", brochureController.getBrochureCategoryNames);
-
-// GET /api/public/brochure/all-images - Get all brochure images flattened
-router.get("/brochure/all-images", brochureController.getAllBrochureImages);
-
-// GET /api/public/brochure/:slug - Get single brochure category
-router.get("/brochure/:slug", brochureController.getBrochureCategoryBySlug);
+// GET /api/public/gallery/:slug - Get single gallery category by slug
+router.get("/gallery/:slug", galleryController.getGalleryCategoryBySlug);
 
 // ==================== PRODUCTS (Shop) ====================
 

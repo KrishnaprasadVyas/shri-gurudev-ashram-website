@@ -89,7 +89,7 @@ const eventSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Indexes for efficient querying
@@ -98,7 +98,7 @@ eventSchema.index({ status: 1, isPublished: 1 });
 eventSchema.index({ isFeatured: 1 });
 
 // Pre-save middleware to auto-update status based on date
-eventSchema.pre("save", function (next) {
+eventSchema.pre("save", function () {
   const now = new Date();
   const eventDate = new Date(this.date);
 
@@ -118,7 +118,7 @@ eventSchema.pre("save", function (next) {
       const eventDay = new Date(
         eventDate.getFullYear(),
         eventDate.getMonth(),
-        eventDate.getDate()
+        eventDate.getDate(),
       );
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
@@ -129,8 +129,6 @@ eventSchema.pre("save", function (next) {
       }
     }
   }
-
-  next();
 });
 
 module.exports = mongoose.model("Event", eventSchema);

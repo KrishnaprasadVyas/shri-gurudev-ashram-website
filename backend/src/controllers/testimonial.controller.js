@@ -81,7 +81,8 @@ exports.submitTestimonial = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Testimonial submitted successfully. It will be visible after approval.",
+      message:
+        "Testimonial submitted successfully. It will be visible after approval.",
     });
   } catch (error) {
     console.error("Error submitting testimonial:", error);
@@ -126,7 +127,9 @@ exports.getAllTestimonials = async (req, res) => {
       .lean();
 
     const total = await Testimonial.countDocuments(filter);
-    const pendingCount = await Testimonial.countDocuments({ isApproved: false });
+    const pendingCount = await Testimonial.countDocuments({
+      isApproved: false,
+    });
 
     res.json({
       success: true,
@@ -209,8 +212,17 @@ exports.getTestimonialById = async (req, res) => {
  */
 exports.createTestimonial = async (req, res) => {
   try {
-    const { name, city, email, message, rating, isApproved, isFeatured, order, avatarUrl } =
-      req.body;
+    const {
+      name,
+      city,
+      email,
+      message,
+      rating,
+      isApproved,
+      isFeatured,
+      order,
+      avatarUrl,
+    } = req.body;
 
     // Validation
     if (!name || name.trim().length === 0) {
@@ -273,7 +285,8 @@ exports.createTestimonial = async (req, res) => {
  */
 exports.updateTestimonial = async (req, res) => {
   try {
-    const { name, city, email, message, rating, isFeatured, order, avatarUrl } = req.body;
+    const { name, city, email, message, rating, isFeatured, order, avatarUrl } =
+      req.body;
 
     const testimonial = await Testimonial.findById(req.params.id);
 
@@ -287,7 +300,8 @@ exports.updateTestimonial = async (req, res) => {
     // Update fields
     if (name !== undefined) testimonial.name = name.trim();
     if (city !== undefined) testimonial.city = city.trim();
-    if (email !== undefined) testimonial.email = email?.trim().toLowerCase() || null;
+    if (email !== undefined)
+      testimonial.email = email?.trim().toLowerCase() || null;
     if (message !== undefined) testimonial.message = message.trim();
     if (rating !== undefined) testimonial.rating = rating;
     if (isFeatured !== undefined) testimonial.isFeatured = isFeatured;
@@ -344,6 +358,48 @@ exports.deleteTestimonial = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to delete testimonial",
+    });
+  }
+};
+
+/**
+ * PATCH /api/admin/website/testimonials/:id/toggle
+ * Toggle approval status
+ */
+exports.toggleTestimonialApproval = async (req, res) => {
+  try {
+    const testimonial = await Testimonial.findById(req.params.id);
+
+    if (!testimonial) {
+      return res.status(404).json({
+        success: false,
+        message: "Testimonial not found",
+      });
+    }
+
+    testimonial.isApproved = !testimonial.isApproved;
+
+    // Update approval metadata
+    if (testimonial.isApproved) {
+      testimonial.approvedBy = req.user.id;
+      testimonial.approvedAt = new Date();
+    } else {
+      testimonial.approvedBy = null;
+      testimonial.approvedAt = null;
+    }
+
+    await testimonial.save();
+
+    res.json({
+      success: true,
+      message: `Testimonial ${testimonial.isApproved ? "approved" : "unapproved"} successfully`,
+      data: testimonial,
+    });
+  } catch (error) {
+    console.error("Error toggling testimonial approval:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to toggle approval status",
     });
   }
 };

@@ -1,36 +1,54 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useActivities } from "../../context/ActivitiesContext";
+import { Loader2 } from "lucide-react";
 
 const ActivitiesManager = () => {
   const {
     activitiesItems,
+    loading,
+    error,
+    fetchActivities,
     addActivity,
     updateActivity,
     deleteActivity,
     toggleVisibility,
-    moveActivity
+    moveActivity,
   } = useActivities();
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [toast, setToast] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
     shortDescription: "",
     imageUrl: "",
     visible: true,
-    category: "spiritual"
+    category: "spiritual",
   });
 
-  const sortedItems = [...activitiesItems].sort((a, b) => a.order - b.order);
+  // Fetch activities on mount
+  useEffect(() => {
+    fetchActivities();
+  }, [fetchActivities]);
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const sortedItems = [...activitiesItems].sort(
+    (a, b) => (a.order || 0) - (b.order || 0),
+  );
 
   const handleAdd = () => {
     setEditingItem(null);
-    setFormData({ 
-      title: "", 
-      shortDescription: "", 
-      imageUrl: "", 
+    setFormData({
+      title: "",
+      shortDescription: "",
+      imageUrl: "",
       visible: true,
-      category: "spiritual"
+      category: "spiritual",
     });
     setShowAddForm(true);
   };
@@ -42,38 +60,70 @@ const ActivitiesManager = () => {
       shortDescription: item.shortDescription,
       imageUrl: item.imageUrl,
       visible: item.visible,
-      category: item.category || "spiritual"
+      category: item.category || "spiritual",
     });
     setShowAddForm(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (editingItem) {
-      updateActivity(editingItem.id, formData);
-    } else {
-      addActivity(formData);
+    setSubmitting(true);
+    try {
+      if (editingItem) {
+        await updateActivity(editingItem.id || editingItem._id, formData);
+        showToast("Activity updated successfully");
+      } else {
+        await addActivity(formData);
+        showToast("Activity added successfully");
+      }
+      setShowAddForm(false);
+      setEditingItem(null);
+      setFormData({
+        title: "",
+        shortDescription: "",
+        imageUrl: "",
+        visible: true,
+        category: "spiritual",
+      });
+    } catch (err) {
+      console.error("Error saving activity:", err);
+      showToast("Failed to save activity", "error");
+    } finally {
+      setSubmitting(false);
     }
-    setShowAddForm(false);
-    setEditingItem(null);
-    setFormData({ 
-      title: "", 
-      shortDescription: "", 
-      imageUrl: "", 
-      visible: true,
-      category: "spiritual"
-    });
+  };
+
+  const handleDelete = async (item) => {
+    if (window.confirm(`Delete "${item.title}"?`)) {
+      try {
+        await deleteActivity(item.id || item._id);
+        showToast("Activity deleted successfully");
+      } catch (err) {
+        console.error("Error deleting activity:", err);
+        showToast("Failed to delete activity", "error");
+      }
+    }
+  };
+
+  const handleToggle = async (id) => {
+    try {
+      await toggleVisibility(id);
+      showToast("Visibility updated");
+    } catch (err) {
+      console.error("Error toggling visibility:", err);
+      showToast("Failed to update visibility", "error");
+    }
   };
 
   const handleCancel = () => {
     setShowAddForm(false);
     setEditingItem(null);
-    setFormData({ 
-      title: "", 
-      shortDescription: "", 
-      imageUrl: "", 
+    setFormData({
+      title: "",
+      shortDescription: "",
+      imageUrl: "",
       visible: true,
-      category: "spiritual"
+      category: "spiritual",
     });
   };
 
@@ -81,7 +131,9 @@ const ActivitiesManager = () => {
     <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Activities Manager</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Activities Manager
+          </h1>
           <p className="text-gray-600 text-sm mt-1">
             Manage activities for the public website
           </p>
@@ -96,7 +148,12 @@ const ActivitiesManager = () => {
 
       {/* Activities List */}
       <div className="space-y-4">
-        {sortedItems.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-amber-600" />
+            <span className="ml-2 text-gray-600">Loading activities...</span>
+          </div>
+        ) : sortedItems.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             No activities yet. Click "Add Activity" to get started.
           </div>
@@ -137,7 +194,7 @@ const ActivitiesManager = () => {
               <div className="flex items-center gap-2">
                 {/* Visibility Toggle */}
                 <button
-                  onClick={() => toggleVisibility(item.id)}
+                  onClick={() => handleToggle(item.id || item._id)}
                   className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
                     item.visible
                       ? "bg-green-100 text-green-700 hover:bg-green-200"
@@ -149,25 +206,45 @@ const ActivitiesManager = () => {
 
                 {/* Move Up */}
                 <button
-                  onClick={() => moveActivity(item.id, "up")}
+                  onClick={() => moveActivity(item.id || item._id, "up")}
                   disabled={index === 0}
                   className="p-2 text-gray-600 hover:text-amber-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   title="Move Up"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 15l7-7 7 7"
+                    />
                   </svg>
                 </button>
 
                 {/* Move Down */}
                 <button
-                  onClick={() => moveActivity(item.id, "down")}
+                  onClick={() => moveActivity(item.id || item._id, "down")}
                   disabled={index === sortedItems.length - 1}
                   className="p-2 text-gray-600 hover:text-amber-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   title="Move Down"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </button>
 
@@ -181,11 +258,7 @@ const ActivitiesManager = () => {
 
                 {/* Delete */}
                 <button
-                  onClick={() => {
-                    if (window.confirm(`Delete "${item.title}"?`)) {
-                      deleteActivity(item.id);
-                    }
-                  }}
+                  onClick={() => handleDelete(item)}
                   className="px-3 py-1 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
                 >
                   Delete
@@ -227,7 +300,10 @@ const ActivitiesManager = () => {
                   required
                   value={formData.shortDescription}
                   onChange={(e) =>
-                    setFormData({ ...formData, shortDescription: e.target.value })
+                    setFormData({
+                      ...formData,
+                      shortDescription: e.target.value,
+                    })
                   }
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -282,19 +358,37 @@ const ActivitiesManager = () => {
               <div className="flex gap-3 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-amber-600 text-white font-semibold rounded-md hover:bg-amber-700 transition-colors"
+                  disabled={submitting}
+                  className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-amber-600 text-white font-semibold rounded-md hover:bg-amber-700 transition-colors disabled:opacity-50"
                 >
+                  {submitting && (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  )}
                   {editingItem ? "Update" : "Add"}
                 </button>
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-md hover:bg-gray-300 transition-colors"
+                  disabled={submitting}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-md hover:bg-gray-300 transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-4 right-4 z-50 animate-in fade-in slide-in-from-bottom-5">
+          <div
+            className={`${
+              toast.type === "error" ? "bg-red-600" : "bg-green-600"
+            } text-white px-6 py-3 rounded-lg shadow-lg`}
+          >
+            <span className="font-medium">{toast.message}</span>
           </div>
         </div>
       )}

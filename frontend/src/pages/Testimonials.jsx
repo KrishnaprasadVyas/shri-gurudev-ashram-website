@@ -1,8 +1,36 @@
+import { useState, useEffect } from "react";
 import SectionHeading from "../components/SectionHeading";
 import TestimonialCard from "../components/TestimonialCard";
-import { testimonials } from "../data/dummyData";
+import { Loader2 } from "lucide-react";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const Testimonials = () => {
+  const [testimonials, setTestimonials] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/public/testimonials`);
+        const data = await response.json();
+        if (data.success) {
+          setTestimonials(data.data || []);
+        } else {
+          setError(data.message || "Failed to load testimonials");
+        }
+      } catch (err) {
+        console.error("Error fetching testimonials:", err);
+        setError("Failed to load testimonials");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTestimonials();
+  }, []);
+
   return (
     <>
       <section className="py-16 px-4 bg-white">
@@ -12,11 +40,26 @@ const Testimonials = () => {
             subtitle="Stories of transformation, gratitude, and spiritual growth"
             center={true}
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-            {testimonials.map((testimonial) => (
-              <TestimonialCard key={testimonial.id} testimonial={testimonial} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-amber-600" />
+            </div>
+          ) : error ? (
+            <div className="text-center py-12 text-red-600">{error}</div>
+          ) : testimonials.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              No testimonials available yet.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+              {testimonials.map((testimonial) => (
+                <TestimonialCard
+                  key={testimonial._id || testimonial.id}
+                  testimonial={testimonial}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

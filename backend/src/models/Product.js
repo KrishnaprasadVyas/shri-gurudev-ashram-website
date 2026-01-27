@@ -152,7 +152,7 @@ const productSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Indexes
@@ -175,7 +175,7 @@ productSchema.virtual("isLowStock").get(function () {
 });
 
 // Pre-save middleware to generate slug
-productSchema.pre("save", function (next) {
+productSchema.pre("save", function () {
   if (!this.slug && this.name) {
     this.slug =
       this.name
@@ -185,7 +185,6 @@ productSchema.pre("save", function (next) {
       "-" +
       Date.now().toString(36);
   }
-  next();
 });
 
 // Enable virtuals in JSON
