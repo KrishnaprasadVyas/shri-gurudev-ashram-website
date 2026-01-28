@@ -3,8 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { formatCurrency, formatDate } from "../../utils/helpers";
 import { Plus, Download, RefreshCw } from "lucide-react";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { API_BASE_URL, parseJsonResponse } from "../../utils/api";
 
 const DonationsView = () => {
   const navigate = useNavigate();
@@ -22,6 +21,7 @@ const DonationsView = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Fetch donations from API
   // Fetch donations from API
   const fetchDonations = async () => {
     setIsLoading(true);
@@ -47,7 +47,7 @@ const DonationsView = () => {
         throw new Error("Failed to fetch donations");
       }
 
-      const data = await response.json();
+      const data = await parseJsonResponse(response);
       setDonations(data);
     } catch (err) {
       setError(err.message || "Failed to load donations");
@@ -90,7 +90,8 @@ const DonationsView = () => {
 
   const handleDownloadReceipt = (donation) => {
     if (donation.receiptUrl) {
-      window.open(`${API_BASE_URL.replace("/api", "")}${donation.receiptUrl}`, "_blank");
+      // Use relative path for receipts served from same origin
+      window.open(donation.receiptUrl, "_blank");
     }
   };
 

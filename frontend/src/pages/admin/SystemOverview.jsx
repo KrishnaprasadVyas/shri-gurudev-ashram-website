@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { formatCurrency } from "../../utils/helpers";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { API_BASE_URL, parseJsonResponse } from "../../utils/api";
 
 const SystemOverview = () => {
   const [donations, setDonations] = useState([]);
@@ -33,8 +32,8 @@ const SystemOverview = () => {
           throw new Error("Failed to fetch data");
         }
 
-        const donationsData = await donationsRes.json();
-        const reportsData = await reportsRes.json();
+        const donationsData = await parseJsonResponse(donationsRes);
+        const reportsData = await parseJsonResponse(reportsRes);
 
         setDonations(donationsData);
         setReports(reportsData);

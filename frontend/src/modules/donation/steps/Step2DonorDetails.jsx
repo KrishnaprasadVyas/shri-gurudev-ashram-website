@@ -2,8 +2,7 @@ import { useState } from "react";
 import FormInput from "../../../components/FormInput";
 import PrimaryButton from "../../../components/PrimaryButton";
 import { validateEmail, validatePhone } from "../../../utils/helpers";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { API_BASE_URL, parseJsonResponse } from "../../../utils/api";
 
 const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
   const [errors, setErrors] = useState({});
@@ -60,7 +59,7 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
         },
       );
 
-      const result = await response.json();
+      const result = await parseJsonResponse(response);
 
       if (!response.ok) {
         throw new Error(result.message || "Failed to send verification email");
@@ -107,7 +106,7 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
       });
 
       if (response.ok) {
-        const result = await response.json();
+        const result = await parseJsonResponse(response);
         if (result.email === data.email && result.emailVerified) {
           updateData({ emailVerified: true });
           setEmailVerificationSent(false);
@@ -271,7 +270,7 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
         body: JSON.stringify({ mobile: data.mobile }),
       });
 
-      const result = await response.json();
+      const result = await parseJsonResponse(response);
 
       if (!response.ok) {
         throw new Error(result.message || "Failed to send OTP");
@@ -307,7 +306,7 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
         body: JSON.stringify({ mobile: data.mobile, otp }),
       });
 
-      const result = await response.json();
+      const result = await parseJsonResponse(response);
 
       if (!response.ok) {
         throw new Error(result.message || "Invalid OTP");
@@ -338,7 +337,7 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
         body: JSON.stringify({ mobile: data.mobile }),
       });
 
-      const result = await response.json();
+      const result = await parseJsonResponse(response);
 
       if (!response.ok) {
         throw new Error(result.message || "Failed to resend OTP");

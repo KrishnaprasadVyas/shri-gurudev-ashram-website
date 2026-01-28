@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { formatCurrency } from "../../utils/helpers";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { API_BASE_URL, parseJsonResponse } from "../../utils/api";
 
 const ExportsView = () => {
   const [donations, setDonations] = useState([]);
@@ -27,7 +26,7 @@ const ExportsView = () => {
           throw new Error("Failed to fetch donations");
         }
 
-        const data = await response.json();
+        const data = await parseJsonResponse(response);
         setDonations(data);
       } catch (err) {
         console.error("Error fetching data:", err);

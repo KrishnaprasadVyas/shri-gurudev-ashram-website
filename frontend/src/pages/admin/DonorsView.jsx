@@ -1,8 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { formatCurrency } from "../../utils/helpers";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { API_BASE_URL, parseJsonResponse } from "../../utils/api";
 
 const DonorsView = () => {
   const { user } = useAuth();
@@ -37,7 +36,7 @@ const DonorsView = () => {
           throw new Error("Failed to fetch donations");
         }
 
-        const donationsData = await donationsRes.json();
+        const donationsData = await parseJsonResponse(donationsRes);
         setDonations(donationsData);
 
         // Build donors list from donations (unique by donor name + ID)

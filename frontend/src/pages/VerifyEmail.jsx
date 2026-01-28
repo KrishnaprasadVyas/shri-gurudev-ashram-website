@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import PrimaryButton from "../components/PrimaryButton";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { API_BASE_URL, parseJsonResponse } from "../utils/api";
 
 /**
  * Email Verification Page
@@ -31,7 +30,7 @@ const VerifyEmail = () => {
         const response = await fetch(
           `${API_BASE_URL}/auth/verify-email?token=${encodeURIComponent(token)}`,
         );
-        const result = await response.json();
+        const result = await parseJsonResponse(response);
 
         if (response.ok) {
           setStatus("success");

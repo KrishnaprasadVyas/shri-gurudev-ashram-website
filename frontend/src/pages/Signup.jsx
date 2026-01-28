@@ -3,8 +3,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { validateEmail } from "../utils/helpers";
 import { useAuth } from "../context/AuthContext";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { API_BASE_URL, parseJsonResponse } from "../utils/api";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -47,7 +46,7 @@ const Signup = () => {
         body: JSON.stringify({ mobile: fullMobile }),
       });
 
-      const data = await response.json();
+      const data = await parseJsonResponse(response);
 
       if (!response.ok) {
         throw new Error(data.message || "Failed to send OTP");
@@ -93,7 +92,7 @@ const Signup = () => {
         body: JSON.stringify({ mobile: fullMobile, otp }),
       });
 
-      const data = await response.json();
+      const data = await parseJsonResponse(response);
 
       if (!response.ok) {
         throw new Error(data.message || "Invalid OTP");

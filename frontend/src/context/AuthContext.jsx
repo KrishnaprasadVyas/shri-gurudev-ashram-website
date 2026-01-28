@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { API_BASE_URL, parseJsonResponse } from "../utils/api";
 
 const AuthContext = createContext(null);
 
@@ -54,7 +53,7 @@ export const AuthProvider = ({ children }) => {
         throw new Error("Failed to fetch user");
       }
 
-      const userData = await response.json();
+      const userData = await parseJsonResponse(response);
       setUser(userData);
       return userData;
     } catch (error) {

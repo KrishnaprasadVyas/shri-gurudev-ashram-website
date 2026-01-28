@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import SectionHeading from "../components/SectionHeading";
 import TestimonialCard from "../components/TestimonialCard";
 import { Loader2 } from "lucide-react";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { API_BASE_URL, parseJsonResponse } from "../utils/api";
 
 const Testimonials = () => {
   const [testimonials, setTestimonials] = useState([]);
@@ -14,7 +13,7 @@ const Testimonials = () => {
     const fetchTestimonials = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/public/testimonials`);
-        const data = await response.json();
+        const data = await parseJsonResponse(response);
         if (data.success) {
           setTestimonials(data.data || []);
         } else {

@@ -4,8 +4,7 @@ import SectionHeading from "../components/SectionHeading";
 import PrimaryButton from "../components/PrimaryButton";
 import { formatCurrency } from "../utils/helpers";
 import { useAuth } from "../context/AuthContext";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { API_BASE_URL, parseJsonResponse } from "../utils/api";
 
 const MyDonations = () => {
   const { user, token, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -42,7 +41,7 @@ const MyDonations = () => {
         throw new Error("Failed to fetch donations");
       }
 
-      const data = await response.json();
+      const data = await parseJsonResponse(response);
       setDonations(data);
     } catch (err) {
       setError(err.message);

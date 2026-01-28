@@ -1,8 +1,7 @@
 import { useState, useCallback } from "react";
 import PrimaryButton from "../../../components/PrimaryButton";
 import { formatCurrency } from "../../../utils/helpers";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { API_BASE_URL, parseJsonResponse } from "../../../utils/api";
 
 /**
  * Step4Payment - Handles payment processing
@@ -34,7 +33,7 @@ const Step4Payment = ({ data, updateData, nextStep, prevStep }) => {
   /**
    * Make authenticated API request
    */
-  const apiRequest = async (endpoint, body) => {
+  const localApiRequest = async (endpoint, body) => {
     const token = getAuthToken();
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -46,12 +45,13 @@ const Step4Payment = ({ data, updateData, nextStep, prevStep }) => {
       body: JSON.stringify(body),
     });
 
+    const data = await parseJsonResponse(response);
+
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `API Error: ${response.status}`);
+      throw new Error(data.message || `API Error: ${response.status}`);
     }
 
-    return response.json();
+    return data;
   };
 
   /**
@@ -91,7 +91,7 @@ const Step4Payment = ({ data, updateData, nextStep, prevStep }) => {
       otpVerified: data.otpVerified || false,
     };
 
-    const result = await apiRequest("/donations/create", payload);
+    const result = await localApiRequest("/donations/create", payload);
     return result.donationId;
   };
 
@@ -99,7 +99,7 @@ const Step4Payment = ({ data, updateData, nextStep, prevStep }) => {
    * Step 2: Create Razorpay order
    */
   const createOrder = async (donationId) => {
-    const result = await apiRequest("/donations/create-order", { donationId });
+    const result = await localApiRequest("/donations/create-order", { donationId });
     return result;
   };
 

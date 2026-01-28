@@ -3,6 +3,7 @@ import SectionHeading from "../components/SectionHeading";
 import FormInput from "../components/FormInput";
 import PrimaryButton from "../components/PrimaryButton";
 import { validateEmail, validatePhone } from "../utils/helpers";
+import { API_BASE_URL, parseJsonResponse } from "../utils/api";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -64,7 +65,7 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/contact`, {
+      const res = await fetch(`${API_BASE_URL}/contact`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -72,7 +73,7 @@ const Contact = () => {
         body: JSON.stringify(formData),
       });
 
-      const data = await res.json();
+      const data = await parseJsonResponse(res);
 
       if (!res.ok) throw new Error(data.message);
 

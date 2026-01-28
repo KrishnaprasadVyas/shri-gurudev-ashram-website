@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { formatCurrency } from "../../utils/helpers";
-
-// API base URL from environment
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { API_BASE_URL, parseJsonResponse } from "../../utils/api";
 
 // Trophy icon for top donors
 const TrophyIcon = ({ className }) => (
@@ -54,7 +52,7 @@ const DonorList = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/public/donations/recent`);
       if (response.ok) {
-        const data = await response.json();
+        const data = await parseJsonResponse(response);
         setRecentDonations(data);
         // Initialize display with first 5 donations
         setDisplayDonations(data.slice(0, 5));
@@ -71,7 +69,7 @@ const DonorList = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/public/donations/top`);
       if (response.ok) {
-        const data = await response.json();
+        const data = await parseJsonResponse(response);
         setTopDonors(data);
       }
     } catch (error) {

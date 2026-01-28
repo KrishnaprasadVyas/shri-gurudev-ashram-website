@@ -4,8 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { donationHeads } from "../../data/dummyData";
 import { formatCurrency } from "../../utils/helpers";
 import { ArrowLeft, CheckCircle, Download } from "lucide-react";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { API_BASE_URL, parseJsonResponse } from "../../utils/api";
 
 const CashDonationForm = () => {
   const navigate = useNavigate();
@@ -165,7 +164,7 @@ const CashDonationForm = () => {
         body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
+      const data = await parseJsonResponse(response);
 
       if (!response.ok) {
         throw new Error(data.message || "Failed to create cash donation");
@@ -189,7 +188,8 @@ const CashDonationForm = () => {
 
   const handleDownloadReceipt = () => {
     if (success?.receiptUrl) {
-      window.open(`${API_BASE_URL.replace("/api", "")}${success.receiptUrl}`, "_blank");
+      // Use relative path for receipts served from same origin
+      window.open(success.receiptUrl, "_blank");
     }
   };
 

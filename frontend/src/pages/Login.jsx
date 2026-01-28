@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import SectionHeading from "../components/SectionHeading";
 import { useAuth } from "../context/AuthContext";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { API_BASE_URL, parseJsonResponse } from "../utils/api";
 
 const COUNTRY_OPTIONS = [
   { value: "IN", label: "India", dialCode: "+91", length: 10 },
@@ -82,7 +81,7 @@ const Login = () => {
         body: JSON.stringify({ mobile: fullMobile }),
       });
 
-      const data = await response.json();
+      const data = await parseJsonResponse(response);
 
       if (!response.ok) {
         throw new Error(data.message || "Failed to send OTP");
@@ -118,7 +117,7 @@ const Login = () => {
         body: JSON.stringify({ mobile: fullMobile, otp }),
       });
 
-      const data = await response.json();
+      const data = await parseJsonResponse(response);
 
       if (!response.ok) {
         throw new Error(data.message || "Invalid OTP");

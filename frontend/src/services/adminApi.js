@@ -3,23 +3,18 @@
  * Handles all API calls for admin panel operations
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
-/**
- * Get auth token from localStorage
- */
-const getToken = () => localStorage.getItem("token");
+import { API_BASE_URL, getAuthToken, parseJsonResponse } from '../utils/api';
 
 /**
  * Create headers with auth token
  */
 const getAuthHeaders = () => ({
   "Content-Type": "application/json",
-  Authorization: `Bearer ${getToken()}`,
+  Authorization: `Bearer ${getAuthToken()}`,
 });
 
 /**
- * Generic API request handler
+ * Generic API request handler with proper error handling
  */
 const apiRequest = async (endpoint, options = {}) => {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -30,7 +25,7 @@ const apiRequest = async (endpoint, options = {}) => {
     },
   });
 
-  const data = await response.json();
+  const data = await parseJsonResponse(response);
 
   if (!response.ok) {
     throw new Error(data.message || "API request failed");

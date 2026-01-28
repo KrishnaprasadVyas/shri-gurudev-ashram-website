@@ -3,8 +3,8 @@ import PrimaryButton from "../../../components/PrimaryButton";
 import { formatCurrency } from "../../../utils/helpers";
 import { useDonations } from "../../../context/DonationsContext";
 import { useEffect, useRef, useState, useCallback } from "react";
+import { API_BASE_URL, parseJsonResponse } from "../../../utils/api";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const POLL_INTERVAL = 4000; // 4 seconds
 const MAX_POLL_TIME = 30000; // 30 seconds
 
@@ -41,7 +41,7 @@ const Step5Success = ({ data, resetFlow }) => {
       );
 
       if (response.ok) {
-        const result = await response.json();
+        const result = await parseJsonResponse(response);
         setPaymentStatus(result.status);
 
         // Stop polling on terminal states
