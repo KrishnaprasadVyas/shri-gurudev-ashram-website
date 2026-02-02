@@ -115,6 +115,26 @@ export const activitiesApi = {
       body: JSON.stringify({ orderedIds }),
     }),
 
+  // Upload activity image
+  uploadImage: async (file) => {
+    const formData = new FormData();
+    formData.append("image", file);
+
+    const response = await fetch(`${API_BASE_URL}/admin/website/activities/upload`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+      body: formData,
+    });
+
+    const data = await parseJsonResponse(response);
+    if (!response.ok) {
+      throw new Error(data.message || "Upload failed");
+    }
+    return data;
+  },
+
   // Get visible activities (public)
   getVisible: () => apiRequest("/public/activities"),
 };
@@ -159,6 +179,26 @@ export const eventsApi = {
     apiRequest(`/admin/website/events/${id}/feature`, {
       method: "PATCH",
     }),
+
+  // Upload event image
+  uploadImage: async (file) => {
+    const formData = new FormData();
+    formData.append("image", file);
+
+    const response = await fetch(`${API_BASE_URL}/admin/website/events/upload`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+      body: formData,
+    });
+
+    const data = await parseJsonResponse(response);
+    if (!response.ok) {
+      throw new Error(data.message || "Upload failed");
+    }
+    return data;
+  },
 
   // Get published events (public)
   getPublished: () => apiRequest("/public/events"),
@@ -273,7 +313,81 @@ export const galleryApi = {
       body: JSON.stringify({ orderedIds }),
     }),
 
-  // Add images to category
+  // ==================== IMAGE UPLOAD (NEW) ====================
+
+  /**
+   * Upload single image file
+   * Returns { url, thumbnailUrl, originalName }
+   */
+  uploadImage: async (file) => {
+    const formData = new FormData();
+    formData.append("image", file);
+
+    const response = await fetch(`${API_BASE_URL}/admin/website/gallery/upload`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+        // Note: Don't set Content-Type for FormData - browser sets it with boundary
+      },
+      body: formData,
+    });
+
+    const data = await parseJsonResponse(response);
+    if (!response.ok) {
+      throw new Error(data.message || "Upload failed");
+    }
+    return data;
+  },
+
+  /**
+   * Upload multiple image files
+   * Returns { uploaded: [...], failed: [...] }
+   */
+  uploadImages: async (files) => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("images", file));
+
+    const response = await fetch(`${API_BASE_URL}/admin/website/gallery/upload/multiple`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+      body: formData,
+    });
+
+    const data = await parseJsonResponse(response);
+    if (!response.ok) {
+      throw new Error(data.message || "Upload failed");
+    }
+    return data;
+  },
+
+  /**
+   * Upload images directly to a category
+   * Combines upload + add to category in one request
+   */
+  uploadToCategory: async (categoryId, files) => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("images", file));
+
+    const response = await fetch(`${API_BASE_URL}/admin/website/gallery/${categoryId}/upload`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+      body: formData,
+    });
+
+    const data = await parseJsonResponse(response);
+    if (!response.ok) {
+      throw new Error(data.message || "Upload failed");
+    }
+    return data;
+  },
+
+  // ==================== IMAGE MANAGEMENT ====================
+
+  // Add images to category (by URL - for backward compatibility)
   addImages: (categoryId, images) =>
     apiRequest(`/admin/website/gallery/${categoryId}/images`, {
       method: "POST",
@@ -287,9 +401,15 @@ export const galleryApi = {
       body: JSON.stringify(data),
     }),
 
-  // Delete image
+  // Delete image (keeps file for old /assets/ images)
   deleteImage: (categoryId, imageId) =>
     apiRequest(`/admin/website/gallery/${categoryId}/images/${imageId}`, {
+      method: "DELETE",
+    }),
+
+  // Delete image with file cleanup (for uploaded images)
+  deleteImageWithFile: (categoryId, imageId) =>
+    apiRequest(`/admin/website/gallery/${categoryId}/images/${imageId}/file`, {
       method: "DELETE",
     }),
 

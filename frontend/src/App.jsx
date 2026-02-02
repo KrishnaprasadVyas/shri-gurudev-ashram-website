@@ -21,7 +21,6 @@ import Gallery from "./pages/Gallery";
 import Testimonials from "./pages/Testimonials";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
-import Signup from "./pages/Signup";
 import ActivityDetail from "./pages/ActivityDetail";
 
 // Admin Pages
@@ -80,7 +79,6 @@ function App() {
                         <Route path="testimonials" element={<Testimonials />} />
                         <Route path="contact" element={<Contact />} />
                         <Route path="login" element={<Login />} />
-                        <Route path="signup" element={<Signup />} />
 
                         {/* Email Verification - public route */}
                         <Route path="verify-email" element={<VerifyEmail />} />

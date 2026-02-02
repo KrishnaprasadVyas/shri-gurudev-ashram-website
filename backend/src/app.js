@@ -31,6 +31,13 @@ app.use(express.json({ limit: "1mb" }));
 // Serve receipts as static files
 app.use("/receipts", express.static(path.join(__dirname, "../receipts")));
 
+// Serve uploaded gallery images as static files
+// Images stored in backend/uploads/gallery/ and backend/uploads/gallery/thumbnails/
+app.use("/uploads", express.static(path.join(__dirname, "../uploads"), {
+  maxAge: "7d", // Cache for 7 days (images rarely change)
+  immutable: true, // Files won't change (UUID names)
+}));
+
 app.use("/api/auth", require("./routes/auth.routes"));
 app.use("/api/test", require("./routes/test.routes"));
 app.use("/api/donations", require("./routes/donation.routes"));

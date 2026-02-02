@@ -32,6 +32,7 @@ export const GalleryProvider = ({ children }) => {
       setGalleryCategories(categories);
 
       // Flatten images for backward compatibility
+      // Include thumbnailUrl for new uploads
       const flattenedImages = [];
       categories.forEach((cat) => {
         (cat.images || []).forEach((img, imgIndex) => {
@@ -41,7 +42,11 @@ export const GalleryProvider = ({ children }) => {
             category: cat.slug || cat.name,
             categoryName: cat.name,
             imageUrl: img.url,
+            url: img.url, // Alias for compatibility
+            src: img.url, // Alias for GalleryGrid
+            thumbnailUrl: img.thumbnailUrl || null, // For new uploads
             title: img.title || cat.name,
+            altText: img.altText || '',
             order: flattenedImages.length + 1,
             visible: img.isVisible !== false && cat.isVisible !== false,
           });
@@ -72,6 +77,7 @@ export const GalleryProvider = ({ children }) => {
       setGalleryCategories(categories);
 
       // Flatten images for backward compatibility
+      // Include thumbnailUrl for new uploads
       const flattenedImages = [];
       categories.forEach((cat) => {
         (cat.images || []).forEach((img, imgIndex) => {
@@ -81,7 +87,11 @@ export const GalleryProvider = ({ children }) => {
             category: cat.slug || cat.name,
             categoryName: cat.name,
             imageUrl: img.url,
+            url: img.url, // Alias for compatibility
+            src: img.url, // Alias for GalleryGrid
+            thumbnailUrl: img.thumbnailUrl || null, // For new uploads
             title: img.title || cat.name,
+            altText: img.altText || '',
             order: flattenedImages.length + 1,
             visible: true,
           });

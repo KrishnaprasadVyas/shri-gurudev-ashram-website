@@ -1,13 +1,14 @@
 const GalleryCategory = require("../models/GalleryCategory");
+const imageService = require("../services/image.service");
 
 /**
  * GALLERY CONTROLLER
  * Handles CRUD operations for folder-based gallery
  *
- * IMPORTANT:
- * - Images exist in /public/assets/Brochure/**
- * - MongoDB stores ONLY URLs and metadata
- * - Frontend should NOT auto-scan folders
+ * IMAGE URL STRATEGY:
+ * - OLD images: /assets/Brochure/** (served by frontend, no thumbnails)
+ * - NEW uploads: /uploads/gallery/** (served by backend, with thumbnails)
+ * - Both work simultaneously - no migration required for existing images
  */
 
 // ==================== PUBLIC ROUTES ====================
@@ -497,7 +498,11 @@ exports.addImagesToGalleryCategory = async (req, res) => {
     res.status(201).json({
       success: true,
       message: `${newImages.length} images added successfully`,
-      data: category,
+      data: {
+        categoryId: category._id,
+        addedCount: newImages.length,
+        totalImages: category.images.length,
+      },
     });
   } catch (error) {
     console.error("Error adding images:", error);
@@ -548,7 +553,14 @@ exports.updateGalleryImage = async (req, res) => {
     res.json({
       success: true,
       message: "Image updated successfully",
-      data: category,
+      data: {
+        _id: image._id,
+        url: image.url,
+        title: image.title,
+        altText: image.altText,
+        order: image.order,
+        isVisible: image.isVisible,
+      },
     });
   } catch (error) {
     console.error("Error updating image:", error);
@@ -591,7 +603,6 @@ exports.deleteGalleryImage = async (req, res) => {
     res.json({
       success: true,
       message: "Image deleted successfully",
-      data: category,
     });
   } catch (error) {
     console.error("Error deleting image:", error);
@@ -641,13 +652,219 @@ exports.reorderGalleryImages = async (req, res) => {
     res.json({
       success: true,
       message: "Images reordered successfully",
-      data: category,
     });
   } catch (error) {
     console.error("Error reordering images:", error);
     res.status(500).json({
       success: false,
       message: "Failed to reorder images",
+    });
+  }
+};
+
+// ==================== IMAGE UPLOAD ENDPOINTS ====================
+
+/**
+ * POST /api/admin/website/gallery/upload
+ * Upload single image and get URL
+ * Returns processed image URL for use in category creation/update
+ */
+exports.uploadSingleImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No image file provided",
+      });
+    }
+
+    const result = await imageService.processAndSaveImage(
+      req.file.buffer,
+      req.file.originalname
+    );
+
+    res.status(201).json({
+      success: true,
+      message: "Image uploaded successfully",
+      data: {
+        url: result.url,
+        thumbnailUrl: result.thumbnailUrl,
+        originalName: result.originalName,
+      },
+    });
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to upload image",
+    });
+  }
+};
+
+/**
+ * POST /api/admin/website/gallery/upload/multiple
+ * Upload multiple images at once
+ * Returns array of processed image URLs
+ */
+exports.uploadMultipleImages = async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No image files provided",
+      });
+    }
+
+    const results = await imageService.processMultipleImages(req.files);
+
+    const successful = results.filter((r) => r.success);
+    const failed = results.filter((r) => !r.success);
+
+    res.status(201).json({
+      success: true,
+      message: `${successful.length} images uploaded successfully${failed.length > 0 ? `, ${failed.length} failed` : ""}`,
+      data: {
+        uploaded: successful.map((r) => ({
+          url: r.url,
+          thumbnailUrl: r.thumbnailUrl,
+          originalName: r.originalName,
+        })),
+        failed: failed.map((r) => ({
+          originalName: r.originalName,
+          error: r.error,
+        })),
+      },
+    });
+  } catch (error) {
+    console.error("Error uploading images:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to upload images",
+    });
+  }
+};
+
+/**
+ * POST /api/admin/website/gallery/:id/upload
+ * Upload images directly to a category
+ * Combines upload + add to category in single request
+ */
+exports.uploadImagesToCategory = async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No image files provided",
+      });
+    }
+
+    const category = await GalleryCategory.findById(req.params.id);
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: "Gallery category not found",
+      });
+    }
+
+    // Process all uploaded images
+    const results = await imageService.processMultipleImages(req.files);
+    const successful = results.filter((r) => r.success);
+
+    if (successful.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "All image uploads failed",
+      });
+    }
+
+    // Get current max order
+    const maxOrder =
+      category.images.length > 0
+        ? Math.max(...category.images.map((img) => img.order))
+        : -1;
+
+    // Add processed images to category
+    const newImages = successful.map((img, index) => ({
+      url: img.url,
+      thumbnailUrl: img.thumbnailUrl,
+      title: img.originalName.replace(/\.[^/.]+$/, ""), // Filename without extension
+      altText: "",
+      order: maxOrder + 1 + index,
+      isVisible: true,
+    }));
+
+    category.images.push(...newImages);
+    category.updatedBy = req.user.id;
+
+    await category.save();
+
+    const failed = results.filter((r) => !r.success);
+
+    res.status(201).json({
+      success: true,
+      message: `${successful.length} images uploaded and added to category${failed.length > 0 ? `, ${failed.length} failed` : ""}`,
+      data: {
+        categoryId: category._id,
+        uploaded: newImages.length,
+        totalImages: category.images.length,
+        failed: failed.length,
+      },
+    });
+  } catch (error) {
+    console.error("Error uploading images to category:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to upload images",
+    });
+  }
+};
+
+/**
+ * DELETE /api/admin/website/gallery/:id/images/:imageId/file
+ * Delete image file when removing from category
+ * Only deletes files from /uploads/, not /assets/
+ */
+exports.deleteGalleryImageWithFile = async (req, res) => {
+  try {
+    const category = await GalleryCategory.findById(req.params.id);
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: "Gallery category not found",
+      });
+    }
+
+    const image = category.images.id(req.params.imageId);
+
+    if (!image) {
+      return res.status(404).json({
+        success: false,
+        message: "Image not found",
+      });
+    }
+
+    // Delete file if it's an uploaded image (not old /assets/ image)
+    if (image.url && image.url.startsWith("/uploads/")) {
+      await imageService.deleteImage(image.url);
+    }
+
+    // Remove from category
+    image.deleteOne();
+    category.updatedBy = req.user.id;
+
+    await category.save();
+
+    res.json({
+      success: true,
+      message: "Image deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting image with file:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete image",
     });
   }
 };

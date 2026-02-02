@@ -1,4 +1,5 @@
 const Activity = require("../models/Activity");
+const imageService = require("../services/image.service");
 
 /**
  * ACTIVITY CONTROLLER
@@ -233,7 +234,10 @@ exports.createActivity = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Activity created successfully",
-      data: activity,
+      data: {
+        _id: activity._id,
+        title: activity.title,
+      },
     });
   } catch (error) {
     console.error("Error creating activity:", error);
@@ -310,7 +314,10 @@ exports.updateActivity = async (req, res) => {
     res.json({
       success: true,
       message: "Activity updated successfully",
-      data: activity,
+      data: {
+        _id: activity._id,
+        title: activity.title,
+      },
     });
   } catch (error) {
     console.error("Error updating activity:", error);
@@ -479,7 +486,10 @@ exports.addSubitem = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Subitem added successfully",
-      data: activity,
+      data: {
+        subitem,
+        totalSubitems: activity.subitems.length,
+      },
     });
   } catch (error) {
     console.error("Error adding subitem:", error);
@@ -536,7 +546,14 @@ exports.updateSubitem = async (req, res) => {
     res.json({
       success: true,
       message: "Subitem updated successfully",
-      data: activity,
+      data: {
+        _id: subitem._id,
+        key: subitem.key,
+        title: subitem.title,
+        description: subitem.description,
+        order: subitem.order,
+        isVisible: subitem.isVisible,
+      },
     });
   } catch (error) {
     console.error("Error updating subitem:", error);
@@ -579,13 +596,51 @@ exports.deleteSubitem = async (req, res) => {
     res.json({
       success: true,
       message: "Subitem deleted successfully",
-      data: activity,
     });
   } catch (error) {
     console.error("Error deleting subitem:", error);
     res.status(500).json({
       success: false,
       message: "Failed to delete subitem",
+    });
+  }
+};
+
+// ==================== IMAGE UPLOAD ====================
+
+/**
+ * POST /api/admin/website/activities/upload
+ * Upload image for activity
+ * Returns processed image URL
+ */
+exports.uploadImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No image file provided",
+      });
+    }
+
+    const result = await imageService.processAndSaveImage(
+      req.file.buffer,
+      req.file.originalname
+    );
+
+    res.status(201).json({
+      success: true,
+      message: "Image uploaded successfully",
+      data: {
+        url: result.url,
+        thumbnailUrl: result.thumbnailUrl,
+        originalName: result.originalName,
+      },
+    });
+  } catch (error) {
+    console.error("Error uploading activity image:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to upload image",
     });
   }
 };

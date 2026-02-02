@@ -258,7 +258,10 @@ exports.createTestimonial = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Testimonial created successfully",
-      data: testimonial,
+      data: {
+        _id: testimonial._id,
+        name: testimonial.name,
+      },
     });
   } catch (error) {
     console.error("Error creating testimonial:", error);
@@ -313,7 +316,10 @@ exports.updateTestimonial = async (req, res) => {
     res.json({
       success: true,
       message: "Testimonial updated successfully",
-      data: testimonial,
+      data: {
+        _id: testimonial._id,
+        name: testimonial.name,
+      },
     });
   } catch (error) {
     console.error("Error updating testimonial:", error);
@@ -393,7 +399,7 @@ exports.toggleTestimonialApproval = async (req, res) => {
     res.json({
       success: true,
       message: `Testimonial ${testimonial.isApproved ? "approved" : "unapproved"} successfully`,
-      data: testimonial,
+      data: { isApproved: testimonial.isApproved },
     });
   } catch (error) {
     console.error("Error toggling testimonial approval:", error);
@@ -428,7 +434,7 @@ exports.approveTestimonial = async (req, res) => {
     res.json({
       success: true,
       message: "Testimonial approved successfully",
-      data: testimonial,
+      data: { isApproved: testimonial.isApproved },
     });
   } catch (error) {
     console.error("Error approving testimonial:", error);

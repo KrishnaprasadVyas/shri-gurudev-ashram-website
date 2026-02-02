@@ -20,8 +20,8 @@ const donationSchema = new mongoose.Schema(
       address: { type: String, required: true },
       anonymousDisplay: { type: Boolean, default: false },
       dob: { type: Date, required: true },
-      idType: { type: String, enum: ["PAN", "AADHAAR"], required: true },
-      idNumber: { type: String, required: true }, // Stored as-is, masked only in receipts/display
+      idType: { type: String, enum: ["PAN"], default: "PAN", required: true },
+      idNumber: { type: String, required: true }, // PAN number stored as-is
     },
 
     // === DONATION DETAILS ===

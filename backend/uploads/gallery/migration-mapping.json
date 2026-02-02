@@ -1,0 +1,579 @@
+{
+  "createdAt": "2026-02-02T13:21:06.880Z",
+  "totalImages": 46,
+  "successCount": 46,
+  "failCount": 0,
+  "mapping": {
+    "/assets/Brochure/Adivasi/0.JPG": {
+      "url": "/uploads/gallery/f1537ee4-0ceb-40a8-876c-e5e711cfd613.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_f1537ee4-0ceb-40a8-876c-e5e711cfd613.webp"
+    },
+    "/assets/Brochure/Adivasi/00.JPG": {
+      "url": "/uploads/gallery/3792bcab-2dda-4104-9b6d-78c45c071ede.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_3792bcab-2dda-4104-9b6d-78c45c071ede.webp"
+    },
+    "/assets/Brochure/Adivasi/1.JPG": {
+      "url": "/uploads/gallery/1508c463-09aa-457a-9728-c911126d8c1a.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_1508c463-09aa-457a-9728-c911126d8c1a.webp"
+    },
+    "/assets/Brochure/Adivasi/10.JPG": {
+      "url": "/uploads/gallery/5b1b296d-9fe9-4ad4-afed-5514ef5d19ce.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_5b1b296d-9fe9-4ad4-afed-5514ef5d19ce.webp"
+    },
+    "/assets/Brochure/Adivasi/11.JPG": {
+      "url": "/uploads/gallery/d1ac4e18-eeb1-42be-99c3-617a3e6d6c15.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_d1ac4e18-eeb1-42be-99c3-617a3e6d6c15.webp"
+    },
+    "/assets/Brochure/Adivasi/12.JPG": {
+      "url": "/uploads/gallery/3a4caf54-62e5-4991-aa18-35dc332162fe.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_3a4caf54-62e5-4991-aa18-35dc332162fe.webp"
+    },
+    "/assets/Brochure/Adivasi/2.jpg": {
+      "url": "/uploads/gallery/0df1812a-e033-49f9-8ce3-aa3ff1b55683.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_0df1812a-e033-49f9-8ce3-aa3ff1b55683.webp"
+    },
+    "/assets/Brochure/Adivasi/3.jpg": {
+      "url": "/uploads/gallery/c594fa09-a894-44bb-82c8-9f278dc76281.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_c594fa09-a894-44bb-82c8-9f278dc76281.webp"
+    },
+    "/assets/Brochure/Adivasi/4.JPG": {
+      "url": "/uploads/gallery/f991f667-4e22-40fb-8d6e-435d14576147.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_f991f667-4e22-40fb-8d6e-435d14576147.webp"
+    },
+    "/assets/Brochure/Adivasi/5.JPG": {
+      "url": "/uploads/gallery/b9d4dc27-2731-490b-ae29-515c2cbcc8cc.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_b9d4dc27-2731-490b-ae29-515c2cbcc8cc.webp"
+    },
+    "/assets/Brochure/Adivasi/6.JPG": {
+      "url": "/uploads/gallery/5896152b-07f4-476e-930d-0dabb45be947.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_5896152b-07f4-476e-930d-0dabb45be947.webp"
+    },
+    "/assets/Brochure/Adivasi/7.JPG": {
+      "url": "/uploads/gallery/ee027d6c-d7d1-42d1-b40b-b2b087842e5a.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_ee027d6c-d7d1-42d1-b40b-b2b087842e5a.webp"
+    },
+    "/assets/Brochure/Adivasi/8.JPG": {
+      "url": "/uploads/gallery/843b8837-2ba6-4b7c-968c-dea131026d33.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_843b8837-2ba6-4b7c-968c-dea131026d33.webp"
+    },
+    "/assets/Brochure/Adivasi/9.JPG": {
+      "url": "/uploads/gallery/720bc66d-706a-4a2f-bda9-9e23e08176aa.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_720bc66d-706a-4a2f-bda9-9e23e08176aa.webp"
+    },
+    "/assets/Brochure/Adivasi/IMG_1179.JPG": {
+      "url": "/uploads/gallery/31903526-e027-4ff1-a4cb-0d018167efb5.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_31903526-e027-4ff1-a4cb-0d018167efb5.webp"
+    },
+    "/assets/Brochure/Adivasi/Medical Camp.jpg": {
+      "url": "/uploads/gallery/4367be07-30a1-472b-8388-ee7eea52d042.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_4367be07-30a1-472b-8388-ee7eea52d042.webp"
+    },
+    "/assets/Brochure/Anath/1.JPG": {
+      "url": "/uploads/gallery/e28433c1-df28-46d0-b724-327d2496f0f4.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_e28433c1-df28-46d0-b724-327d2496f0f4.webp"
+    },
+    "/assets/Brochure/Anath/2.jpg": {
+      "url": "/uploads/gallery/ff51886e-f28b-45d6-a6f8-af35ecac891f.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_ff51886e-f28b-45d6-a6f8-af35ecac891f.webp"
+    },
+    "/assets/Brochure/Anath/3.jpg": {
+      "url": "/uploads/gallery/c225ff51-02eb-4521-ac73-4b7b722ed555.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_c225ff51-02eb-4521-ac73-4b7b722ed555.webp"
+    },
+    "/assets/Brochure/Anath/4.jpg": {
+      "url": "/uploads/gallery/80fe5615-2080-4074-8b6d-6dbb5ac2415d.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_80fe5615-2080-4074-8b6d-6dbb5ac2415d.webp"
+    },
+    "/assets/Brochure/Annadan/1.JPG": {
+      "url": "/uploads/gallery/be04930e-8bec-4d25-9321-d8119cc771af.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_be04930e-8bec-4d25-9321-d8119cc771af.webp"
+    },
+    "/assets/Brochure/Annadan/2.JPG": {
+      "url": "/uploads/gallery/afd963de-ca74-4c20-86e2-1488e8659c1b.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_afd963de-ca74-4c20-86e2-1488e8659c1b.webp"
+    },
+    "/assets/Brochure/Annadan/3.JPG": {
+      "url": "/uploads/gallery/ef547778-1bee-40d9-a10c-acc017badf92.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_ef547778-1bee-40d9-a10c-acc017badf92.webp"
+    },
+    "/assets/Brochure/Goushala/1.jpeg": {
+      "url": "/uploads/gallery/95292a56-9d44-4d11-beb9-18539c87c579.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_95292a56-9d44-4d11-beb9-18539c87c579.webp"
+    },
+    "/assets/Brochure/Goushala/2.jpg": {
+      "url": "/uploads/gallery/9e969753-a762-47a1-b6f8-74fbe7112902.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_9e969753-a762-47a1-b6f8-74fbe7112902.webp"
+    },
+    "/assets/Brochure/Goushala/3.jpg": {
+      "url": "/uploads/gallery/055b3b42-483b-45c0-a389-c2acec9fcb69.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_055b3b42-483b-45c0-a389-c2acec9fcb69.webp"
+    },
+    "/assets/Brochure/Gurukul/1.jpg": {
+      "url": "/uploads/gallery/9b98c631-71e4-4dba-95ae-65b9ea56429a.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_9b98c631-71e4-4dba-95ae-65b9ea56429a.webp"
+    },
+    "/assets/Brochure/Gurukul/2.jpg": {
+      "url": "/uploads/gallery/9a9b9afd-2316-4b65-95ff-33b876967f40.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_9a9b9afd-2316-4b65-95ff-33b876967f40.webp"
+    },
+    "/assets/Brochure/Gurukul/3.jpg": {
+      "url": "/uploads/gallery/e9b05ff8-1636-4f15-ac2a-9214501b509a.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_e9b05ff8-1636-4f15-ac2a-9214501b509a.webp"
+    },
+    "/assets/Brochure/Seva Tirth/01.jpg": {
+      "url": "/uploads/gallery/d19110b4-d250-4ed4-9939-d19a9c0e047c.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_d19110b4-d250-4ed4-9939-d19a9c0e047c.webp"
+    },
+    "/assets/Brochure/Seva Tirth/1.JPG": {
+      "url": "/uploads/gallery/e9907724-a378-4113-b072-8700ef3713c9.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_e9907724-a378-4113-b072-8700ef3713c9.webp"
+    },
+    "/assets/Brochure/Seva Tirth/2.jpg": {
+      "url": "/uploads/gallery/02e7d7aa-da01-4163-b69b-f441cfbf731c.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_02e7d7aa-da01-4163-b69b-f441cfbf731c.webp"
+    },
+    "/assets/Brochure/Seva Tirth/IMG-20231027-WA0081.jpg": {
+      "url": "/uploads/gallery/55a94beb-fb44-43a7-a727-a62e7509904f.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_55a94beb-fb44-43a7-a727-a62e7509904f.webp"
+    },
+    "/assets/Brochure/Shri Gurudev Vidhyalay/1.jpg": {
+      "url": "/uploads/gallery/4da2587f-ca2e-41f0-8f0b-a29b347c7c9e.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_4da2587f-ca2e-41f0-8f0b-a29b347c7c9e.webp"
+    },
+    "/assets/Brochure/Shri Gurudev Vidhyalay/2.jpg": {
+      "url": "/uploads/gallery/5be73f23-1768-469d-a1f4-3fda539e38ab.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_5be73f23-1768-469d-a1f4-3fda539e38ab.webp"
+    },
+    "/assets/Brochure/Shri Gurudev Vidhyalay/3.jpg": {
+      "url": "/uploads/gallery/103024ac-f6df-4c1a-b1a8-c672c110837e.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_103024ac-f6df-4c1a-b1a8-c672c110837e.webp"
+    },
+    "/assets/Brochure/Shri Gurudev Vidhyalay/4.jpg": {
+      "url": "/uploads/gallery/c21b52a3-7886-4825-8bc8-691c979c74a5.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_c21b52a3-7886-4825-8bc8-691c979c74a5.webp"
+    },
+    "/assets/Brochure/Shri Gurudev Vidhyalay/5.jpg": {
+      "url": "/uploads/gallery/0c28f024-cb1d-49a1-acd4-d6733011be94.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_0c28f024-cb1d-49a1-acd4-d6733011be94.webp"
+    },
+    "/assets/Brochure/Utsav/1.JPG": {
+      "url": "/uploads/gallery/0a7bb93b-7dd4-40d3-837b-32e5c98873db.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_0a7bb93b-7dd4-40d3-837b-32e5c98873db.webp"
+    },
+    "/assets/Brochure/Utsav/2.JPG": {
+      "url": "/uploads/gallery/a0e6b8bd-76a1-4238-8c83-e93956b5b539.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_a0e6b8bd-76a1-4238-8c83-e93956b5b539.webp"
+    },
+    "/assets/Brochure/Utsav/3.JPG": {
+      "url": "/uploads/gallery/7f2bb928-2fa9-4e20-8f7b-2591aebef18c.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_7f2bb928-2fa9-4e20-8f7b-2591aebef18c.webp"
+    },
+    "/assets/Brochure/Utsav/4.JPG": {
+      "url": "/uploads/gallery/b1804be1-fefa-4733-bc44-75d212f25b0c.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_b1804be1-fefa-4733-bc44-75d212f25b0c.webp"
+    },
+    "/assets/Brochure/Utsav/5.JPG": {
+      "url": "/uploads/gallery/7de62105-8b43-4b55-ae70-cf0c35a0ca93.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_7de62105-8b43-4b55-ae70-cf0c35a0ca93.webp"
+    },
+    "/assets/Brochure/Utsav/6.JPG": {
+      "url": "/uploads/gallery/88d5b5c1-aa10-4d2f-850e-7559d3427594.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_88d5b5c1-aa10-4d2f-850e-7559d3427594.webp"
+    },
+    "/assets/Brochure/Utsav/7.JPG": {
+      "url": "/uploads/gallery/7c58338b-1793-4dc9-9fcf-7c052bddf662.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_7c58338b-1793-4dc9-9fcf-7c052bddf662.webp"
+    },
+    "/assets/Brochure/Vaishanvi Mata/Vaishanvi Temple_.png": {
+      "url": "/uploads/gallery/84a7a3c4-2bb4-41e8-bcc7-86ac5951fb16.webp",
+      "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_84a7a3c4-2bb4-41e8-bcc7-86ac5951fb16.webp"
+    }
+  },
+  "categories": [
+    {
+      "name": "Adivasi",
+      "slug": "adivasi",
+      "images": [
+        {
+          "url": "/uploads/gallery/f1537ee4-0ceb-40a8-876c-e5e711cfd613.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_f1537ee4-0ceb-40a8-876c-e5e711cfd613.webp",
+          "title": "0",
+          "altText": "Adivasi - 0.JPG",
+          "oldUrl": "/assets/Brochure/Adivasi/0.JPG"
+        },
+        {
+          "url": "/uploads/gallery/3792bcab-2dda-4104-9b6d-78c45c071ede.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_3792bcab-2dda-4104-9b6d-78c45c071ede.webp",
+          "title": "00",
+          "altText": "Adivasi - 00.JPG",
+          "oldUrl": "/assets/Brochure/Adivasi/00.JPG"
+        },
+        {
+          "url": "/uploads/gallery/1508c463-09aa-457a-9728-c911126d8c1a.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_1508c463-09aa-457a-9728-c911126d8c1a.webp",
+          "title": "1",
+          "altText": "Adivasi - 1.JPG",
+          "oldUrl": "/assets/Brochure/Adivasi/1.JPG"
+        },
+        {
+          "url": "/uploads/gallery/5b1b296d-9fe9-4ad4-afed-5514ef5d19ce.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_5b1b296d-9fe9-4ad4-afed-5514ef5d19ce.webp",
+          "title": "10",
+          "altText": "Adivasi - 10.JPG",
+          "oldUrl": "/assets/Brochure/Adivasi/10.JPG"
+        },
+        {
+          "url": "/uploads/gallery/d1ac4e18-eeb1-42be-99c3-617a3e6d6c15.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_d1ac4e18-eeb1-42be-99c3-617a3e6d6c15.webp",
+          "title": "11",
+          "altText": "Adivasi - 11.JPG",
+          "oldUrl": "/assets/Brochure/Adivasi/11.JPG"
+        },
+        {
+          "url": "/uploads/gallery/3a4caf54-62e5-4991-aa18-35dc332162fe.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_3a4caf54-62e5-4991-aa18-35dc332162fe.webp",
+          "title": "12",
+          "altText": "Adivasi - 12.JPG",
+          "oldUrl": "/assets/Brochure/Adivasi/12.JPG"
+        },
+        {
+          "url": "/uploads/gallery/0df1812a-e033-49f9-8ce3-aa3ff1b55683.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_0df1812a-e033-49f9-8ce3-aa3ff1b55683.webp",
+          "title": "2",
+          "altText": "Adivasi - 2.jpg",
+          "oldUrl": "/assets/Brochure/Adivasi/2.jpg"
+        },
+        {
+          "url": "/uploads/gallery/c594fa09-a894-44bb-82c8-9f278dc76281.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_c594fa09-a894-44bb-82c8-9f278dc76281.webp",
+          "title": "3",
+          "altText": "Adivasi - 3.jpg",
+          "oldUrl": "/assets/Brochure/Adivasi/3.jpg"
+        },
+        {
+          "url": "/uploads/gallery/f991f667-4e22-40fb-8d6e-435d14576147.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_f991f667-4e22-40fb-8d6e-435d14576147.webp",
+          "title": "4",
+          "altText": "Adivasi - 4.JPG",
+          "oldUrl": "/assets/Brochure/Adivasi/4.JPG"
+        },
+        {
+          "url": "/uploads/gallery/b9d4dc27-2731-490b-ae29-515c2cbcc8cc.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_b9d4dc27-2731-490b-ae29-515c2cbcc8cc.webp",
+          "title": "5",
+          "altText": "Adivasi - 5.JPG",
+          "oldUrl": "/assets/Brochure/Adivasi/5.JPG"
+        },
+        {
+          "url": "/uploads/gallery/5896152b-07f4-476e-930d-0dabb45be947.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_5896152b-07f4-476e-930d-0dabb45be947.webp",
+          "title": "6",
+          "altText": "Adivasi - 6.JPG",
+          "oldUrl": "/assets/Brochure/Adivasi/6.JPG"
+        },
+        {
+          "url": "/uploads/gallery/ee027d6c-d7d1-42d1-b40b-b2b087842e5a.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_ee027d6c-d7d1-42d1-b40b-b2b087842e5a.webp",
+          "title": "7",
+          "altText": "Adivasi - 7.JPG",
+          "oldUrl": "/assets/Brochure/Adivasi/7.JPG"
+        },
+        {
+          "url": "/uploads/gallery/843b8837-2ba6-4b7c-968c-dea131026d33.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_843b8837-2ba6-4b7c-968c-dea131026d33.webp",
+          "title": "8",
+          "altText": "Adivasi - 8.JPG",
+          "oldUrl": "/assets/Brochure/Adivasi/8.JPG"
+        },
+        {
+          "url": "/uploads/gallery/720bc66d-706a-4a2f-bda9-9e23e08176aa.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_720bc66d-706a-4a2f-bda9-9e23e08176aa.webp",
+          "title": "9",
+          "altText": "Adivasi - 9.JPG",
+          "oldUrl": "/assets/Brochure/Adivasi/9.JPG"
+        },
+        {
+          "url": "/uploads/gallery/31903526-e027-4ff1-a4cb-0d018167efb5.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_31903526-e027-4ff1-a4cb-0d018167efb5.webp",
+          "title": "IMG_1179",
+          "altText": "Adivasi - IMG_1179.JPG",
+          "oldUrl": "/assets/Brochure/Adivasi/IMG_1179.JPG"
+        },
+        {
+          "url": "/uploads/gallery/4367be07-30a1-472b-8388-ee7eea52d042.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_4367be07-30a1-472b-8388-ee7eea52d042.webp",
+          "title": "Medical Camp",
+          "altText": "Adivasi - Medical Camp.jpg",
+          "oldUrl": "/assets/Brochure/Adivasi/Medical Camp.jpg"
+        }
+      ],
+      "coverImageUrl": "/uploads/gallery/f1537ee4-0ceb-40a8-876c-e5e711cfd613.webp"
+    },
+    {
+      "name": "Anath",
+      "slug": "anath",
+      "images": [
+        {
+          "url": "/uploads/gallery/e28433c1-df28-46d0-b724-327d2496f0f4.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_e28433c1-df28-46d0-b724-327d2496f0f4.webp",
+          "title": "1",
+          "altText": "Anath - 1.JPG",
+          "oldUrl": "/assets/Brochure/Anath/1.JPG"
+        },
+        {
+          "url": "/uploads/gallery/ff51886e-f28b-45d6-a6f8-af35ecac891f.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_ff51886e-f28b-45d6-a6f8-af35ecac891f.webp",
+          "title": "2",
+          "altText": "Anath - 2.jpg",
+          "oldUrl": "/assets/Brochure/Anath/2.jpg"
+        },
+        {
+          "url": "/uploads/gallery/c225ff51-02eb-4521-ac73-4b7b722ed555.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_c225ff51-02eb-4521-ac73-4b7b722ed555.webp",
+          "title": "3",
+          "altText": "Anath - 3.jpg",
+          "oldUrl": "/assets/Brochure/Anath/3.jpg"
+        },
+        {
+          "url": "/uploads/gallery/80fe5615-2080-4074-8b6d-6dbb5ac2415d.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_80fe5615-2080-4074-8b6d-6dbb5ac2415d.webp",
+          "title": "4",
+          "altText": "Anath - 4.jpg",
+          "oldUrl": "/assets/Brochure/Anath/4.jpg"
+        }
+      ],
+      "coverImageUrl": "/uploads/gallery/e28433c1-df28-46d0-b724-327d2496f0f4.webp"
+    },
+    {
+      "name": "Annadan",
+      "slug": "annadan",
+      "images": [
+        {
+          "url": "/uploads/gallery/be04930e-8bec-4d25-9321-d8119cc771af.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_be04930e-8bec-4d25-9321-d8119cc771af.webp",
+          "title": "1",
+          "altText": "Annadan - 1.JPG",
+          "oldUrl": "/assets/Brochure/Annadan/1.JPG"
+        },
+        {
+          "url": "/uploads/gallery/afd963de-ca74-4c20-86e2-1488e8659c1b.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_afd963de-ca74-4c20-86e2-1488e8659c1b.webp",
+          "title": "2",
+          "altText": "Annadan - 2.JPG",
+          "oldUrl": "/assets/Brochure/Annadan/2.JPG"
+        },
+        {
+          "url": "/uploads/gallery/ef547778-1bee-40d9-a10c-acc017badf92.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_ef547778-1bee-40d9-a10c-acc017badf92.webp",
+          "title": "3",
+          "altText": "Annadan - 3.JPG",
+          "oldUrl": "/assets/Brochure/Annadan/3.JPG"
+        }
+      ],
+      "coverImageUrl": "/uploads/gallery/be04930e-8bec-4d25-9321-d8119cc771af.webp"
+    },
+    {
+      "name": "Goushala",
+      "slug": "goushala",
+      "images": [
+        {
+          "url": "/uploads/gallery/95292a56-9d44-4d11-beb9-18539c87c579.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_95292a56-9d44-4d11-beb9-18539c87c579.webp",
+          "title": "1",
+          "altText": "Goushala - 1.jpeg",
+          "oldUrl": "/assets/Brochure/Goushala/1.jpeg"
+        },
+        {
+          "url": "/uploads/gallery/9e969753-a762-47a1-b6f8-74fbe7112902.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_9e969753-a762-47a1-b6f8-74fbe7112902.webp",
+          "title": "2",
+          "altText": "Goushala - 2.jpg",
+          "oldUrl": "/assets/Brochure/Goushala/2.jpg"
+        },
+        {
+          "url": "/uploads/gallery/055b3b42-483b-45c0-a389-c2acec9fcb69.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_055b3b42-483b-45c0-a389-c2acec9fcb69.webp",
+          "title": "3",
+          "altText": "Goushala - 3.jpg",
+          "oldUrl": "/assets/Brochure/Goushala/3.jpg"
+        }
+      ],
+      "coverImageUrl": "/uploads/gallery/95292a56-9d44-4d11-beb9-18539c87c579.webp"
+    },
+    {
+      "name": "Gurukul",
+      "slug": "gurukul",
+      "images": [
+        {
+          "url": "/uploads/gallery/9b98c631-71e4-4dba-95ae-65b9ea56429a.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_9b98c631-71e4-4dba-95ae-65b9ea56429a.webp",
+          "title": "1",
+          "altText": "Gurukul - 1.jpg",
+          "oldUrl": "/assets/Brochure/Gurukul/1.jpg"
+        },
+        {
+          "url": "/uploads/gallery/9a9b9afd-2316-4b65-95ff-33b876967f40.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_9a9b9afd-2316-4b65-95ff-33b876967f40.webp",
+          "title": "2",
+          "altText": "Gurukul - 2.jpg",
+          "oldUrl": "/assets/Brochure/Gurukul/2.jpg"
+        },
+        {
+          "url": "/uploads/gallery/e9b05ff8-1636-4f15-ac2a-9214501b509a.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_e9b05ff8-1636-4f15-ac2a-9214501b509a.webp",
+          "title": "3",
+          "altText": "Gurukul - 3.jpg",
+          "oldUrl": "/assets/Brochure/Gurukul/3.jpg"
+        }
+      ],
+      "coverImageUrl": "/uploads/gallery/9b98c631-71e4-4dba-95ae-65b9ea56429a.webp"
+    },
+    {
+      "name": "Seva Tirth",
+      "slug": "seva-tirth",
+      "images": [
+        {
+          "url": "/uploads/gallery/d19110b4-d250-4ed4-9939-d19a9c0e047c.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_d19110b4-d250-4ed4-9939-d19a9c0e047c.webp",
+          "title": "01",
+          "altText": "Seva Tirth - 01.jpg",
+          "oldUrl": "/assets/Brochure/Seva Tirth/01.jpg"
+        },
+        {
+          "url": "/uploads/gallery/e9907724-a378-4113-b072-8700ef3713c9.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_e9907724-a378-4113-b072-8700ef3713c9.webp",
+          "title": "1",
+          "altText": "Seva Tirth - 1.JPG",
+          "oldUrl": "/assets/Brochure/Seva Tirth/1.JPG"
+        },
+        {
+          "url": "/uploads/gallery/02e7d7aa-da01-4163-b69b-f441cfbf731c.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_02e7d7aa-da01-4163-b69b-f441cfbf731c.webp",
+          "title": "2",
+          "altText": "Seva Tirth - 2.jpg",
+          "oldUrl": "/assets/Brochure/Seva Tirth/2.jpg"
+        },
+        {
+          "url": "/uploads/gallery/55a94beb-fb44-43a7-a727-a62e7509904f.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_55a94beb-fb44-43a7-a727-a62e7509904f.webp",
+          "title": "IMG-20231027-WA0081",
+          "altText": "Seva Tirth - IMG-20231027-WA0081.jpg",
+          "oldUrl": "/assets/Brochure/Seva Tirth/IMG-20231027-WA0081.jpg"
+        }
+      ],
+      "coverImageUrl": "/uploads/gallery/d19110b4-d250-4ed4-9939-d19a9c0e047c.webp"
+    },
+    {
+      "name": "Shri Gurudev Vidhyalay",
+      "slug": "shri-gurudev-vidhyalay",
+      "images": [
+        {
+          "url": "/uploads/gallery/4da2587f-ca2e-41f0-8f0b-a29b347c7c9e.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_4da2587f-ca2e-41f0-8f0b-a29b347c7c9e.webp",
+          "title": "1",
+          "altText": "Shri Gurudev Vidhyalay - 1.jpg",
+          "oldUrl": "/assets/Brochure/Shri Gurudev Vidhyalay/1.jpg"
+        },
+        {
+          "url": "/uploads/gallery/5be73f23-1768-469d-a1f4-3fda539e38ab.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_5be73f23-1768-469d-a1f4-3fda539e38ab.webp",
+          "title": "2",
+          "altText": "Shri Gurudev Vidhyalay - 2.jpg",
+          "oldUrl": "/assets/Brochure/Shri Gurudev Vidhyalay/2.jpg"
+        },
+        {
+          "url": "/uploads/gallery/103024ac-f6df-4c1a-b1a8-c672c110837e.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_103024ac-f6df-4c1a-b1a8-c672c110837e.webp",
+          "title": "3",
+          "altText": "Shri Gurudev Vidhyalay - 3.jpg",
+          "oldUrl": "/assets/Brochure/Shri Gurudev Vidhyalay/3.jpg"
+        },
+        {
+          "url": "/uploads/gallery/c21b52a3-7886-4825-8bc8-691c979c74a5.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_c21b52a3-7886-4825-8bc8-691c979c74a5.webp",
+          "title": "4",
+          "altText": "Shri Gurudev Vidhyalay - 4.jpg",
+          "oldUrl": "/assets/Brochure/Shri Gurudev Vidhyalay/4.jpg"
+        },
+        {
+          "url": "/uploads/gallery/0c28f024-cb1d-49a1-acd4-d6733011be94.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_0c28f024-cb1d-49a1-acd4-d6733011be94.webp",
+          "title": "5",
+          "altText": "Shri Gurudev Vidhyalay - 5.jpg",
+          "oldUrl": "/assets/Brochure/Shri Gurudev Vidhyalay/5.jpg"
+        }
+      ],
+      "coverImageUrl": "/uploads/gallery/4da2587f-ca2e-41f0-8f0b-a29b347c7c9e.webp"
+    },
+    {
+      "name": "Utsav",
+      "slug": "utsav",
+      "images": [
+        {
+          "url": "/uploads/gallery/0a7bb93b-7dd4-40d3-837b-32e5c98873db.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_0a7bb93b-7dd4-40d3-837b-32e5c98873db.webp",
+          "title": "1",
+          "altText": "Utsav - 1.JPG",
+          "oldUrl": "/assets/Brochure/Utsav/1.JPG"
+        },
+        {
+          "url": "/uploads/gallery/a0e6b8bd-76a1-4238-8c83-e93956b5b539.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_a0e6b8bd-76a1-4238-8c83-e93956b5b539.webp",
+          "title": "2",
+          "altText": "Utsav - 2.JPG",
+          "oldUrl": "/assets/Brochure/Utsav/2.JPG"
+        },
+        {
+          "url": "/uploads/gallery/7f2bb928-2fa9-4e20-8f7b-2591aebef18c.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_7f2bb928-2fa9-4e20-8f7b-2591aebef18c.webp",
+          "title": "3",
+          "altText": "Utsav - 3.JPG",
+          "oldUrl": "/assets/Brochure/Utsav/3.JPG"
+        },
+        {
+          "url": "/uploads/gallery/b1804be1-fefa-4733-bc44-75d212f25b0c.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_b1804be1-fefa-4733-bc44-75d212f25b0c.webp",
+          "title": "4",
+          "altText": "Utsav - 4.JPG",
+          "oldUrl": "/assets/Brochure/Utsav/4.JPG"
+        },
+        {
+          "url": "/uploads/gallery/7de62105-8b43-4b55-ae70-cf0c35a0ca93.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_7de62105-8b43-4b55-ae70-cf0c35a0ca93.webp",
+          "title": "5",
+          "altText": "Utsav - 5.JPG",
+          "oldUrl": "/assets/Brochure/Utsav/5.JPG"
+        },
+        {
+          "url": "/uploads/gallery/88d5b5c1-aa10-4d2f-850e-7559d3427594.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_88d5b5c1-aa10-4d2f-850e-7559d3427594.webp",
+          "title": "6",
+          "altText": "Utsav - 6.JPG",
+          "oldUrl": "/assets/Brochure/Utsav/6.JPG"
+        },
+        {
+          "url": "/uploads/gallery/7c58338b-1793-4dc9-9fcf-7c052bddf662.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_7c58338b-1793-4dc9-9fcf-7c052bddf662.webp",
+          "title": "7",
+          "altText": "Utsav - 7.JPG",
+          "oldUrl": "/assets/Brochure/Utsav/7.JPG"
+        }
+      ],
+      "coverImageUrl": "/uploads/gallery/0a7bb93b-7dd4-40d3-837b-32e5c98873db.webp"
+    },
+    {
+      "name": "Vaishanvi Mata",
+      "slug": "vaishanvi-mata",
+      "images": [
+        {
+          "url": "/uploads/gallery/84a7a3c4-2bb4-41e8-bcc7-86ac5951fb16.webp",
+          "thumbnailUrl": "/uploads/gallery/thumbnails/thumb_84a7a3c4-2bb4-41e8-bcc7-86ac5951fb16.webp",
+          "title": "Vaishanvi Temple_",
+          "altText": "Vaishanvi Mata - Vaishanvi Temple_.png",
+          "oldUrl": "/assets/Brochure/Vaishanvi Mata/Vaishanvi Temple_.png"
+        }
+      ],
+      "coverImageUrl": "/uploads/gallery/84a7a3c4-2bb4-41e8-bcc7-86ac5951fb16.webp"
+    }
+  ]
+}

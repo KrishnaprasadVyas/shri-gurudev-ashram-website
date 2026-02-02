@@ -29,9 +29,7 @@ const DonationFlow = ({ selectedCause, onCauseProcessed }) => {
     emailVerified: false,
     address: "",
 
-    // Government ID - SENSITIVE: never stored in localStorage
-    govtIdType: "", // 'aadhaar' or 'pan' (local) -> 'AADHAAR' or 'PAN' (API)
-    aadhaar: "",
+    // Government ID - PAN mandatory
     pan: "",
     dateOfBirth: "", // YYYY-MM-DD format for API
 
@@ -103,8 +101,6 @@ const DonationFlow = ({ selectedCause, onCauseProcessed }) => {
       emailOptIn: false,
       emailVerified: false,
       address: "",
-      govtIdType: "",
-      aadhaar: "",
       pan: "",
       dateOfBirth: "",
       anonymousDisplay: false,

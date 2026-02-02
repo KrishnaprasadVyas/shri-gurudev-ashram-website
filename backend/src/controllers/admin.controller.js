@@ -1,40 +1,21 @@
 const Donation = require("../models/Donation");
 const User = require("../models/User");
-const maskId = require("../utils/maskId");
 const path = require("path");
 const { generateDonationReceipt } = require("../services/receipt.service");
 const { sendDonationReceiptEmail } = require("../services/email.service");
 
 /**
- * Helper: Mask sensitive donor data for API responses
- * Masks PAN/Aadhaar in donor object
- */
-const maskDonorData = (donor) => {
-  if (!donor) return donor;
-  const donorObj = donor.toObject ? donor.toObject() : { ...donor };
-  return {
-    ...donorObj,
-    idNumber: maskId(donorObj.idType, donorObj.idNumber),
-  };
-};
-
-/**
- * Helper: Validate government ID
+ * Helper: Validate PAN number
  */
 const validateGovtId = (idType, idNumber) => {
   const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
-  const aadhaarRegex = /^[0-9]{12}$/;
 
-  if (!["PAN", "AADHAAR"].includes(idType)) {
-    return { valid: false, message: "Invalid ID type" };
+  if (idType !== "PAN") {
+    return { valid: false, message: "Only PAN is accepted" };
   }
 
-  if (idType === "PAN" && !panRegex.test(idNumber.toUpperCase())) {
+  if (!panRegex.test(idNumber.toUpperCase())) {
     return { valid: false, message: "Invalid PAN format (e.g., ABCDE1234F)" };
-  }
-
-  if (idType === "AADHAAR" && !aadhaarRegex.test(idNumber)) {
-    return { valid: false, message: "Invalid AADHAAR format (12 digits required)" };
   }
 
   return { valid: true };
@@ -87,16 +68,8 @@ exports.getAllDonations = async (req, res) => {
       .populate("addedBy", "fullName")
       .sort({ createdAt: -1 });
 
-    // Mask sensitive donor data before sending response
-    const maskedDonations = donations.map((d) => {
-      const donationObj = d.toObject();
-      return {
-        ...donationObj,
-        donor: maskDonorData(donationObj.donor),
-      };
-    });
-
-    res.json(maskedDonations);
+    // Return donations with actual PAN numbers (no masking)
+    res.json(donations);
   } catch (error) {
     console.error("Get donations error:", error);
     res.status(500).json({ message: "Server error" });

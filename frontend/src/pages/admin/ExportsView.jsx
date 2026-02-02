@@ -134,8 +134,7 @@ const ExportsView = () => {
       { label: "Mobile", getValue: (d) => d.mobile },
       { label: "Email", getValue: (d) => d.email },
       { label: "Address", getValue: (d) => d.address },
-      { label: "ID Type", getValue: (d) => d.idType },
-      { label: "ID Number (Masked)", getValue: (d) => d.idNumber },
+      { label: "PAN Number", getValue: (d) => d.idNumber },
       { label: "Total Donated", getValue: (d) => d.totalDonated },
       { label: "Donation Count", getValue: (d) => d.donationCount },
     ];

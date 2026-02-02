@@ -212,7 +212,7 @@ const DonorsView = () => {
                       {donor.email || "N/A"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {donor.governmentIdType}: {donor.governmentIdMasked}
+                      PAN: {donor.governmentIdMasked}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-amber-900">
                       {formatCurrency(donor.totalDonated)}
@@ -285,9 +285,9 @@ const DonorsView = () => {
                   <p className="text-sm text-gray-700">{selectedDonor.address || "N/A"}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase">Government ID</label>
-                  <p className="text-sm text-gray-700">
-                    {selectedDonor.governmentIdType}: {selectedDonor.governmentIdMasked}
+                  <label className="text-xs font-semibold text-gray-500 uppercase">PAN Number</label>
+                  <p className="text-sm text-gray-700 font-mono">
+                    {selectedDonor.governmentIdMasked}
                   </p>
                 </div>
                 <div>

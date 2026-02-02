@@ -1,4 +1,4 @@
-require("dotenv").config({ path: ".env.local" });
+require("dotenv").config();
 
 // Validate required environment variables at startup
 const requiredEnvVars = [

@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useGallery } from "../../context/GalleryContext";
+import { galleryApi } from "../../services/adminApi";
 import {
   Loader2,
   Plus,
@@ -10,6 +11,7 @@ import {
   ChevronDown,
   ChevronUp,
   Image,
+  Upload,
 } from "lucide-react";
 
 const GalleryManager = () => {
@@ -31,17 +33,22 @@ const GalleryManager = () => {
   const [expandedCategory, setExpandedCategory] = useState(null);
   const [showImageForm, setShowImageForm] = useState(null); // category ID to add images to
   const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState(null);
+
+  const coverImageInputRef = useRef(null);
+  const imageInputRef = useRef(null);
 
   const [categoryForm, setCategoryForm] = useState({
     name: "",
     description: "",
     coverImageUrl: "",
+    coverImageFile: null,
     isVisible: true,
   });
 
   const [imageForm, setImageForm] = useState({
-    url: "",
+    files: [],
     title: "",
     altText: "",
   });
@@ -66,6 +73,7 @@ const GalleryManager = () => {
       name: "",
       description: "",
       coverImageUrl: "",
+      coverImageFile: null,
       isVisible: true,
     });
     setShowCategoryForm(true);
@@ -77,9 +85,44 @@ const GalleryManager = () => {
       name: category.name,
       description: category.description || "",
       coverImageUrl: category.coverImageUrl || "",
+      coverImageFile: null,
       isVisible: category.visible !== false,
     });
     setShowCategoryForm(true);
+  };
+
+  const handleCoverImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowedTypes.includes(file.type)) {
+      showToast("Invalid file type. Use JPG, PNG, WebP or GIF.", "error");
+      return;
+    }
+
+    // Validate file size (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      showToast("File too large. Maximum size is 10MB.", "error");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const response = await galleryApi.uploadImage(file);
+      setCategoryForm((prev) => ({
+        ...prev,
+        coverImageUrl: response.data.url,
+        coverImageFile: file,
+      }));
+      showToast("Cover image uploaded");
+    } catch (err) {
+      console.error("Error uploading cover image:", err);
+      showToast("Failed to upload cover image", "error");
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleCategorySubmit = async (e) => {
@@ -107,6 +150,7 @@ const GalleryManager = () => {
         name: "",
         description: "",
         coverImageUrl: "",
+        coverImageFile: null,
         isVisible: true,
       });
     } catch (err) {
@@ -143,25 +187,48 @@ const GalleryManager = () => {
 
   const handleAddImage = (categoryId) => {
     setShowImageForm(categoryId);
-    setImageForm({ url: "", title: "", altText: "" });
+    setImageForm({ files: [], title: "", altText: "" });
+  };
+
+  const handleImageFilesChange = (e) => {
+    const files = Array.from(e.target.files);
+    
+    // Validate files
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    const validFiles = files.filter((file) => {
+      if (!allowedTypes.includes(file.type)) {
+        showToast(`${file.name}: Invalid file type`, "error");
+        return false;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        showToast(`${file.name}: File too large (max 10MB)`, "error");
+        return false;
+      }
+      return true;
+    });
+
+    setImageForm((prev) => ({ ...prev, files: validFiles }));
   };
 
   const handleImageSubmit = async (e) => {
     e.preventDefault();
-    if (!imageForm.url.trim()) {
-      showToast("Image URL is required", "error");
+    if (imageForm.files.length === 0) {
+      showToast("Please select at least one image", "error");
       return;
     }
 
     setSubmitting(true);
     try {
-      await addImagesToCategory(showImageForm, [imageForm]);
-      showToast("Image added successfully");
+      // Upload images directly to category
+      await galleryApi.uploadToCategory(showImageForm, imageForm.files);
+      showToast(`${imageForm.files.length} image(s) uploaded successfully`);
       setShowImageForm(null);
-      setImageForm({ url: "", title: "", altText: "" });
+      setImageForm({ files: [], title: "", altText: "" });
+      // Refresh gallery
+      fetchGalleryCategories();
     } catch (err) {
-      console.error("Error adding image:", err);
-      showToast("Failed to add image", "error");
+      console.error("Error uploading images:", err);
+      showToast("Failed to upload images", "error");
     } finally {
       setSubmitting(false);
     }
@@ -433,20 +500,53 @@ const GalleryManager = () => {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-1">
-                  Cover Image URL
+                  Cover Image
                 </label>
-                <input
-                  type="url"
-                  value={categoryForm.coverImageUrl}
-                  onChange={(e) =>
-                    setCategoryForm({
-                      ...categoryForm,
-                      coverImageUrl: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  placeholder="https://example.com/cover.jpg"
-                />
+                <div className="space-y-2">
+                  {/* Preview */}
+                  {categoryForm.coverImageUrl && (
+                    <div className="relative w-full h-32 rounded-lg overflow-hidden bg-gray-100">
+                      <img
+                        src={categoryForm.coverImageUrl}
+                        alt="Cover preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setCategoryForm({ ...categoryForm, coverImageUrl: "", coverImageFile: null })}
+                        className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full hover:bg-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                  {/* Upload button */}
+                  <input
+                    ref={coverImageInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={handleCoverImageChange}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => coverImageInputRef.current?.click()}
+                    disabled={uploading}
+                    className="w-full inline-flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-amber-500 hover:text-amber-600 transition-colors disabled:opacity-50"
+                  >
+                    {uploading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-5 h-5 mr-2" />
+                        {categoryForm.coverImageUrl ? "Change Cover Image" : "Upload Cover Image"}
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <input
@@ -497,49 +597,52 @@ const GalleryManager = () => {
       {showImageForm && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Add Image</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Upload Images</h2>
             <form onSubmit={handleImageSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-1">
-                  Image URL <span className="text-red-500">*</span>
+                  Select Images <span className="text-red-500">*</span>
                 </label>
                 <input
-                  type="url"
-                  value={imageForm.url}
-                  onChange={(e) =>
-                    setImageForm({ ...imageForm, url: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  placeholder="https://example.com/image.jpg"
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  multiple
+                  onChange={handleImageFilesChange}
+                  className="hidden"
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-1">
-                  Title
-                </label>
-                <input
-                  type="text"
-                  value={imageForm.title}
-                  onChange={(e) =>
-                    setImageForm({ ...imageForm, title: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  placeholder="Image title (optional)"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-1">
-                  Alt Text
-                </label>
-                <input
-                  type="text"
-                  value={imageForm.altText}
-                  onChange={(e) =>
-                    setImageForm({ ...imageForm, altText: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  placeholder="Description for accessibility"
-                />
+                <button
+                  type="button"
+                  onClick={() => imageInputRef.current?.click()}
+                  className="w-full inline-flex items-center justify-center px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-amber-500 hover:text-amber-600 transition-colors"
+                >
+                  <Upload className="w-5 h-5 mr-2" />
+                  Choose Images (max 20)
+                </button>
+                {/* Selected files preview */}
+                {imageForm.files.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    <p className="text-sm text-gray-600">
+                      {imageForm.files.length} file(s) selected:
+                    </p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {imageForm.files.slice(0, 8).map((file, idx) => (
+                        <div key={idx} className="relative aspect-square rounded overflow-hidden bg-gray-100">
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt={file.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ))}
+                      {imageForm.files.length > 8 && (
+                        <div className="aspect-square rounded bg-gray-200 flex items-center justify-center text-gray-600 text-sm">
+                          +{imageForm.files.length - 8} more
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="flex gap-3 pt-4 border-t">
                 <button
@@ -552,13 +655,13 @@ const GalleryManager = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || imageForm.files.length === 0}
                   className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-amber-600 text-white font-semibold rounded-md hover:bg-amber-700 transition-colors disabled:opacity-50"
                 >
                   {submitting && (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   )}
-                  Add Image
+                  Upload {imageForm.files.length > 0 ? `(${imageForm.files.length})` : ""}
                 </button>
               </div>
             </form>

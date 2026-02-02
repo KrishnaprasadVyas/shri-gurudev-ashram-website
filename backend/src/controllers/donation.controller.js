@@ -9,37 +9,20 @@ const Otp = require("../models/Otp");
 const bcrypt = require("bcrypt");
 const { generateDonationReceipt } = require("../services/receipt.service");
 const { sendDonationReceiptEmail } = require("../services/email.service");
-const maskId = require("../utils/maskId");
+const { sendLoginOtp } = require("../services/whatsapp.service");
 
 /**
- * Helper: Mask sensitive donor data for API responses
- * Masks PAN/Aadhaar in donor object
- */
-const maskDonorData = (donor) => {
-  if (!donor) return donor;
-  return {
-    ...donor,
-    idNumber: maskId(donor.idType, donor.idNumber),
-  };
-};
-
-/**
- * Helper: Validate government ID
+ * Helper: Validate PAN number
  */
 const validateGovtId = (idType, idNumber) => {
   const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
-  const aadhaarRegex = /^[0-9]{12}$/;
 
-  if (!["PAN", "AADHAAR"].includes(idType)) {
-    return { valid: false, message: "Invalid ID type" };
+  if (idType !== "PAN") {
+    return { valid: false, message: "Only PAN is accepted" };
   }
 
-  if (idType === "PAN" && !panRegex.test(idNumber)) {
+  if (!panRegex.test(idNumber)) {
     return { valid: false, message: "Invalid PAN number format" };
-  }
-
-  if (idType === "AADHAAR" && !aadhaarRegex.test(idNumber)) {
-    return { valid: false, message: "Invalid Aadhaar number format" };
   }
 
   return { valid: true };
@@ -78,21 +61,53 @@ exports.sendDonationOtp = async (req, res) => {
       return res.status(400).json({ message: "Mobile number is required" });
     }
 
+    // Clean mobile number - remove + and any non-digits
+    let cleanMobile = mobile.replace(/[^\d]/g, '');
+
+    // Normalize to 10-digit phone (strip country code if present)
+    const phone10 = cleanMobile.startsWith("91") && cleanMobile.length === 12
+      ? cleanMobile.slice(2)
+      : cleanMobile;
+
+    // Validate phone format (should be 10 digits)
+    if (!/^\d{10}$/.test(phone10)) {
+      return res.status(400).json({ message: "Invalid mobile number format" });
+    }
+
+    // Store the normalized 10-digit mobile for OTP record
+    const storedMobile = phone10;
+
+    // Format phone number for WhatsApp (ensure 91 prefix)
+    const phone = `91${phone10}`;
+
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000);
     const otpHash = await bcrypt.hash(otp.toString(), 10);
 
+    // Delete any existing OTPs for this mobile
+    await Otp.deleteMany({ mobile: storedMobile });
+
     // Store OTP with 5 min expiry
     await Otp.create({
-      mobile,
+      mobile: storedMobile,
       otpHash,
       expiresAt: new Date(Date.now() + 5 * 60 * 1000),
     });
 
-    // Console log for development (replace with SMS/WhatsApp later)
-    console.log(`[DONATION OTP] Mobile: ${mobile}, OTP: ${otp}`);
+    // Send OTP via WhatsApp
+    const result = await sendLoginOtp(phone, otp.toString());
 
-    res.json({ message: "OTP sent successfully" });
+    if (!result.success) {
+      // Clean up OTP record if WhatsApp send fails
+      await Otp.deleteMany({ mobile: storedMobile });
+      return res.status(500).json({ 
+        message: "Failed to send OTP. Please try again." 
+      });
+    }
+
+    console.log(`[DONATION OTP] Mobile: ${storedMobile}, OTP sent via WhatsApp`);
+
+    res.json({ message: "OTP sent successfully", mobile: storedMobile });
   } catch (error) {
     console.error("Send OTP error:", error);
     res.status(500).json({ message: "Failed to send OTP" });
@@ -111,7 +126,17 @@ exports.verifyDonationOtp = async (req, res) => {
       return res.status(400).json({ message: "Mobile and OTP are required" });
     }
 
-    const record = await Otp.findOne({ mobile }).sort({ _id: -1 });
+    // Clean the mobile number - remove + and any non-digit characters
+    const cleanMobile = mobile.replace(/[^\d]/g, '');
+    
+    // Extract 10-digit phone number (remove country code 91)
+    const phone = cleanMobile.startsWith('91') && cleanMobile.length === 12
+      ? cleanMobile.slice(2)
+      : cleanMobile;
+
+    // Find the most recent OTP record for this mobile (10-digit or legacy formats)
+    const mobileCandidates = [phone, `91${phone}`];
+    const record = await Otp.findOne({ mobile: { $in: mobileCandidates } }).sort({ _id: -1 });
 
     if (!record) {
       return res
@@ -120,7 +145,7 @@ exports.verifyDonationOtp = async (req, res) => {
     }
 
     if (record.expiresAt < new Date()) {
-      await Otp.deleteMany({ mobile });
+      await Otp.deleteMany({ mobile: { $in: mobileCandidates } });
       return res
         .status(400)
         .json({ message: "OTP expired. Please request a new one." });
@@ -133,7 +158,7 @@ exports.verifyDonationOtp = async (req, res) => {
     }
 
     // Delete used OTP
-    await Otp.deleteMany({ mobile });
+    await Otp.deleteMany({ mobile: { $in: mobileCandidates } });
 
     res.json({
       verified: true,

@@ -347,7 +347,11 @@ exports.createDonationHead = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Donation head created successfully",
-      data: donationHead,
+      data: {
+        _id: donationHead._id,
+        key: donationHead.key,
+        name: donationHead.name,
+      },
     });
   } catch (error) {
     console.error("Error creating donation head:", error);
@@ -442,7 +446,11 @@ exports.updateDonationHead = async (req, res) => {
     res.json({
       success: true,
       message: "Donation head updated successfully",
-      data: donationHead,
+      data: {
+        _id: donationHead._id,
+        key: donationHead.key,
+        name: donationHead.name,
+      },
     });
   } catch (error) {
     console.error("Error updating donation head:", error);
@@ -642,10 +650,18 @@ exports.addSubCause = async (req, res) => {
 
     await donationHead.save();
 
+    const newSubCause = donationHead.subCauses[donationHead.subCauses.length - 1];
     res.status(201).json({
       success: true,
       message: "Sub-cause added successfully",
-      data: donationHead,
+      data: {
+        subCause: {
+          _id: newSubCause._id,
+          key: newSubCause.key,
+          name: newSubCause.name,
+        },
+        totalSubCauses: donationHead.subCauses.length,
+      },
     });
   } catch (error) {
     console.error("Error adding sub-cause:", error);
@@ -688,7 +704,6 @@ exports.deleteSubCause = async (req, res) => {
     res.json({
       success: true,
       message: "Sub-cause deleted successfully",
-      data: donationHead,
     });
   } catch (error) {
     console.error("Error deleting sub-cause:", error);

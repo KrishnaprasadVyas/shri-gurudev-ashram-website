@@ -3,6 +3,11 @@ const router = express.Router();
 const auth = require("../middlewares/auth.middleware");
 const { authorize } = require("../middlewares/authorize");
 const validateObjectId = require("../middlewares/validateObjectId");
+const {
+  uploadSingleImage,
+  uploadMultipleImages,
+  handleUploadError,
+} = require("../middlewares/upload.middleware");
 
 /**
  * ADMIN WEBSITE ROUTES
@@ -76,6 +81,15 @@ router.put(
   activityController.reorderActivities,
 );
 
+// Activity image upload
+router.post(
+  "/activities/upload",
+  adminAuth,
+  uploadSingleImage,
+  handleUploadError,
+  activityController.uploadImage,
+);
+
 // Activity subitems
 router.post(
   "/activities/:id/subitems",
@@ -114,6 +128,15 @@ router.post(
   "/events/update-status",
   adminAuth,
   eventController.updateEventStatuses,
+);
+
+// Event image upload
+router.post(
+  "/events/upload",
+  adminAuth,
+  uploadSingleImage,
+  handleUploadError,
+  eventController.uploadImage,
 );
 
 // ==================== TESTIMONIALS ====================
@@ -246,6 +269,29 @@ router.put(
   galleryController.reorderGalleryCategories,
 );
 
+// Gallery image upload routes (NEW - for file uploads instead of URLs)
+router.post(
+  "/gallery/upload",
+  adminAuth,
+  uploadSingleImage,
+  handleUploadError,
+  galleryController.uploadSingleImage,
+);
+router.post(
+  "/gallery/upload/multiple",
+  adminAuth,
+  uploadMultipleImages,
+  handleUploadError,
+  galleryController.uploadMultipleImages,
+);
+router.post(
+  "/gallery/:id/upload",
+  adminAuthWithId,
+  uploadMultipleImages,
+  handleUploadError,
+  galleryController.uploadImagesToCategory,
+);
+
 // Gallery images management
 router.post(
   "/gallery/:id/images",
@@ -261,6 +307,12 @@ router.delete(
   "/gallery/:id/images/:imageId",
   adminAuthWithId,
   galleryController.deleteGalleryImage,
+);
+// Delete image with file cleanup (for uploaded images)
+router.delete(
+  "/gallery/:id/images/:imageId/file",
+  adminAuthWithId,
+  galleryController.deleteGalleryImageWithFile,
 );
 router.put(
   "/gallery/:id/images/reorder",

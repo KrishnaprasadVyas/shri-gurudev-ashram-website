@@ -35,12 +35,6 @@ const CashDonationForm = () => {
     return panRegex.test(pan.toUpperCase());
   };
 
-  // Validate AADHAAR format
-  const validateAadhaar = (aadhaar) => {
-    const aadhaarRegex = /^[0-9]{12}$/;
-    return aadhaarRegex.test(aadhaar);
-  };
-
   // Validate age (must be 18+)
   const validateAge = (dob) => {
     const birthDate = new Date(dob);
@@ -58,7 +52,7 @@ const CashDonationForm = () => {
       setFormData((prev) => ({ ...prev, [name]: checked }));
     } else if (name === "idNumber") {
       // Auto uppercase for PAN
-      const formattedValue = formData.idType === "PAN" ? value.toUpperCase() : value.replace(/\D/g, "");
+      const formattedValue = value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10);
       setFormData((prev) => ({ ...prev, [name]: formattedValue }));
     } else if (name === "mobile") {
       // Only digits, max 10
@@ -78,15 +72,6 @@ const CashDonationForm = () => {
     }
   };
 
-  const handleIdTypeChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      idType: e.target.value,
-      idNumber: "", // Clear ID number when type changes
-    }));
-    setErrors((prev) => ({ ...prev, idNumber: "" }));
-  };
-
   const validateForm = () => {
     const newErrors = {};
 
@@ -99,13 +84,11 @@ const CashDonationForm = () => {
       newErrors.dob = "Donor must be 18 years or older";
     }
 
-    // ID validation
+    // PAN validation
     if (!formData.idNumber.trim()) {
-      newErrors.idNumber = `${formData.idType} number is required`;
-    } else if (formData.idType === "PAN" && !validatePAN(formData.idNumber)) {
+      newErrors.idNumber = "PAN number is required";
+    } else if (!validatePAN(formData.idNumber)) {
       newErrors.idNumber = "Invalid PAN format (e.g., ABCDE1234F)";
-    } else if (formData.idType === "AADHAAR" && !validateAadhaar(formData.idNumber)) {
-      newErrors.idNumber = "Invalid AADHAAR format (12 digits required)";
     }
 
     // Donation details
@@ -423,37 +406,19 @@ const CashDonationForm = () => {
               )}
             </div>
 
-            {/* ID Type */}
-            <div>
+            {/* PAN Number */}
+            <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                ID Type <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="idType"
-                value={formData.idType}
-                onChange={handleIdTypeChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
-              >
-                <option value="PAN">PAN Card</option>
-                <option value="AADHAAR">Aadhaar Card</option>
-              </select>
-            </div>
-
-            {/* ID Number */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {formData.idType} Number <span className="text-red-500">*</span>
+                PAN Number <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 name="idNumber"
                 value={formData.idNumber}
                 onChange={handleChange}
-                placeholder={
-                  formData.idType === "PAN" ? "ABCDE1234F" : "123456789012"
-                }
-                maxLength={formData.idType === "PAN" ? 10 : 12}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 font-mono ${
+                placeholder="ABCDE1234F"
+                maxLength={10}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 font-mono uppercase ${
                   errors.idNumber
                     ? "border-red-300 focus:ring-red-500"
                     : "border-gray-300 focus:ring-amber-500"
@@ -462,6 +427,9 @@ const CashDonationForm = () => {
               {errors.idNumber && (
                 <p className="mt-1 text-xs text-red-600">{errors.idNumber}</p>
               )}
+              <p className="mt-1 text-xs text-gray-500">
+                PAN is mandatory for statutory donation records
+              </p>
             </div>
 
             {/* Anonymous Display */}

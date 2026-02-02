@@ -390,7 +390,10 @@ exports.createProduct = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Product created successfully",
-      data: product,
+      data: {
+        _id: product._id,
+        name: product.name,
+      },
     });
   } catch (error) {
     console.error("Error creating product:", error);
@@ -487,7 +490,10 @@ exports.updateProduct = async (req, res) => {
     res.json({
       success: true,
       message: "Product updated successfully",
-      data: product,
+      data: {
+        _id: product._id,
+        name: product.name,
+      },
     });
   } catch (error) {
     console.error("Error updating product:", error);

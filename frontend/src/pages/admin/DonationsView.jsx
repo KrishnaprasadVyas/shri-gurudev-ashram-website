@@ -90,8 +90,16 @@ const DonationsView = () => {
 
   const handleDownloadReceipt = (donation) => {
     if (donation.receiptUrl) {
-      // Use relative path for receipts served from same origin
-      window.open(donation.receiptUrl, "_blank");
+      // Handle both relative URL paths (/receipts/...) and old absolute paths
+      let url = donation.receiptUrl;
+      
+      // If it's an absolute filesystem path, extract the filename
+      if (url.includes('\\') || (url.includes('/') && !url.startsWith('/'))) {
+        const fileName = url.split(/[\\/]/).pop();
+        url = `/receipts/${fileName}`;
+      }
+      
+      window.open(url, "_blank");
     }
   };
 
@@ -341,8 +349,9 @@ const DonationsView = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {donation.receiptUrl && donation.status === "SUCCESS" ? (
                         <button
+                          type="button"
                           onClick={() => handleDownloadReceipt(donation)}
-                          className="text-amber-600 hover:text-amber-700 font-medium inline-flex items-center"
+                          className="text-amber-600 hover:text-amber-700 hover:underline font-medium inline-flex items-center cursor-pointer"
                         >
                           <Download className="w-4 h-4 mr-1" />
                           Download

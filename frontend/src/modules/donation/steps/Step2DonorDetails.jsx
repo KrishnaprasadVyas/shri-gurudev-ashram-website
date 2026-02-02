@@ -1,13 +1,26 @@
 import { useState } from "react";
 import FormInput from "../../../components/FormInput";
 import PrimaryButton from "../../../components/PrimaryButton";
-import { validateEmail, validatePhone } from "../../../utils/helpers";
+import { validateEmail } from "../../../utils/helpers";
 import { API_BASE_URL, parseJsonResponse } from "../../../utils/api";
+
+const COUNTRY_OPTIONS = [
+  { value: "IN", label: "India", dialCode: "+91", length: 10 },
+  { value: "US", label: "United States", dialCode: "+1", length: 10 },
+  { value: "CA", label: "Canada", dialCode: "+1", length: 10 },
+  { value: "GB", label: "United Kingdom", dialCode: "+44", length: 10 },
+  { value: "AU", label: "Australia", dialCode: "+61", length: 9 },
+  { value: "JP", label: "Japan", dialCode: "+81", length: 10 },
+  { value: "AE", label: "United Arab Emirates", dialCode: "+971", length: 9 },
+  { value: "DE", label: "Germany", dialCode: "+49", length: 11 },
+  { value: "FR", label: "France", dialCode: "+33", length: 9 },
+  { value: "SG", label: "Singapore", dialCode: "+65", length: 8 },
+];
 
 const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
   const [errors, setErrors] = useState({});
+  const [country, setCountry] = useState(COUNTRY_OPTIONS[0]);
   const [showEmailInput, setShowEmailInput] = useState(data.emailOptIn);
-  const [editingGovtId, setEditingGovtId] = useState(false);
 
   // OTP state
   const [otpStep, setOtpStep] = useState("form"); // 'form' | 'otp'
@@ -149,35 +162,19 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
     }
   };
 
-  const handleGovtIdTypeChange = (type) => {
-    updateData({ govtIdType: type });
-    setEditingGovtId(true);
-    if (errors.govtId) {
-      setErrors((prev) => ({ ...prev, govtId: "" }));
-    }
-  };
-
   const validatePAN = (pan) => {
     const panPattern = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
     return panPattern.test(pan);
   };
 
-  const handleGovtIdChange = (e) => {
-    const { name, value } = e.target;
-    let formattedValue = value;
-
-    if (name === "aadhaar") {
-      formattedValue = value.replace(/\D/g, "").slice(0, 12);
-    } else if (name === "pan") {
-      formattedValue = value
-        .replace(/[^A-Z0-9]/gi, "")
-        .slice(0, 10)
-        .toUpperCase();
-    }
-
-    updateData({ [name]: formattedValue });
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
+  const handlePanChange = (e) => {
+    const value = e.target.value
+      .replace(/[^A-Z0-9]/gi, "")
+      .slice(0, 10)
+      .toUpperCase();
+    updateData({ pan: value });
+    if (errors.pan) {
+      setErrors((prev) => ({ ...prev, pan: "" }));
     }
   };
 
@@ -186,17 +183,6 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
     if (errors.dateOfBirth) {
       setErrors((prev) => ({ ...prev, dateOfBirth: "" }));
     }
-  };
-
-  const maskGovtId = (value, type) => {
-    if (!value) return "";
-    if (editingGovtId) return value;
-    if (type === "aadhaar" && value.length > 4) {
-      return "**** **** " + value.slice(-4);
-    } else if (type === "pan" && value.length > 4) {
-      return "****" + value.slice(-4);
-    }
-    return value;
   };
 
   /**
@@ -215,8 +201,8 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
     // Mobile Number
     if (!data.mobile.trim()) {
       newErrors.mobile = "Mobile number is required";
-    } else if (!validatePhone(data.mobile)) {
-      newErrors.mobile = "Please enter a valid 10-digit mobile number";
+    } else if (data.mobile.length !== country.length) {
+      newErrors.mobile = `Please enter a valid ${country.length}-digit mobile number`;
     }
 
     // Email (optional)
@@ -231,21 +217,11 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
       newErrors.address = "Address is required";
     }
 
-    // Government ID
-    if (!data.govtIdType) {
-      newErrors.govtId = "Please select a government ID type";
-    } else {
-      if (data.govtIdType === "aadhaar") {
-        if (!data.aadhaar || data.aadhaar.length !== 12) {
-          newErrors.aadhaar = "Please enter a valid 12-digit Aadhaar number";
-        }
-      } else if (data.govtIdType === "pan") {
-        if (!data.pan || data.pan.length !== 10) {
-          newErrors.pan = "Please enter a valid 10-character PAN number";
-        } else if (!validatePAN(data.pan)) {
-          newErrors.pan = "PAN must be in format: AAAAA9999A";
-        }
-      }
+    // PAN Number (mandatory)
+    if (!data.pan || data.pan.length !== 10) {
+      newErrors.pan = "Please enter a valid 10-character PAN number";
+    } else if (!validatePAN(data.pan)) {
+      newErrors.pan = "PAN must be in format: AAAAA9999A";
     }
 
     // DOB
@@ -263,11 +239,13 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
     setIsLoading(true);
     setOtpError("");
 
+    const fullMobile = `${country.dialCode}${data.mobile}`;
+
     try {
       const response = await fetch(`${API_BASE_URL}/donations/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile: data.mobile }),
+        body: JSON.stringify({ mobile: fullMobile }),
       });
 
       const result = await parseJsonResponse(response);
@@ -299,11 +277,13 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
     setIsLoading(true);
     setOtpError("");
 
+    const fullMobile = `${country.dialCode}${data.mobile}`;
+
     try {
       const response = await fetch(`${API_BASE_URL}/donations/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile: data.mobile, otp }),
+        body: JSON.stringify({ mobile: fullMobile, otp }),
       });
 
       const result = await parseJsonResponse(response);
@@ -330,11 +310,13 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
     setOtpError("");
     setIsLoading(true);
 
+    const fullMobile = `${country.dialCode}${data.mobile}`;
+
     try {
       const response = await fetch(`${API_BASE_URL}/donations/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile: data.mobile }),
+        body: JSON.stringify({ mobile: fullMobile }),
       });
 
       const result = await parseJsonResponse(response);
@@ -368,7 +350,7 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
           Verify Mobile Number
         </h2>
         <p className="text-gray-600 text-center mb-6">
-          Enter the OTP sent to {data.mobile}
+          Enter the OTP sent to {country.dialCode} {data.mobile}
         </p>
 
         {otpError && (
@@ -460,23 +442,54 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
           error={errors.name}
         />
 
-        {/* Mobile Number (required, 10 digits) */}
-        <FormInput
-          label="Mobile Number"
-          type="tel"
-          name="mobile"
-          value={data.mobile}
-          onChange={(e) => {
-            const mobile = e.target.value.replace(/\D/g, "").slice(0, 10);
-            updateData({ mobile });
-            if (errors.mobile) {
-              setErrors((prev) => ({ ...prev, mobile: "" }));
-            }
-          }}
-          placeholder="Enter your 10-digit mobile number"
-          required
-          error={errors.mobile}
-        />
+        {/* Mobile Number with Country Code */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Country
+          </label>
+          <select
+            value={country.value}
+            onChange={(e) => {
+              const selected = COUNTRY_OPTIONS.find(opt => opt.value === e.target.value);
+              if (selected) {
+                setCountry(selected);
+                updateData({ mobile: '' });
+              }
+            }}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white mb-3"
+          >
+            {COUNTRY_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label} ({opt.dialCode})
+              </option>
+            ))}
+          </select>
+
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Mobile Number <span className="text-red-500">*</span>
+          </label>
+          <div className="flex">
+            <span className="inline-flex items-center px-4 py-3 border border-r-0 border-gray-300 bg-gray-100 text-gray-700 rounded-l-lg font-medium">
+              {country.dialCode}
+            </span>
+            <input
+              type="tel"
+              value={data.mobile}
+              onChange={(e) => {
+                const mobile = e.target.value.replace(/\D/g, "").slice(0, country.length);
+                updateData({ mobile });
+                if (errors.mobile) {
+                  setErrors((prev) => ({ ...prev, mobile: "" }));
+                }
+              }}
+              placeholder={`Enter ${country.length}-digit number`}
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+            />
+          </div>
+          {errors.mobile && (
+            <p className="text-red-500 text-sm mt-1">{errors.mobile}</p>
+          )}
+        </div>
 
         {/* Email (Optional - Opt-in only) */}
         <div>
@@ -645,110 +658,27 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
           error={errors.address}
         />
 
-        {/* Government ID (Mandatory - Any One) */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">
-            Government ID <span className="text-red-500">*</span>
-          </label>
+        {/* PAN Number (Mandatory) */}
+        <div className="space-y-3">
+          <FormInput
+            label="PAN Number"
+            type="text"
+            name="pan"
+            value={data.pan}
+            onChange={handlePanChange}
+            placeholder="Enter 10-character PAN number (e.g., ABCDE1234F)"
+            required
+            error={errors.pan}
+            maxLength={10}
+          />
 
-          {/* Radio selection for ID type */}
-          <div className="flex space-x-4 mb-3">
-            <label className="flex items-center space-x-2">
-              <input
-                type="radio"
-                name="govtIdType"
-                value="aadhaar"
-                checked={data.govtIdType === "aadhaar"}
-                onChange={(e) => handleGovtIdTypeChange("aadhaar")}
-                className="w-4 h-4 text-amber-600 border-gray-300 focus:ring-amber-500"
-              />
-              <span className="text-sm text-gray-700">Aadhaar</span>
-            </label>
-            <label className="flex items-center space-x-2">
-              <input
-                type="radio"
-                name="govtIdType"
-                value="pan"
-                checked={data.govtIdType === "pan"}
-                onChange={(e) => handleGovtIdTypeChange("pan")}
-                className="w-4 h-4 text-amber-600 border-gray-300 focus:ring-amber-500"
-              />
-              <span className="text-sm text-gray-700">PAN</span>
-            </label>
+          {/* Helper Text for PAN */}
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+            <p className="text-xs text-blue-700">
+              PAN is mandatory for statutory donation records as per Income Tax regulations. 
+              Your information is kept confidential.
+            </p>
           </div>
-
-          {/* Show selected ID input */}
-          {data.govtIdType === "aadhaar" && (
-            <div>
-              <FormInput
-                label="Aadhaar Number"
-                type="text"
-                name="aadhaar"
-                value={maskGovtId(data.aadhaar, "aadhaar")}
-                onChange={handleGovtIdChange}
-                onFocus={() => setEditingGovtId(true)}
-                onBlur={() => {
-                  setTimeout(() => setEditingGovtId(false), 200);
-                }}
-                placeholder="Enter 12-digit Aadhaar number"
-                required
-                error={errors.aadhaar}
-                maxLength={16}
-              />
-              {data.aadhaar && !editingGovtId && (
-                <button
-                  type="button"
-                  onClick={() => setEditingGovtId(true)}
-                  className="text-xs text-amber-600 hover:text-amber-700 mt-1"
-                >
-                  Edit
-                </button>
-              )}
-            </div>
-          )}
-
-          {data.govtIdType === "pan" && (
-            <div className="space-y-3">
-              <div>
-                <FormInput
-                  label="PAN Number"
-                  type="text"
-                  name="pan"
-                  value={maskGovtId(data.pan, "pan")}
-                  onChange={handleGovtIdChange}
-                  onFocus={() => setEditingGovtId(true)}
-                  onBlur={() => {
-                    setTimeout(() => setEditingGovtId(false), 200);
-                  }}
-                  placeholder="Enter 10-character PAN number (e.g., ABCDE1234F)"
-                  required
-                  error={errors.pan}
-                  maxLength={14}
-                />
-                {data.pan && !editingGovtId && (
-                  <button
-                    type="button"
-                    onClick={() => setEditingGovtId(true)}
-                    className="text-xs text-amber-600 hover:text-amber-700 mt-1"
-                  >
-                    Edit
-                  </button>
-                )}
-              </div>
-
-              {/* Helper Text for PAN */}
-              <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-                <p className="text-xs text-blue-700">
-                  Required for statutory donation records. Your information is
-                  kept confidential.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {errors.govtId && (
-            <p className="mt-1 text-sm text-red-600">{errors.govtId}</p>
-          )}
         </div>
 
         {/* Date of Birth */}

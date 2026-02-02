@@ -337,19 +337,6 @@ const Login = () => {
               </div>
             </form>
           )}
-
-          {/* Footer Links */}
-          <div className="pt-4 border-t border-amber-200 text-center">
-            <p className="text-sm text-gray-600">
-              Don't have an account?{" "}
-              <a
-                href="/signup"
-                className="text-amber-600 hover:text-amber-700 font-medium"
-              >
-                Sign up
-              </a>
-            </p>
-          </div>
         </div>
       </div>
     </section>

@@ -1,7 +1,6 @@
 const PDFDocument = require("pdfkit");
 const fs = require("fs");
 const path = require("path");
-const maskId = require("../utils/maskId");
 
 /**
  * Convert filesystem path to public URL path
@@ -331,11 +330,11 @@ exports.generateDonationReceipt = (donation) => {
 
       yPos += addressRowHeight;
 
-      // PAN/Aadhaar
-      const idLabel = donation.donor.idType === "PAN" ? "PAN" : "Aadhaar";
+      // PAN
+      const idLabel = "PAN";
       drawTableRow(
         idLabel,
-        maskId(donation.donor.idType, donation.donor.idNumber),
+        donation.donor.idNumber,
       );
 
       // On Account of (Donation Head)

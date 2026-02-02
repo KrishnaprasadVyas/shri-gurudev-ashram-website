@@ -1,15 +1,36 @@
 import { useState } from 'react';
 import FormInput from '../../../components/FormInput';
 import PrimaryButton from '../../../components/PrimaryButton';
-import { validatePhone } from '../../../utils/helpers';
+
+const COUNTRY_OPTIONS = [
+  { value: "IN", label: "India", dialCode: "+91", length: 10 },
+  { value: "US", label: "United States", dialCode: "+1", length: 10 },
+  { value: "CA", label: "Canada", dialCode: "+1", length: 10 },
+  { value: "GB", label: "United Kingdom", dialCode: "+44", length: 10 },
+  { value: "AU", label: "Australia", dialCode: "+61", length: 9 },
+  { value: "JP", label: "Japan", dialCode: "+81", length: 10 },
+  { value: "AE", label: "United Arab Emirates", dialCode: "+971", length: 9 },
+  { value: "DE", label: "Germany", dialCode: "+49", length: 11 },
+  { value: "FR", label: "France", dialCode: "+33", length: 9 },
+  { value: "SG", label: "Singapore", dialCode: "+65", length: 8 },
+];
 
 const Step1MobileOTP = ({ data, updateData, nextStep }) => {
   const [errors, setErrors] = useState({});
   const [otpSent, setOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [country, setCountry] = useState(COUNTRY_OPTIONS[0]);
+
+  const handleCountryChange = (e) => {
+    const selected = COUNTRY_OPTIONS.find(opt => opt.value === e.target.value);
+    if (selected) {
+      setCountry(selected);
+      updateData({ mobile: '' });
+    }
+  };
 
   const handleMobileChange = (e) => {
-    const mobile = e.target.value.replace(/\D/g, '').slice(0, 10);
+    const mobile = e.target.value.replace(/\D/g, '').slice(0, country.length);
     updateData({ mobile });
     if (errors.mobile) {
       setErrors(prev => ({ ...prev, mobile: '' }));
@@ -30,15 +51,18 @@ const Step1MobileOTP = ({ data, updateData, nextStep }) => {
       return;
     }
 
-    if (!validatePhone(data.mobile)) {
-      setErrors({ mobile: 'Please enter a valid 10-digit mobile number' });
+    if (data.mobile.length !== country.length) {
+      setErrors({ mobile: `Please enter a valid ${country.length}-digit mobile number` });
       return;
     }
+
+    const fullMobile = `${country.dialCode}${data.mobile}`;
 
     setIsLoading(true);
     // TODO: Replace with actual API call
     setTimeout(() => {
-      console.log('OTP sent to:', data.mobile);
+      console.log('OTP sent to:', fullMobile);
+      updateData({ fullMobile }); // Store full mobile with country code
       setOtpSent(true);
       setIsLoading(false);
       // In real app, OTP would be sent via SMS
@@ -73,17 +97,47 @@ const Step1MobileOTP = ({ data, updateData, nextStep }) => {
       </h2>
 
       <div className="space-y-4">
-        <FormInput
-          label="Mobile Number"
-          type="tel"
-          name="mobile"
-          value={data.mobile}
-          onChange={handleMobileChange}
-          placeholder="Enter your 10-digit mobile number"
-          required
-          error={errors.mobile}
-          disabled={otpSent}
-        />
+        {/* Country Code Selector */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Country
+          </label>
+          <select
+            value={country.value}
+            onChange={handleCountryChange}
+            disabled={otpSent}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white disabled:bg-gray-100"
+          >
+            {COUNTRY_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label} ({opt.dialCode})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Mobile Number with Country Code */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Mobile Number <span className="text-red-500">*</span>
+          </label>
+          <div className="flex">
+            <span className="inline-flex items-center px-4 py-3 border border-r-0 border-gray-300 bg-gray-100 text-gray-700 rounded-l-lg font-medium">
+              {country.dialCode}
+            </span>
+            <input
+              type="tel"
+              value={data.mobile}
+              onChange={handleMobileChange}
+              placeholder={`Enter ${country.length}-digit number`}
+              disabled={otpSent}
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:bg-gray-100"
+            />
+          </div>
+          {errors.mobile && (
+            <p className="text-red-500 text-sm mt-1">{errors.mobile}</p>
+          )}
+        </div>
 
         {!otpSent ? (
           <PrimaryButton
@@ -96,7 +150,7 @@ const Step1MobileOTP = ({ data, updateData, nextStep }) => {
         ) : (
           <>
             <div className="bg-green-50 border border-green-200 text-green-700 p-3 rounded-lg text-sm mb-4">
-              OTP sent to {data.mobile}. Please check your SMS.
+              OTP sent to {country.dialCode} {data.mobile}. Please check your SMS.
             </div>
             <FormInput
               label="Enter OTP"

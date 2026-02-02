@@ -2,19 +2,6 @@ import PrimaryButton from '../../../components/PrimaryButton';
 import { formatCurrency } from '../../../utils/helpers';
 
 const Step3Review = ({ data, updateData, nextStep, prevStep }) => {
-  const maskGovtId = (value, type) => {
-    if (!value) return '';
-    if (value.length > 4) {
-      if (type === 'aadhaar') {
-        // Format: **** **** 1234
-        return '**** **** ' + value.slice(-4);
-      } else {
-        return '****' + value.slice(-4);
-      }
-    }
-    return value;
-  };
-
   return (
     <div className="max-w-2xl mx-auto">
       <h2 className="text-2xl font-bold text-amber-900 mb-6 text-center">
@@ -70,17 +57,15 @@ const Step3Review = ({ data, updateData, nextStep, prevStep }) => {
                 {data.address || 'Not provided'}
               </span>
             </div>
-            {data.govtIdType && (
+            {data.pan && (
               <>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Government ID ({data.govtIdType === 'aadhaar' ? 'Aadhaar' : 'PAN'}):</span>
-                <span className="font-semibold text-gray-900">
-                  {data.govtIdType === 'aadhaar' 
-                    ? maskGovtId(data.aadhaar, 'aadhaar') 
-                    : maskGovtId(data.pan, 'pan')}
-                </span>
+                  <span className="text-gray-600">PAN Number:</span>
+                  <span className="font-semibold text-gray-900">
+                    {data.pan}
+                  </span>
                 </div>
-                {data.govtIdType === 'pan' && data.dateOfBirth && (
+                {data.dateOfBirth && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Date of Birth:</span>
                     <span className="font-semibold text-gray-900">

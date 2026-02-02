@@ -2,19 +2,6 @@ import { createContext, useContext, useState, useEffect } from "react";
 
 const DonationsContext = createContext();
 
-// Helper to mask government ID
-const maskGovtId = (id, type) => {
-  if (!id) return "";
-  if (type === "aadhaar" || type === "Aadhaar") {
-    // Mask Aadhaar: Show first 4 and last 4, mask middle
-    return id.length > 8 ? `${id.slice(0, 4)}****${id.slice(-4)}` : "****";
-  } else if (type === "pan" || type === "PAN") {
-    // Mask PAN: Show first 2 and last 1, mask middle
-    return id.length > 3 ? `${id.slice(0, 2)}****${id.slice(-1)}` : "****";
-  }
-  return "****";
-};
-
 // Initialize with mock data
 const getInitialDonations = () => {
   return [
@@ -231,16 +218,12 @@ export const DonationsProvider = ({ children }) => {
         setDonors(updatedDonors);
       } else {
         // Create new donor
-        const govtIdType =
-          donationData.govtIdType === "aadhaar" ? "Aadhaar" : "PAN";
-        const govtId = donationData.aadhaar || donationData.pan || "";
-
         const newDonor = {
           id: Date.now() + 1,
           name: donationData.name,
           mobile: donationData.mobile || "",
-          governmentIdType: govtIdType,
-          governmentIdMasked: maskGovtId(govtId, govtIdType),
+          governmentIdType: "PAN",
+          governmentId: donationData.pan || "",
           totalDonated: newDonation.amount,
         };
         setDonors((prev) => [...prev, newDonor]);
@@ -252,7 +235,6 @@ export const DonationsProvider = ({ children }) => {
     donations,
     donors,
     addDonation,
-    maskGovtId,
   };
 
   return (

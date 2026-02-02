@@ -3,6 +3,10 @@ const mongoose = require("mongoose");
 /**
  * Gallery Image Schema (embedded)
  * Stores URL and metadata for each image in the category
+ * 
+ * URL STRATEGY:
+ * - Old images: /assets/Brochure/** (no thumbnailUrl)
+ * - New uploads: /uploads/gallery/** (with thumbnailUrl)
  */
 const galleryImageSchema = new mongoose.Schema(
   {
@@ -10,6 +14,12 @@ const galleryImageSchema = new mongoose.Schema(
       type: String,
       required: [true, "Image URL is required"],
       trim: true,
+    },
+    // Thumbnail URL for new uploads (null for old /assets/ images)
+    thumbnailUrl: {
+      type: String,
+      trim: true,
+      default: null,
     },
     title: {
       type: String,

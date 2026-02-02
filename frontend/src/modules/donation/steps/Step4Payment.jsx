@@ -69,8 +69,8 @@ const Step4Payment = ({ data, updateData, nextStep, prevStep }) => {
       address: data.address,
       anonymousDisplay: data.anonymousDisplay || false,
       dob: data.dateOfBirth, // YYYY-MM-DD format
-      idType: data.govtIdType === "aadhaar" ? "AADHAAR" : "PAN",
-      idNumber: data.govtIdType === "aadhaar" ? data.aadhaar : data.pan,
+      idType: "PAN",
+      idNumber: data.pan,
     };
 
     // Validate donationHead exists before proceeding

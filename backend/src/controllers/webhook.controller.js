@@ -24,6 +24,7 @@ exports.handleRazorpayWebhook = async (req, res) => {
     }
 
     const event = JSON.parse(req.body.toString());
+    console.log(event)
     const eventType = event.event;
 
     console.log("Webhook received:", eventType);
@@ -64,7 +65,8 @@ exports.handleRazorpayWebhook = async (req, res) => {
 
         // Verify the file was actually created before storing
         if (receiptPath && fs.existsSync(receiptPath)) {
-          donation.receiptUrl = receiptPath;
+          // Store the public URL path, not the filesystem path
+          donation.receiptUrl = getReceiptPublicUrl(receiptPath);
           await donation.save();
           console.log("Receipt generated successfully:", receiptPath);
         } else {
@@ -80,27 +82,16 @@ exports.handleRazorpayWebhook = async (req, res) => {
       // 1. Receipt was successfully generated
       // 2. Donor opted in for email AND has verified email
       if (receiptPath && fs.existsSync(receiptPath)) {
-        console.log("Email check - emailOptIn:", donation.donor?.emailOptIn);
-        console.log(
-          "Email check - emailVerified:",
-          donation.donor?.emailVerified,
-        );
-        console.log("Email check - email:", donation.donor?.email);
-
         const shouldSendEmail =
           donation.donor?.emailOptIn === true &&
           donation.donor?.emailVerified === true &&
           donation.donor?.email;
-
-        console.log("Should send email:", shouldSendEmail);
 
         if (shouldSendEmail) {
           const emailSent = await sendDonationReceiptEmail(
             donation.donor.email,
             receiptPath,
           );
-
-          console.log("Email send result:", emailSent);
 
           if (emailSent) {
             donation.emailSent = true;

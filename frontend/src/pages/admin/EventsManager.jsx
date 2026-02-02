@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useEvents } from "../../context/EventsContext";
+import { eventsApi } from "../../services/adminApi";
 import { formatDate } from "../../utils/helpers";
-import { Loader2 } from "lucide-react";
+import { Loader2, Upload, Trash2 } from "lucide-react";
 
 const EventsManager = () => {
   const {
@@ -19,7 +20,9 @@ const EventsManager = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState(null);
+  const imageInputRef = useRef(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -136,6 +139,39 @@ const EventsManager = () => {
       time: "",
       location: "",
     });
+  };
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowedTypes.includes(file.type)) {
+      showToast("Invalid file type. Use JPG, PNG, WebP or GIF.", "error");
+      return;
+    }
+
+    // Validate file size (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      showToast("File too large. Maximum size is 10MB.", "error");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const response = await eventsApi.uploadImage(file);
+      setFormData((prev) => ({
+        ...prev,
+        imageUrl: response.data.url,
+      }));
+      showToast("Image uploaded successfully");
+    } catch (err) {
+      console.error("Error uploading image:", err);
+      showToast("Failed to upload image", "error");
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -359,18 +395,53 @@ const EventsManager = () => {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-1">
-                  Image URL *
+                  Image <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="url"
-                  required
-                  value={formData.imageUrl}
-                  onChange={(e) =>
-                    setFormData({ ...formData, imageUrl: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  placeholder="https://example.com/image.jpg"
-                />
+                <div className="space-y-2">
+                  {/* Preview */}
+                  {formData.imageUrl && (
+                    <div className="relative w-full h-40 rounded-lg overflow-hidden bg-gray-100">
+                      <img
+                        src={formData.imageUrl}
+                        alt="Event preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, imageUrl: "" })}
+                        className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full hover:bg-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                  {/* Upload button */}
+                  <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => imageInputRef.current?.click()}
+                    disabled={uploading}
+                    className="w-full inline-flex items-center justify-center px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-amber-500 hover:text-amber-600 transition-colors disabled:opacity-50"
+                  >
+                    {uploading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-5 h-5 mr-2" />
+                        {formData.imageUrl ? "Change Image" : "Upload Image"}
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
               <div className="flex items-center">
                 <input

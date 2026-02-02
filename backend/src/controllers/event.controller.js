@@ -1,4 +1,5 @@
 const Event = require("../models/Event");
+const imageService = require("../services/image.service");
 
 /**
  * EVENT CONTROLLER
@@ -281,7 +282,10 @@ exports.createEvent = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Event created successfully",
-      data: event,
+      data: {
+        _id: event._id,
+        title: event.title,
+      },
     });
   } catch (error) {
     console.error("Error creating event:", error);
@@ -353,7 +357,10 @@ exports.updateEvent = async (req, res) => {
     res.json({
       success: true,
       message: "Event updated successfully",
-      data: event,
+      data: {
+        _id: event._id,
+        title: event.title,
+      },
     });
   } catch (error) {
     console.error("Error updating event:", error);
@@ -512,6 +519,45 @@ exports.updateEventStatuses = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to update event statuses",
+    });
+  }
+};
+
+// ==================== IMAGE UPLOAD ====================
+
+/**
+ * POST /api/admin/website/events/upload
+ * Upload image for event
+ * Returns processed image URL
+ */
+exports.uploadImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No image file provided",
+      });
+    }
+
+    const result = await imageService.processAndSaveImage(
+      req.file.buffer,
+      req.file.originalname
+    );
+
+    res.status(201).json({
+      success: true,
+      message: "Image uploaded successfully",
+      data: {
+        url: result.url,
+        thumbnailUrl: result.thumbnailUrl,
+        originalName: result.originalName,
+      },
+    });
+  } catch (error) {
+    console.error("Error uploading event image:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to upload image",
     });
   }
 };

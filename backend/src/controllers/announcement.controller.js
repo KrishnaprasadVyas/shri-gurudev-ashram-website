@@ -160,7 +160,10 @@ exports.createAnnouncement = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Announcement created successfully",
-      data: announcement,
+      data: {
+        _id: announcement._id,
+        text: announcement.text.substring(0, 50),
+      },
     });
   } catch (error) {
     console.error("Error creating announcement:", error);
@@ -231,7 +234,10 @@ exports.updateAnnouncement = async (req, res) => {
     res.json({
       success: true,
       message: "Announcement updated successfully",
-      data: announcement,
+      data: {
+        _id: announcement._id,
+        text: announcement.text.substring(0, 50),
+      },
     });
   } catch (error) {
     console.error("Error updating announcement:", error);
