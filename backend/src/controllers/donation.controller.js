@@ -327,14 +327,14 @@ exports.getUserDonations = async (req, res) => {
       )
       .sort({ createdAt: -1 });
 
-    // Format response with display name handling and masked donor data
+    // Format response with display name handling
     const formattedDonations = donations.map((d) => {
       const donorObj = d.donor.toObject ? d.donor.toObject() : d.donor;
       return {
         _id: d._id,
         donationHead: d.donationHead,
         donorName: donorObj.anonymousDisplay ? "Anonymous" : donorObj.name,
-        donor: maskDonorData(donorObj),
+        donor: donorObj,
         amount: d.amount,
         status: d.status,
         createdAt: d.createdAt,

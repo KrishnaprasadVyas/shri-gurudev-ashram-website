@@ -3,22 +3,20 @@
  * 
  * Handles image URLs from different sources:
  * - Old: /assets/Brochure/** (served by frontend Vite/Nginx)
- * - New: /uploads/gallery/** (served by backend Express)
+ * - New: /uploads/gallery/** (served by backend Express / Nginx)
  * - External: https://...
  * 
- * This utility ensures backward compatibility while supporting new uploads.
+ * PRODUCTION RULE: All paths must be ABSOLUTE from domain root (start with /)
+ * NGINX serves /uploads/ directly - no hostname or API_URL needed
  */
-
-// Backend API URL (for /uploads/ paths)
-const API_URL = import.meta.env.VITE_API_URL || '';
 
 /**
- * Get full image URL based on source
+ * Resolve any image URL to correct format
  * 
  * @param {string} url - Image URL from database
- * @returns {string} - Full URL ready for img src
+ * @returns {string} - URL ready for img src (absolute path from root)
  */
-export const getImageUrl = (url) => {
+export const resolveImageUrl = (url) => {
   if (!url) return '';
 
   // External URLs - use as-is
@@ -26,20 +24,17 @@ export const getImageUrl = (url) => {
     return url;
   }
 
-  // New uploads from backend - prepend API URL
-  if (url.startsWith('/uploads/')) {
-    return `${API_URL}${url}`;
+  // Ensure leading slash for all paths
+  if (!url.startsWith('/')) {
+    return `/${url}`;
   }
 
-  // Old assets from frontend public folder - use as-is
-  // These are served directly by Vite dev server or Nginx in production
-  if (url.startsWith('/assets/')) {
-    return url;
-  }
-
-  // Unknown format - return as-is
+  // Return absolute path as-is (works for /uploads/, /assets/, etc.)
   return url;
 };
+
+// Alias for backward compatibility
+export const getImageUrl = resolveImageUrl;
 
 /**
  * Get thumbnail URL for an image
@@ -51,12 +46,11 @@ export const getImageUrl = (url) => {
 export const getThumbnailUrl = (url, thumbnailUrl) => {
   // If explicit thumbnail provided (new uploads), use it
   if (thumbnailUrl) {
-    return getImageUrl(thumbnailUrl);
+    return resolveImageUrl(thumbnailUrl);
   }
 
   // For old /assets/ images, there's no thumbnail - use original
-  // The browser will load full image (existing behavior)
-  return getImageUrl(url);
+  return resolveImageUrl(url);
 };
 
 /**
@@ -90,8 +84,8 @@ export const isOldAsset = (url) => {
 export const getImageSrcSet = (url, thumbnailUrl) => {
   if (!thumbnailUrl) return '';
 
-  const thumb = getImageUrl(thumbnailUrl);
-  const full = getImageUrl(url);
+  const thumb = resolveImageUrl(thumbnailUrl);
+  const full = resolveImageUrl(url);
 
   // thumbnail at 400w, full at 1920w
   return `${thumb} 400w, ${full} 1920w`;
