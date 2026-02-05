@@ -10,6 +10,7 @@ import MainLayout from "./layouts/MainLayout";
 import ScrollToTop from "./components/ScrollToTop";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Pages
 import Home from "./pages/Home";
@@ -54,16 +55,17 @@ import VerifyEmail from "./pages/VerifyEmail";
 
 function App() {
   return (
-    <BrowserRouter>
-      <ScrollToTop />
-      <AuthProvider>
-        <CartProvider>
-          <GalleryProvider>
-            <EventsProvider>
-              <ActivitiesProvider>
-                <AnnouncementProvider>
-                  <DonationsProvider>
-                    <Routes>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <ScrollToTop />
+        <AuthProvider>
+          <CartProvider>
+            <GalleryProvider>
+              <EventsProvider>
+                <ActivitiesProvider>
+                  <AnnouncementProvider>
+                    <DonationsProvider>
+                      <Routes>
                       <Route path="/" element={<MainLayout />}>
                         {/* Main Pages */}
                         <Route index element={<Home />} />
@@ -168,6 +170,7 @@ function App() {
         </CartProvider>
       </AuthProvider>
     </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 

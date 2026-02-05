@@ -43,3 +43,42 @@ export const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
+/**
+ * Safely mask PAN or Aadhaar numbers for display
+ * @param {string} idNumber - The ID number to mask
+ * @param {string} idType - "PAN" or "Aadhaar"
+ * @returns {string} Masked ID
+ *
+ * Examples:
+ * - Aadhaar: "123456789012" → "**** **** 9012"
+ * - PAN: "ABCDE1234F" → "******234F"
+ */
+export const maskGovtId = (idNumber, idType) => {
+  try {
+    if (!idNumber || typeof idNumber !== 'string') return '****';
+
+    const id = idNumber.trim();
+    if (id.length <= 4) return '****';
+
+    const normalizedType = idType?.toUpperCase();
+
+    if (normalizedType === 'AADHAAR') {
+      // Aadhaar: Show last 4 digits with format "**** **** 1234"
+      const last4 = id.slice(-4);
+      return `**** **** ${last4}`;
+    }
+
+    if (normalizedType === 'PAN') {
+      // PAN: Show last 4 characters with format "******1234"
+      const last4 = id.slice(-4);
+      return `******${last4}`;
+    }
+
+    // Default fallback: mask all but last 4
+    return '****' + id.slice(-4);
+  } catch (error) {
+    console.error('maskGovtId error:', error);
+    return '****';
+  }
+};
+
