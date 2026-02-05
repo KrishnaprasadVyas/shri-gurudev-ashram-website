@@ -4,11 +4,26 @@ const mongoose = require("mongoose");
  * Donation Schema
  * Stores complete donor snapshot at time of donation
  * This ensures donation records are self-contained and immutable
+ * 
+ * Collector fields:
+ * - collectorId: Reference to User who referred the donation (nullable)
+ * - collectorName: Snapshot of collector's name at donation time (for receipts)
  */
 const donationSchema = new mongoose.Schema(
   {
-    // Optional reference to registered user
+    // Optional reference to registered user (the donor)
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+
+    // === COLLECTOR/REFERRAL (nullable - donation may not have a collector) ===
+    collectorId: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: "User",
+      default: null 
+    },
+    collectorName: { 
+      type: String, 
+      default: null 
+    }, // Snapshot for receipts - avoids future lookups
 
     // === DONOR SNAPSHOT (captured at donation time) ===
     donor: {
@@ -63,6 +78,7 @@ const donationSchema = new mongoose.Schema(
 
 // Index for user donations lookup
 donationSchema.index({ user: 1, createdAt: -1 });
+donationSchema.index({ collectorId: 1, createdAt: -1 }); // Leaderboard & collector stats
 donationSchema.index({ "donor.mobile": 1 });
 donationSchema.index({ status: 1 });
 donationSchema.index({ paymentMethod: 1 });

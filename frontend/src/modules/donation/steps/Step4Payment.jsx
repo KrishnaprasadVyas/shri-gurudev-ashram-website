@@ -88,7 +88,8 @@ const Step4Payment = ({ data, updateData, nextStep, prevStep }) => {
       donor,
       donationHead,
       amount: data.amount,
-      otpVerified: data.otpVerified || false,
+      // Include referral code if present (from URL params)
+      ...(data.referralCode && { referralCode: data.referralCode }),
     };
 
     const result = await localApiRequest("/donations/create", payload);

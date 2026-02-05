@@ -9,6 +9,7 @@ const SystemAdminLayout = () => {
     { path: "/admin/system/donations", label: "Donations", active: false, disabled: false },
     { path: "/admin/system/cash-donation", label: "Add Cash Donation", active: false, disabled: false, indent: true },
     { path: "/admin/system/donors", label: "Donors", active: false, disabled: false },
+    { path: "/admin/system/collectors", label: "Collectors", active: false, disabled: false },
     { path: "/admin/system/reports", label: "Reports", active: false, disabled: false },
     { path: "/admin/system/exports", label: "Exports", active: false, disabled: false },
   ];

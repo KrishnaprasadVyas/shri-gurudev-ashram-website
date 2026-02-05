@@ -13,8 +13,13 @@ import Step5Success from "./steps/Step5Success";
  * - Controls step navigation (next, prev, reset)
  * - Passes props to step components
  * - Does NOT call backend directly (Step4Payment handles API calls)
+ * 
+ * Props:
+ * - selectedCause: The donation cause selected by user
+ * - referralData: { code, collectorName, isValid } from URL params
+ * - prefillAmount: Suggested amount from URL params
  */
-const DonationFlow = ({ selectedCause, onCauseProcessed }) => {
+const DonationFlow = ({ selectedCause, onCauseProcessed, referralData, prefillAmount }) => {
   const [currentStep, setCurrentStep] = useState(1);
 
   // Core donation state - aligned with backend API requirements
@@ -44,6 +49,10 @@ const DonationFlow = ({ selectedCause, onCauseProcessed }) => {
     amount: 0,
     customAmount: "",
 
+    // Referral/Collector info (from URL params, immutable during flow)
+    referralCode: null,      // Code from URL - sent to backend
+    collectorName: null,     // Resolved collector name - for display only
+
     // Backend-generated IDs (set by Step4Payment after API calls)
     donationId: null, // From POST /donations/create
     razorpayOrderId: null, // From POST /donations/create-order
@@ -57,6 +66,28 @@ const DonationFlow = ({ selectedCause, onCauseProcessed }) => {
     // Legacy field for backward compatibility with Step5Success
     transactionId: null,
   });
+
+  // Initialize referral data from props (once, on mount or when referralData changes)
+  useEffect(() => {
+    if (referralData?.isValid && referralData?.code) {
+      setDonationData((prev) => ({
+        ...prev,
+        referralCode: referralData.code,
+        collectorName: referralData.collectorName,
+      }));
+    }
+  }, [referralData]);
+
+  // Initialize prefill amount from props
+  useEffect(() => {
+    if (prefillAmount && prefillAmount > 0) {
+      setDonationData((prev) => ({
+        ...prev,
+        amount: prefillAmount,
+        customAmount: prefillAmount.toString(),
+      }));
+    }
+  }, [prefillAmount]);
 
   // When a cause is selected from DonationPage, update state and reset to step 1
   useEffect(() => {
@@ -91,10 +122,11 @@ const DonationFlow = ({ selectedCause, onCauseProcessed }) => {
   /**
    * Reset entire flow - clears all data and goes back to step 1
    * SECURITY: Clears sensitive fields (PAN/Aadhaar) from memory
+   * NOTE: Preserves referral data from URL (immutable during session)
    */
   const resetFlow = useCallback(() => {
     setCurrentStep(1);
-    setDonationData({
+    setDonationData((prev) => ({
       mobile: "",
       name: "",
       email: "",
@@ -106,8 +138,11 @@ const DonationFlow = ({ selectedCause, onCauseProcessed }) => {
       anonymousDisplay: false,
       otpVerified: false,
       donationHead: null,
-      amount: 0,
-      customAmount: "",
+      amount: prefillAmount || 0,
+      customAmount: prefillAmount ? prefillAmount.toString() : "",
+      // Preserve referral data - it came from URL and should persist
+      referralCode: prev.referralCode,
+      collectorName: prev.collectorName,
       donationId: null,
       razorpayOrderId: null,
       razorpayOrderAmount: null,
@@ -115,8 +150,8 @@ const DonationFlow = ({ selectedCause, onCauseProcessed }) => {
       razorpayPaymentId: null,
       receiptNumber: null,
       transactionId: null,
-    });
-  }, []);
+    }));
+  }, [prefillAmount]);
 
   // Step definitions for progress indicator
   const steps = [

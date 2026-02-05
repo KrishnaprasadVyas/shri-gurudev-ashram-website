@@ -1,4 +1,39 @@
 const Donation = require("../models/Donation");
+const { resolveCollector } = require("../services/collector.service");
+
+/**
+ * PUBLIC API: Validate Referral Code
+ * GET /api/public/referral/:code
+ *
+ * Returns collector name if referral code is valid.
+ * No authentication required.
+ *
+ * Response: { valid: true, collectorName } or { valid: false }
+ */
+exports.validateReferralCode = async (req, res) => {
+  try {
+    const { code } = req.params;
+
+    if (!code || code.length < 4) {
+      return res.json({ valid: false });
+    }
+
+    const collector = await resolveCollector(code);
+
+    if (!collector) {
+      return res.json({ valid: false });
+    }
+
+    // Only return collector name - never expose IDs to public
+    res.json({
+      valid: true,
+      collectorName: collector.collectorName,
+    });
+  } catch (error) {
+    console.error("Error validating referral code:", error);
+    res.json({ valid: false });
+  }
+};
 
 /**
  * PUBLIC API: Get Recent Donations

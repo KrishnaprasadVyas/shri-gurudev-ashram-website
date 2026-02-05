@@ -42,10 +42,13 @@ import DonorsView from "./pages/admin/DonorsView";
 import ReportsView from "./pages/admin/ReportsView";
 import ExportsView from "./pages/admin/ExportsView";
 import CashDonationForm from "./pages/admin/CashDonationForm";
+import CollectorsView from "./pages/admin/CollectorsView";
+import CollectorDetailView from "./pages/admin/CollectorDetailView";
 
 // Donation Module
 import DonationPage from "./modules/donation/DonationPage";
 import MyDonations from "./pages/MyDonations";
+import CollectorDashboard from "./pages/CollectorDashboard";
 
 // E-commerce Module (disabled)
 import ShopComingSoon from "./pages/ShopComingSoon";
@@ -92,6 +95,14 @@ function App() {
                           element={
                             <ProtectedRoute>
                               <MyDonations />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="collector"
+                          element={
+                            <ProtectedRoute>
+                              <CollectorDashboard />
                             </ProtectedRoute>
                           }
                         />
@@ -153,6 +164,8 @@ function App() {
                           <Route path="overview" element={<SystemOverview />} />
                           <Route path="donations" element={<DonationsView />} />
                           <Route path="donors" element={<DonorsView />} />
+                          <Route path="collectors" element={<CollectorsView />} />
+                          <Route path="collectors/:id" element={<CollectorDetailView />} />
                           <Route path="reports" element={<ReportsView />} />
                           <Route path="exports" element={<ExportsView />} />
                           <Route

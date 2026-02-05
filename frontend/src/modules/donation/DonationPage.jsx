@@ -4,6 +4,7 @@ import SectionHeading from "../../components/SectionHeading";
 import DonationFlow from "./DonationFlow";
 import DonorList from "./DonorList";
 import { donationHeads, donationIcons } from "../../data/dummyData";
+import { API_BASE_URL } from "../../utils/api";
 
 // Heart Icon for donate button
 const HeartIcon = ({ className }) => (
@@ -33,25 +34,105 @@ const DonationPage = () => {
   const [imageErrors, setImageErrors] = useState({});
   const [searchParams] = useSearchParams();
 
-  // Check if Quick Donate was clicked (from header)
+  // Referral state from URL params
+  const [referralData, setReferralData] = useState({
+    code: null,           // Referral code from URL
+    collectorName: null,  // Resolved collector name
+    isValid: false,       // Whether code was validated
+    isLoading: false,     // Loading state during validation
+    error: null,          // Soft error for invalid codes
+  });
+
+  // Prefill amount from URL
+  const [prefillAmount, setPrefillAmount] = useState(null);
+
+  // Handle URL parameters: ref, cause, amount
   useEffect(() => {
+    const refCode = searchParams.get("ref");
+    const causeName = searchParams.get("cause");
+    const amount = searchParams.get("amount");
     const quickDonate = searchParams.get("quick");
-    if (quickDonate === "true") {
+
+    // Handle referral code
+    if (refCode) {
+      validateReferralCode(refCode);
+    }
+
+    // Handle cause prefill
+    if (causeName) {
+      const matchedCause = donationHeads.find(
+        (h) => h.name.toLowerCase() === causeName.toLowerCase()
+      );
+      if (matchedCause) {
+        setSelectedCause(matchedCause);
+      }
+    } else if (quickDonate === "true") {
+      // Fallback to Quick Donate behavior
       const generalSeva = donationHeads.find((h) => h.name === "General Seva");
       if (generalSeva) {
         setSelectedCause(generalSeva);
-        // Scroll to donation flow after component renders
-        setTimeout(() => {
-          if (donationFlowRef.current) {
-            donationFlowRef.current.scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-            });
-          }
-        }, 300);
       }
     }
+
+    // Handle amount prefill
+    if (amount) {
+      const parsedAmount = parseInt(amount, 10);
+      if (!isNaN(parsedAmount) && parsedAmount > 0) {
+        setPrefillAmount(parsedAmount);
+      }
+    }
+
+    // Scroll to donation flow if any params present
+    if (refCode || causeName || quickDonate === "true") {
+      setTimeout(() => {
+        if (donationFlowRef.current) {
+          donationFlowRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
+      }, 300);
+    }
   }, [searchParams]);
+
+  // Validate referral code via backend
+  const validateReferralCode = async (code) => {
+    setReferralData((prev) => ({ ...prev, code, isLoading: true, error: null }));
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/public/referral/${encodeURIComponent(code)}`);
+      const data = await response.json();
+
+      if (data.valid && data.collectorName) {
+        setReferralData({
+          code,
+          collectorName: data.collectorName,
+          isValid: true,
+          isLoading: false,
+          error: null,
+        });
+      } else {
+        // Invalid code - show soft warning, allow donation to continue
+        setReferralData({
+          code: null,
+          collectorName: null,
+          isValid: false,
+          isLoading: false,
+          error: "Referral code not recognized. You can still donate without it.",
+        });
+      }
+    } catch (error) {
+      console.warn("Referral validation error:", error);
+      // Network error - still allow donation
+      setReferralData({
+        code: null,
+        collectorName: null,
+        isValid: false,
+        isLoading: false,
+        error: null, // Don't show error for network issues
+      });
+    }
+  };
 
   const handleCauseSelect = (head) => {
     setSelectedCause(head);
@@ -168,10 +249,41 @@ const DonationPage = () => {
           {/* Live Donor List */}
           <DonorList />
 
+          {/* Referral info banner - show when valid referral code exists */}
+          {referralData.isValid && referralData.collectorName && (
+            <div className="mt-8 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
+              <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-green-800 font-medium">
+                  Collected by: <span className="font-bold">{referralData.collectorName}</span>
+                </p>
+                <p className="text-green-600 text-sm">Your donation will be attributed to this collector</p>
+              </div>
+            </div>
+          )}
+
+          {/* Referral error warning - soft, doesn't block donation */}
+          {referralData.error && (
+            <div className="mt-8 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-3">
+              <svg className="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <p className="text-amber-700">{referralData.error}</p>
+            </div>
+          )}
+
           {/* Donation Flow - Only show when a cause is selected */}
           {selectedCause && (
             <div ref={donationFlowRef} className="mt-12">
-              <DonationFlow selectedCause={selectedCause} />
+              <DonationFlow 
+                selectedCause={selectedCause} 
+                referralData={referralData}
+                prefillAmount={prefillAmount}
+              />
             </div>
           )}
         </div>

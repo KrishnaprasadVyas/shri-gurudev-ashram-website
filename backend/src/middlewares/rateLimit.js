@@ -78,3 +78,29 @@ exports.emailVerificationLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+/**
+ * FIX 1: Donation creation rate limiter
+ * 10 requests per minute per IP
+ * Purpose: Prevent spam/abuse while allowing legitimate donors
+ */
+exports.donationCreateLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10,
+  message: { message: "Too many donation attempts. Please wait a moment." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+/**
+ * FIX 2: Public API rate limiter (referral validation)
+ * 30 requests per minute per IP
+ * Purpose: Prevent brute-force guessing of referral codes
+ */
+exports.publicApiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30,
+  message: { message: "Too many requests. Please slow down." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});

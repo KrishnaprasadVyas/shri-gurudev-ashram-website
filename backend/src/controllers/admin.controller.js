@@ -288,3 +288,236 @@ exports.getReports = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+/**
+ * Get all collectors with stats (Admin only)
+ * GET /api/admin/system/collectors
+ * Returns all users who have made referral attributions
+ */
+exports.getAllCollectors = async (req, res) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Get collector stats from donations
+    const collectorStats = await Donation.aggregate([
+      {
+        $match: {
+          collectorId: { $ne: null },
+          status: "SUCCESS",
+        },
+      },
+      {
+        $group: {
+          _id: "$collectorId",
+          totalAmount: { $sum: "$amount" },
+          donationCount: { $sum: 1 },
+          collectorName: { $last: "$collectorName" },
+        },
+      },
+      { $sort: { totalAmount: -1 } },
+      { $skip: skip },
+      { $limit: parseInt(limit) },
+    ]);
+
+    // Get total count for pagination
+    const totalCollectors = await Donation.aggregate([
+      { $match: { collectorId: { $ne: null }, status: "SUCCESS" } },
+      { $group: { _id: "$collectorId" } },
+      { $count: "total" },
+    ]);
+
+    // Enrich with user details (disabled status, referral code)
+    const collectorIds = collectorStats.map((c) => c._id);
+    const users = await User.find({ _id: { $in: collectorIds } })
+      .select("_id fullName referralCode collectorDisabled")
+      .lean();
+
+    const userMap = users.reduce((acc, u) => {
+      acc[u._id.toString()] = u;
+      return acc;
+    }, {});
+
+    const collectors = collectorStats.map((stat, index) => {
+      const user = userMap[stat._id.toString()] || {};
+      return {
+        rank: skip + index + 1,
+        collectorId: stat._id,
+        collectorName: user.fullName || stat.collectorName || "Unknown",
+        referralCode: user.referralCode || null,
+        collectorDisabled: user.collectorDisabled || false,
+        totalAmount: stat.totalAmount,
+        donationCount: stat.donationCount,
+      };
+    });
+
+    res.json({
+      collectors,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: totalCollectors[0]?.total || 0,
+        totalPages: Math.ceil((totalCollectors[0]?.total || 0) / parseInt(limit)),
+      },
+    });
+  } catch (error) {
+    console.error("Get collectors error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/**
+ * Get collector details with donations (Admin only)
+ * GET /api/admin/system/collectors/:id
+ */
+exports.getCollectorDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Get user info
+    const user = await User.findById(id)
+      .select("_id fullName referralCode collectorDisabled createdAt")
+      .lean();
+
+    if (!user) {
+      return res.status(404).json({ message: "Collector not found" });
+    }
+
+    // Get collector stats
+    const stats = await Donation.aggregate([
+      { $match: { collectorId: user._id, status: "SUCCESS" } },
+      {
+        $group: {
+          _id: null,
+          totalAmount: { $sum: "$amount" },
+          donationCount: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Get donations attributed to this collector (limited info for privacy)
+    const donations = await Donation.find({
+      collectorId: user._id,
+      status: "SUCCESS",
+    })
+      .select("_id createdAt amount donationHead status")
+      .sort({ createdAt: -1 })
+      .limit(100)
+      .lean();
+
+    // Format donations (no donor PII)
+    const formattedDonations = donations.map((d) => ({
+      donationId: d._id,
+      date: d.createdAt,
+      amount: d.amount,
+      cause: d.donationHead?.name || "General",
+      status: d.status,
+    }));
+
+    res.json({
+      collector: {
+        id: user._id,
+        name: user.fullName,
+        referralCode: user.referralCode,
+        disabled: user.collectorDisabled || false,
+        createdAt: user.createdAt,
+      },
+      stats: {
+        totalAmount: stats[0]?.totalAmount || 0,
+        donationCount: stats[0]?.donationCount || 0,
+      },
+      donations: formattedDonations,
+    });
+  } catch (error) {
+    console.error("Get collector details error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/**
+ * Toggle collector disabled status (Admin only)
+ * PATCH /api/admin/system/collectors/:id/toggle-status
+ * 
+ * NOTE: This is a true toggle - it flips the current state.
+ * No request body required. This prevents accidental state mismatches.
+ */
+exports.toggleCollectorStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body; // Optional reason for audit
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "Collector not found" });
+    }
+
+    // True toggle: flip current state (no client-provided value accepted)
+    const previousState = user.collectorDisabled || false;
+    user.collectorDisabled = !previousState;
+    await user.save();
+
+    // Audit log with admin ID, collector ID, and action
+    console.log(
+      `[ADMIN AUDIT] CollectorToggle | Admin: ${req.user.id} | Collector: ${user._id} (${user.fullName}) | Action: ${
+        user.collectorDisabled ? "DISABLED" : "ENABLED"
+      } | Previous: ${previousState ? "DISABLED" : "ENABLED"} | Reason: ${reason || "Not specified"}`
+    );
+
+    res.json({
+      message: `Collector ${disabled ? "disabled" : "enabled"} successfully`,
+      collector: {
+        id: user._id,
+        name: user.fullName,
+        disabled: user.collectorDisabled,
+      },
+    });
+  } catch (error) {
+    console.error("Toggle collector status error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/**
+ * Get collector summary stats for admin dashboard
+ * GET /api/admin/system/collectors/summary
+ */
+exports.getCollectorSummary = async (req, res) => {
+  try {
+    // Total active collectors (users with at least 1 donation attributed)
+    const activeCollectors = await Donation.aggregate([
+      { $match: { collectorId: { $ne: null }, status: "SUCCESS" } },
+      { $group: { _id: "$collectorId" } },
+      { $count: "total" },
+    ]);
+
+    // Donations with vs without referral
+    const referralStats = await Donation.aggregate([
+      { $match: { status: "SUCCESS" } },
+      {
+        $group: {
+          _id: { $cond: [{ $ne: ["$collectorId", null] }, "with_referral", "without_referral"] },
+          count: { $sum: 1 },
+          amount: { $sum: "$amount" },
+        },
+      },
+    ]);
+
+    const withReferral = referralStats.find((r) => r._id === "with_referral") || { count: 0, amount: 0 };
+    const withoutReferral = referralStats.find((r) => r._id === "without_referral") || { count: 0, amount: 0 };
+
+    res.json({
+      activeCollectors: activeCollectors[0]?.total || 0,
+      withReferral: {
+        count: withReferral.count,
+        amount: withReferral.amount,
+      },
+      withoutReferral: {
+        count: withoutReferral.count,
+        amount: withoutReferral.amount,
+      },
+    });
+  } catch (error) {
+    console.error("Get collector summary error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

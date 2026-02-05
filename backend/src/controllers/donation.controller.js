@@ -10,6 +10,7 @@ const bcrypt = require("bcrypt");
 const { generateDonationReceipt } = require("../services/receipt.service");
 const { sendDonationReceiptEmail } = require("../services/email.service");
 const { sendLoginOtp } = require("../services/whatsapp.service");
+const { resolveCollector, getTopCollectors, getCollectorStats } = require("../services/collector.service");
 
 /**
  * Helper: Validate PAN number
@@ -174,10 +175,12 @@ exports.verifyDonationOtp = async (req, res) => {
  * Create donation record
  * POST /donations/create
  * Accepts full donor object and stores snapshot
+ * Optional referralCode for collector attribution
  */
 exports.createDonation = async (req, res) => {
   try {
-    const { donor, donationHead, amount, otpVerified } = req.body;
+    // FIX 1: Removed otpVerified from destructuring - never trust client input
+    const { donor, donationHead, amount, referralCode } = req.body;
 
     // Validate required fields
     if (!donor || !donationHead || !amount || amount <= 0) {
@@ -227,10 +230,16 @@ exports.createDonation = async (req, res) => {
       return res.status(400).json({ message: ageValidation.message });
     }
 
+    // Resolve collector from referral code (safe - returns null if invalid/missing)
+    const collector = await resolveCollector(referralCode);
+
     // Create donation with donor snapshot
     
     const donation = await Donation.create({
       user: req.user?.id || null,
+      // Collector attribution (nullable)
+      collectorId: collector?.collectorId || null,
+      collectorName: collector?.collectorName || null,
       donor: {
         name,
         mobile,
@@ -249,7 +258,8 @@ exports.createDonation = async (req, res) => {
       },
       amount,
       paymentMethod: "ONLINE",
-      otpVerified: otpVerified || false,
+      // FIX 1: Always false - only set true server-side after OTP verification
+      otpVerified: false,
       status: "PENDING",
     });
 
@@ -440,5 +450,44 @@ exports.downloadReceipt = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to download receipt" });
+  }
+};
+
+/**
+ * Get top collectors leaderboard
+ * GET /donations/leaderboard
+ * Returns top 5 collectors ranked by total donation amount
+ */
+exports.getLeaderboard = async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 5, 20); // Cap at 20
+    const leaderboard = await getTopCollectors(limit);
+    res.json({ leaderboard });
+  } catch (error) {
+    console.error("Leaderboard error:", error);
+    res.status(500).json({ message: "Failed to fetch leaderboard" });
+  }
+};
+
+/**
+ * Get current user's collector stats
+ * GET /donations/my-collector-stats
+ * Requires authentication
+ */
+exports.getMyCollectorStats = async (req, res) => {
+  try {
+    if (!req.user?.id) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const stats = await getCollectorStats(req.user.id);
+    if (!stats) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(stats);
+  } catch (error) {
+    console.error("Collector stats error:", error);
+    res.status(500).json({ message: "Failed to fetch collector stats" });
   }
 };

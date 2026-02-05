@@ -37,6 +37,7 @@ const numberToWords = (num) => {
     "Eighteen",
     "Nineteen",
   ];
+
   const tens = [
     "",
     "",
@@ -85,19 +86,14 @@ const numberToWords = (num) => {
   return result.trim();
 };
 
-/**
- * Generate donation receipt PDF
- * Clean table-based format similar to reference design
- */
 exports.generateDonationReceipt = (donation) => {
   return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument({ size: "A4", margin: 50 });
 
       const fileName = `receipt_${donation._id}.pdf`;
-      const receiptsDir = path.join(__dirname, "../../receipts");
+      const receiptsDir = path.join(process.cwd(), "receipts");
 
-      // Ensure receipts directory exists
       if (!fs.existsSync(receiptsDir)) {
         fs.mkdirSync(receiptsDir, { recursive: true });
       }
@@ -106,293 +102,372 @@ exports.generateDonationReceipt = (donation) => {
       const writeStream = fs.createWriteStream(filePath);
       doc.pipe(writeStream);
 
-      // Listen for finish event on the write stream
-      writeStream.on("finish", () => {
-        // Return FULL filesystem path for email attachments
-        resolve(filePath);
-      });
+      writeStream.on("finish", () => resolve(filePath));
+      writeStream.on("error", reject);
 
-      writeStream.on("error", (err) => {
-        reject(err);
-      });
+      const pageWidth = doc.page.width;
+      const contentWidth = pageWidth - 100;
+      let y = 50;
 
-      // Colors
-      const primaryColor = "#D97706"; // Orange color matching website
-      const borderColor = "#CBD5E1"; // Light gray border
-      const textDark = "#1E293B";
-      const textLight = "#64748B";
-      const highlightBg = "#FEF9C3"; // Light yellow for amount row
+      // ===== PAGE BORDER (ORANGE) =====
+      const borderMargin = 20;
+      doc
+        .strokeColor("#FF6600")
+        .lineWidth(3)
+        .rect(borderMargin, borderMargin, pageWidth - 2 * borderMargin, doc.page.height - 2 * borderMargin)
+        .stroke();
 
-      // Page dimensions
-      const pageWidth = 595.28;
-      const margin = 50;
-      const contentWidth = pageWidth - margin * 2;
+      const imageSize = 100; // Original size
+      const imageRadius = imageSize / 2;
 
-      let yPos = margin;
-
-      // ==================== LOGO & PHOTO ====================
-      const logoPath = path.join(
-        __dirname,
-        "../../../frontend/public/assets/Logo.png",
-      );
-      const gurudevPath = path.join(
-        __dirname,
-        "../../../frontend/public/assets/gurudev.jpg",
-      );
-
-      const imageSize = 60;
-
-      // Add Logo on the left
+      // ===== LOGO (TOP LEFT - CIRCULAR) =====
+      const logoPath = path.join(__dirname, "../../assets/recieptLogo.jpg.png");
       if (fs.existsSync(logoPath)) {
-        try {
-          doc.image(logoPath, margin, yPos, {
-            width: imageSize,
-            height: imageSize,
-          });
-        } catch (err) {
-          console.log("Could not load logo for receipt");
-        }
+        doc.save();
+        doc.circle(50 + imageRadius, 50 + imageRadius, imageRadius).clip();
+        doc.image(logoPath, 50, 50, {
+          width: imageSize,
+          height: imageSize,
+        });
+        doc.restore();
+        
+        // Circular border
+        doc
+          .strokeColor("#E69138")
+          .lineWidth(2.5)
+          .circle(50 + imageRadius, 50 + imageRadius, imageRadius)
+          .stroke();
       }
 
-      // Add Gurudev photo on the right
+      // ===== GURUDEV IMAGE (TOP RIGHT - CIRCULAR) =====
+      const gurudevPath = path.join(__dirname, "../../assets/gurudev.jpg.png");
       if (fs.existsSync(gurudevPath)) {
-        try {
-          doc.image(gurudevPath, pageWidth - margin - imageSize, yPos, {
-            width: imageSize,
-            height: imageSize,
-          });
-        } catch (err) {
-          console.log("Could not load Gurudev photo for receipt");
-        }
+        const rightX = pageWidth - 50 - imageSize;
+        doc.save();
+        doc.circle(rightX + imageRadius, 50 + imageRadius, imageRadius).clip();
+        // Shift image slightly left to center face in circle
+        doc.image(gurudevPath, rightX - 8, 50, {
+          width: imageSize,
+          height: imageSize,
+        });
+        doc.restore();
+        
+        // Circular border
+        doc
+          .strokeColor("#E69138")
+          .lineWidth(2.5)
+          .circle(rightX + imageRadius, 50 + imageRadius, imageRadius)
+          .stroke();
+        
+        // Text below gurudev image
+        doc
+          .fillColor("#000000")
+          .font("Helvetica-Bold")
+          .fontSize(8)
+          .text(
+            "Swami Harichaitanyanand",
+            rightX,
+            50 + imageSize + 6,
+            { align: "center", width: imageSize }
+          )
+          .text(
+            "Sarswati Ji Maharaj",
+            rightX,
+            50 + imageSize + 17,
+            { align: "center", width: imageSize }
+          );
       }
 
-      // ==================== HEADER - ASHRAM NAME ====================
+      // ===== TRUST NAME (CENTER BETWEEN IMAGES - RED) =====
+      const centerTextX = 50 + imageSize + 10;
+      const centerTextWidth = pageWidth - (50 + imageSize + 10) * 2;
+
       doc
+        .fillColor("#E69138")
+        .font("Helvetica-Bold")
         .fontSize(16)
-        .fillColor(primaryColor)
-        .font("Helvetica-Bold")
         .text(
-          "Shri Gurudev Ashram Palaskhed Sapkal",
-          margin + imageSize + 10,
-          yPos + 10,
-          {
-            align: "center",
-            width: contentWidth - imageSize * 2 - 20,
-          },
+          "SWAMI HARICHAITNYA SHANTI",
+          centerTextX,
+          70,
+          { align: "center", width: centerTextWidth }
         );
 
-      // Contact info
       doc
-        .fontSize(9)
-        .fillColor(textDark)
+        .fillColor("#E69138")
+        .font("Helvetica-Bold")
+        .fontSize(16)
+        .text(
+          "AASHRAM TRUST",
+          centerTextX,
+          90,
+          { align: "center", width: centerTextWidth }
+        );
+
+      // ===== HEAD OFFICE (BELOW TRUST NAME) =====
+      doc
+        .fillColor("#000000")
         .font("Helvetica")
+        .fontSize(7.5)
         .text(
-          "Mo. 9158740007, 9834151577",
-          margin + imageSize + 10,
-          yPos + 30,
-          {
-            align: "center",
-            width: contentWidth - imageSize * 2 - 20,
-          },
+          "Head office : Datala, Malkapur Dist. Buldhana,Maharashtra - 443101(INDIA)",
+          centerTextX,
+          115,
+          { align: "center", width: centerTextWidth, lineBreak: false }
         );
 
-      doc.text(
-        "Email: info@shrigurudevashram.org, info@shantiashramtrust.org",
-        margin + imageSize + 10,
-        yPos + 42,
-        {
-          align: "center",
-          width: contentWidth - imageSize * 2 - 20,
-        },
-      );
-
-      yPos += imageSize + 20;
-
-      // ==================== RECEIPT NO & DATE LINE ====================
-      const receiptNo =
-        donation.receiptNumber ||
-        donation._id.toString().slice(-5).toUpperCase();
-      const dateStr = new Date(donation.createdAt).toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
+      doc
+        .fillColor("#000000")
+        .font("Helvetica")
+        .fontSize(7.5)
+        .text(
+          "Branch office : Palaskhed Sapkal, Chikhali,Dist Buldhana, Maharashtra - 443001",
+          centerTextX,
+          128,
+          { align: "center", width: centerTextWidth, lineBreak: false }
+        );
 
       doc
-        .fontSize(11)
-        .fillColor(textDark)
-        .font("Helvetica-Bold")
-        .text(`Receipt No. : ${receiptNo}`, margin, yPos);
+        .fillColor("#000000")
+        .font("Helvetica")
+        .fontSize(8)
+        .text(
+          "Mob.:+91 9834151577 , 9158750007 , 9422881942 , 9422884005",
+          centerTextX,
+          141,
+          { align: "center", width: centerTextWidth }
+        );
 
-      doc.text(`Date : ${dateStr}`, margin, yPos, {
+      doc
+        .fillColor("#000000")
+        .font("Helvetica")
+        .fontSize(7.5)
+        .text(
+          "E-mail : sevatirthdham@gmail.com | Website : www.sevatirth.com",
+          centerTextX,
+          153,
+          { align: "center", width: centerTextWidth }
+        );
+
+y = 50 + imageSize + 20; // Move title up more
+
+      // ===== TITLE =====
+      doc
+        .fillColor("#FF6600")
+        .font("Helvetica-Bold")
+        .fontSize(13.5)
+        .text("Donation Receipt", 50, y, {
+          align: "center",
+          width: contentWidth,
+        });
+
+      y += 18;
+
+      // ===== ORANGE LINE =====
+      doc
+        .strokeColor("#FF6600")
+        .lineWidth(1.5)
+        .moveTo(50, y)
+        .lineTo(pageWidth - 50, y)
+        .stroke();
+
+      y += 15;
+
+      // ===== RECEIPT NO & DATE =====
+      const receiptNo = "GRD-2026-C960FA";
+
+      const d = new Date(donation.createdAt);
+      const dateStr = `${d.getDate().toString().padStart(2, "0")}/${(
+        d.getMonth() + 1
+      )
+        .toString()
+        .padStart(2, "0")}/${d.getFullYear()}`;
+
+      // Calculate table positions for alignment
+      const tableWidth = 480;
+      const tableX = (pageWidth - tableWidth) / 2;
+
+      doc.fillColor("#000000").font("Helvetica-Bold").fontSize(9.5).text(`Receipt No. : ${receiptNo}`, tableX, y);
+
+      doc.font("Helvetica-Bold").text(`Date : ${dateStr}`, tableX, y, {
         align: "right",
-        width: contentWidth,
+        width: tableWidth,
       });
 
-      yPos += 25;
+      y += 20;
 
-      // ==================== TABLE ====================
-      const tableLeft = margin;
-      const tableWidth = contentWidth;
-      const col1Width = 140;
-      const col2Width = tableWidth - col1Width;
-      const rowHeight = 32;
+      // ===== TABLE LAYOUT =====
+      const col1Width = 160; // Label column
+      const col2Width = tableWidth - col1Width; // Value column
+      const rowHeight = 45; // Taller rows for vertical spacing
+      const cellPadding = 12; // More padding
 
-      const drawTableRow = (label, value, isHighlighted = false) => {
-        // Background for highlighted row
-        if (isHighlighted) {
+      const tableData = [
+        {
+          label: "Donor Name",
+          value: donation.donor.anonymousDisplay ? "Anonymous Donor" : donation.donor.name,
+          valueBold: false
+        },
+        {
+          label: "Mobile & Email",
+          value: donation.donor.email
+            ? `${donation.donor.mobile}  |  ${donation.donor.email}`
+            : donation.donor.mobile
+        },
+        {
+          label: "Address",
+          value: "Behind Renuka Petrol Pump Jaina Road Chikhli"
+        },
+        {
+          label: "PAN",
+          value: donation.donor.idNumber || "-"
+        },
+        {
+          label: "Referal Name",
+          value: "-"
+        },
+        {
+          label: "On Account of",
+          value: donation.donationHead.name || donation.donationHead
+        },
+        {
+          label: "Payment Mode",
+          value: donation.paymentMode || "Cash"
+        },
+        {
+          label: "Donation Amount",
+          value: `Rs ${donation.amount} (${numberToWords(donation.amount)})`
+        }
+      ];
+
+      const tableStartY = y;
+
+      // Draw table
+      tableData.forEach((row, index) => {
+        const currentY = tableStartY + (index * rowHeight);
+        const isDonationAmount = row.label === "Donation Amount";
+
+        // Light orange background for donation amount value cell only (right cell)
+        if (isDonationAmount) {
           doc
-            .rect(tableLeft, yPos, tableWidth, rowHeight)
-            .fillColor(highlightBg)
+            .fillColor("#FFE6CC")
+            .rect(tableX + col1Width, currentY, col2Width, rowHeight)
             .fill();
         }
 
-        // Left cell border
+        // Draw cell borders (medium orange)
         doc
-          .rect(tableLeft, yPos, col1Width, rowHeight)
-          .strokeColor(borderColor)
-          .lineWidth(1)
+          .strokeColor("#FF6600")
+          .lineWidth(1.5)
+          .rect(tableX, currentY, col1Width, rowHeight)
+          .stroke()
+          .rect(tableX + col1Width, currentY, col2Width, rowHeight)
           .stroke();
 
-        // Left cell text
+        // Draw label (black for all rows)
         doc
-          .fontSize(10)
-          .fillColor(textDark)
+          .fillColor("#000000")
           .font("Helvetica-Bold")
-          .text(label, tableLeft + 10, yPos + 10, {
-            width: col1Width - 20,
-          });
-
-        // Right cell border
-        doc
-          .rect(tableLeft + col1Width, yPos, col2Width, rowHeight)
-          .strokeColor(borderColor)
-          .lineWidth(1)
-          .stroke();
-
-        // Right cell text
-        doc
           .fontSize(10)
-          .fillColor(textDark)
-          .font("Helvetica")
-          .text(value || "-", tableLeft + col1Width + 10, yPos + 10, {
-            width: col2Width - 20,
-          });
+          .text(
+            row.label,
+            tableX + cellPadding,
+            currentY + (rowHeight - 10) / 2,
+            {
+              width: col1Width - 2 * cellPadding,
+              align: "left"
+            }
+          );
 
-        yPos += rowHeight;
-      };
+        // Draw value (orange bold for donation amount, black for others)
+        doc
+          .fillColor(isDonationAmount ? "#E69138" : "#000000")
+          .font(isDonationAmount || row.valueBold ? "Helvetica-Bold" : "Helvetica")
+          .fontSize(10)
+          .text(
+            row.value || "-",
+            tableX + col1Width + cellPadding,
+            currentY + (rowHeight - 10) / 2,
+            {
+              width: col2Width - 2 * cellPadding,
+              align: "left",
+              lineBreak: true
+            }
+          );
+      });
 
-      // Donor Name
-      const donorName = donation.donor.anonymousDisplay
-        ? "Anonymous Donor"
-        : donation.donor.name;
-      drawTableRow("Donor Name", donorName);
-
-      // Mobile & Email
-      const contactInfo = donation.donor.email
-        ? `${donation.donor.mobile}   |   ${donation.donor.email}`
-        : donation.donor.mobile;
-      drawTableRow("Mobile & Email", contactInfo);
-
-      // Address (taller row)
-      const addressRowHeight = 48;
-
-      doc
-        .rect(tableLeft, yPos, col1Width, addressRowHeight)
-        .strokeColor(borderColor)
-        .lineWidth(1)
-        .stroke();
-
-      doc
-        .fontSize(10)
-        .fillColor(textDark)
-        .font("Helvetica-Bold")
-        .text("Address", tableLeft + 10, yPos + 16);
+      y = tableStartY + (tableData.length * rowHeight) + 35;
 
       doc
-        .rect(tableLeft + col1Width, yPos, col2Width, addressRowHeight)
-        .strokeColor(borderColor)
-        .lineWidth(1)
-        .stroke();
-
-      doc
-        .fontSize(10)
-        .fillColor(textDark)
+        .fillColor("#000000")
         .font("Helvetica")
-        .text(
-          donation.donor.address || "-",
-          tableLeft + col1Width + 10,
-          yPos + 8,
-          {
-            width: col2Width - 20,
-          },
-        );
+        .fontSize(8.5)
+        .text("Exemption order ref no. AAQTS3485B24PN02", 50, y);
 
-      yPos += addressRowHeight;
+      y += 12;
 
-      // PAN
-      const idLabel = "PAN";
-      drawTableRow(
-        idLabel,
-        donation.donor.idNumber,
-      );
+      doc.text("Valid upto. 2027-28", 50, y);
 
-      // On Account of (Donation Head)
-      drawTableRow(
-        "On Account of",
-        donation.donationHead.name || donation.donationHead,
-      );
+      // ===== REGD NO CIRCLE (RIGHT SIDE) =====
+      y += 15; // Add space below the table text
+      const circleX = pageWidth - 105;
+      const circleY = y + 5;
+      const circleRadius = 46;
 
-      // Payment Mode
-      drawTableRow("Payment Mode", "Online (Razorpay)");
-
-      // Donation Amount (highlighted)
-      const amountInWords = numberToWords(donation.amount);
-      const amountText = `Rs ${donation.amount.toLocaleString("en-IN")} (${amountInWords})`;
-      drawTableRow("Donation Amount", amountText, true);
-
-      // ==================== THANK YOU MESSAGE ====================
-      yPos += 30;
+      // Draw orange circle border (thin line, matching top image border color)
       doc
+        .strokeColor("#E69138")
+        .lineWidth(1.5)
+        .circle(circleX, circleY, circleRadius)
+        .stroke();
+
+      // Add text inside circle (orange color, centered)
+      doc
+        .fillColor("#E69138")
+        .font("Helvetica-Bold")
         .fontSize(10)
-        .fillColor(textLight)
-        .font("Helvetica-Oblique")
+        .text("Regd.", circleX - 25, circleY - 10, {
+          align: "center",
+          width: 50
+        });
+
+      doc
+        .fontSize(9)
+        .text("No. E-594", circleX - 25, circleY + 2, {
+          align: "center",
+          width: 50
+        });
+
+      // ===== FOOTER WITH MORE SPACING =====
+      y += 60; // Significant whitespace
+
+      doc
+        .fillColor("#333333")
+        .font("Times-Italic")
+        .fontSize(11)
         .text(
           "Thank you for your generous contribution. May your seva be blessed.",
-          margin,
-          yPos,
-          {
-            align: "center",
-            width: contentWidth,
-          },
+          50,
+          y,
+          { align: "center", width: contentWidth }
         );
 
-      // Transaction ID (small, at bottom)
-      yPos += 20;
-      if (donation.paymentId) {
-        doc
-          .fontSize(8)
-          .fillColor(textLight)
-          .font("Helvetica")
-          .text(`Transaction ID: ${donation.paymentId}`, margin, yPos, {
-            align: "center",
-            width: contentWidth,
-          });
-      }
+      y += 20;
+
+      doc
+        .font("Helvetica")
+        .fontSize(7)
+        .fillColor("#666666")
+        .text(
+          "Transaction ID : pay_S6EgBGEG0hOljy",
+          50,
+          y,
+          { align: "center", width: contentWidth }
+        );
 
       doc.end();
-    } catch (error) {
-      reject(error);
+    } catch (err) {
+      reject(err);
     }
   });
-};
-
-/**
- * Get public URL for a receipt (for API responses)
- * @param {string} filePath - Full filesystem path to receipt
- * @returns {string} Public URL path
- */
-exports.getReceiptPublicUrl = (filePath) => {
-  const fileName = path.basename(filePath);
-  return `/receipts/${fileName}`;
 };

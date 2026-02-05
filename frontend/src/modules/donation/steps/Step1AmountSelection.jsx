@@ -1,10 +1,16 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import PrimaryButton from "../../../components/PrimaryButton";
 import { presetAmounts } from "../../../data/dummyData";
 import { formatCurrency } from "../../../utils/helpers";
+import { API_BASE_URL } from "../../../utils/api";
 
 const Step1AmountSelection = ({ data, updateData, nextStep }) => {
   const [errors, setErrors] = useState({});
+  
+  // Manual referral code input state (only when no URL referral)
+  const [manualReferralCode, setManualReferralCode] = useState("");
+  const [referralValidating, setReferralValidating] = useState(false);
+  const [referralError, setReferralError] = useState("");
 
   // Get minimum amount from selected cause, default to 10
   const minAmount = useMemo(() => {
@@ -27,6 +33,42 @@ const Step1AmountSelection = ({ data, updateData, nextStep }) => {
       });
     }
   };
+
+  // Validate manual referral code
+  const validateManualReferral = useCallback(async () => {
+    if (!manualReferralCode.trim()) {
+      // Clear referral if input is empty
+      updateData({ referralCode: null, collectorName: null });
+      setReferralError("");
+      return;
+    }
+
+    const code = manualReferralCode.trim().toUpperCase();
+    setReferralValidating(true);
+    setReferralError("");
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/public/referral/${encodeURIComponent(code)}`);
+      const result = await response.json();
+
+      if (result.valid && result.collectorName) {
+        updateData({
+          referralCode: code,
+          collectorName: result.collectorName,
+        });
+        setReferralError("");
+      } else {
+        updateData({ referralCode: null, collectorName: null });
+        setReferralError("Referral code not found. You can still donate without it.");
+      }
+    } catch (error) {
+      console.warn("Referral validation error:", error);
+      updateData({ referralCode: null, collectorName: null });
+      setReferralError("");
+    } finally {
+      setReferralValidating(false);
+    }
+  }, [manualReferralCode, updateData]);
 
   const handlePresetAmount = (amount) => {
     clearDonationIds();
@@ -143,6 +185,52 @@ const Step1AmountSelection = ({ data, updateData, nextStep }) => {
             </div>
           )}
         </div>
+
+        {/* Referral Code Section - Only show if no referral from URL */}
+        {!data.referralCode && (
+          <div className="border-t border-gray-200 pt-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Have a referral code? (Optional)
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={manualReferralCode}
+                onChange={(e) => setManualReferralCode(e.target.value.toUpperCase())}
+                placeholder="e.g., COL7X9K2"
+                maxLength={8}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono tracking-wider uppercase"
+              />
+              <button
+                type="button"
+                onClick={validateManualReferral}
+                disabled={referralValidating || !manualReferralCode.trim()}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+              >
+                {referralValidating ? "Checking..." : "Apply"}
+              </button>
+            </div>
+            {referralError && (
+              <p className="mt-2 text-sm text-amber-600">{referralError}</p>
+            )}
+          </div>
+        )}
+
+        {/* Show validated collector info */}
+        {data.collectorName && (
+          <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
+            <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+              <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-green-800 font-medium">
+                Collected by: <span className="font-bold">{data.collectorName}</span>
+              </p>
+            </div>
+          </div>
+        )}
 
         <div className="pt-4">
           <PrimaryButton

@@ -11,6 +11,7 @@ const router = express.Router();
 const {
   getRecentDonations,
   getTopDonors,
+  validateReferralCode,
 } = require("../controllers/public.controller");
 
 const announcementController = require("../controllers/announcement.controller");
@@ -24,6 +25,9 @@ const productController = require("../controllers/product.controller");
 // Optional auth middleware for authenticated public submissions
 const optionalAuth = require("../middlewares/optionalAuth.middleware");
 
+// FIX 2: Rate limiter to prevent brute-force referral code guessing
+const { publicApiLimiter } = require("../middlewares/rateLimit");
+
 // ==================== DONATION DATA ====================
 
 // GET /api/public/donations/recent - Last 10 successful donations
@@ -31,6 +35,12 @@ router.get("/donations/recent", getRecentDonations);
 
 // GET /api/public/donations/top - Top 5 donors by total amount
 router.get("/donations/top", getTopDonors);
+
+// ==================== REFERRAL ====================
+
+// GET /api/public/referral/:code - Validate referral code and get collector name
+// FIX 2: Rate limited to prevent brute-force guessing (30/min per IP)
+router.get("/referral/:code", publicApiLimiter, validateReferralCode);
 
 // ==================== ANNOUNCEMENTS ====================
 

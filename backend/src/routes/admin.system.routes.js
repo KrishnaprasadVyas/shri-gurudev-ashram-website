@@ -32,4 +32,33 @@ router.get(
   adminController.getReports
 );
 
+// Collector management routes (Admin only)
+router.get(
+  "/collectors/summary",
+  auth,
+  authorize("SYSTEM_ADMIN"),
+  adminController.getCollectorSummary
+);
+
+router.get(
+  "/collectors",
+  auth,
+  authorize("SYSTEM_ADMIN"),
+  adminController.getAllCollectors
+);
+
+router.get(
+  "/collectors/:id",
+  auth,
+  authorize("SYSTEM_ADMIN"),
+  adminController.getCollectorDetails
+);
+
+router.patch(
+  "/collectors/:id/toggle-status",
+  auth,
+  authorize("SYSTEM_ADMIN"),
+  adminController.toggleCollectorStatus
+);
+
 module.exports = router;

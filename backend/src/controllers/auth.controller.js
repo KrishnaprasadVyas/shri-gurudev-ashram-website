@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { sendEmailVerificationEmail } = require("../services/email.service");
 const { sendLoginOtp } = require("../services/whatsapp.service");
+const { assignReferralCode } = require("../services/collector.service");
 
 exports.sendOtp = async (req, res) => {
   try {
@@ -106,8 +107,18 @@ exports.verifyOtp = async (req, res) => {
 
     // Find or create user (store 10-digit mobile)
     let user = await User.findOne({ mobile: phone });
+    let isNewUser = false;
     if (!user) {
       user = await User.create({ mobile: phone });
+      isNewUser = true;
+    }
+
+    // Assign referral code for new users (async, non-blocking)
+    // Also handles existing users who don't have a code yet
+    if (isNewUser || !user.referralCode) {
+      assignReferralCode(user._id).catch((err) => {
+        console.error("[Auth] Failed to assign referral code:", err);
+      });
     }
 
     // Generate JWT token
@@ -152,6 +163,7 @@ exports.getMe = async (req, res) => {
       emailVerified: user.emailVerified || false,
       mobile: user.mobile,
       role: user.role,
+      referralCode: user.referralCode || null,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
