@@ -300,9 +300,11 @@ exports.getAllCollectors = async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     // Get collector stats from donations
+    // BUG FIX: Only count donations with explicit hasCollectorAttribution flag
     const collectorStats = await Donation.aggregate([
       {
         $match: {
+          hasCollectorAttribution: true, // Only explicit attributions
           collectorId: { $ne: null },
           status: "SUCCESS",
         },
@@ -321,8 +323,9 @@ exports.getAllCollectors = async (req, res) => {
     ]);
 
     // Get total count for pagination
+    // BUG FIX: Only count donations with explicit hasCollectorAttribution flag
     const totalCollectors = await Donation.aggregate([
-      { $match: { collectorId: { $ne: null }, status: "SUCCESS" } },
+      { $match: { hasCollectorAttribution: true, collectorId: { $ne: null }, status: "SUCCESS" } },
       { $group: { _id: "$collectorId" } },
       { $count: "total" },
     ]);
@@ -384,8 +387,9 @@ exports.getCollectorDetails = async (req, res) => {
     }
 
     // Get collector stats
+    // BUG FIX: Only count donations with explicit hasCollectorAttribution flag
     const stats = await Donation.aggregate([
-      { $match: { collectorId: user._id, status: "SUCCESS" } },
+      { $match: { hasCollectorAttribution: true, collectorId: user._id, status: "SUCCESS" } },
       {
         $group: {
           _id: null,
@@ -396,7 +400,9 @@ exports.getCollectorDetails = async (req, res) => {
     ]);
 
     // Get donations attributed to this collector (limited info for privacy)
+    // BUG FIX: Only show donations with explicit hasCollectorAttribution flag
     const donations = await Donation.find({
+      hasCollectorAttribution: true,
       collectorId: user._id,
       status: "SUCCESS",
     })
@@ -484,18 +490,20 @@ exports.toggleCollectorStatus = async (req, res) => {
 exports.getCollectorSummary = async (req, res) => {
   try {
     // Total active collectors (users with at least 1 donation attributed)
+    // BUG FIX: Only count donations with explicit hasCollectorAttribution flag
     const activeCollectors = await Donation.aggregate([
-      { $match: { collectorId: { $ne: null }, status: "SUCCESS" } },
+      { $match: { hasCollectorAttribution: true, collectorId: { $ne: null }, status: "SUCCESS" } },
       { $group: { _id: "$collectorId" } },
       { $count: "total" },
     ]);
 
     // Donations with vs without referral
+    // BUG FIX: Use hasCollectorAttribution flag instead of collectorId null check
     const referralStats = await Donation.aggregate([
       { $match: { status: "SUCCESS" } },
       {
         $group: {
-          _id: { $cond: [{ $ne: ["$collectorId", null] }, "with_referral", "without_referral"] },
+          _id: { $cond: [{ $eq: ["$hasCollectorAttribution", true] }, "with_referral", "without_referral"] },
           count: { $sum: 1 },
           amount: { $sum: "$amount" },
         },

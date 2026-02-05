@@ -138,9 +138,11 @@ const resolveCollector = async (referralCode) => {
 const getTopCollectors = async (limit = 5) => {
   try {
     const leaderboard = await Donation.aggregate([
-      // Only count successful donations with a collector
+      // BUG FIX: Only count donations that explicitly had a referral code
+      // Historical donations without hasCollectorAttribution field are excluded
       {
         $match: {
+          hasCollectorAttribution: true, // Only explicit attributions
           collectorId: { $ne: null },
           status: "SUCCESS",
         },
@@ -200,6 +202,7 @@ const getCollectorStats = async (userId) => {
     const stats = await Donation.aggregate([
       {
         $match: {
+          hasCollectorAttribution: true, // BUG FIX: Only explicit attributions
           collectorId: user._id,
           status: "SUCCESS",
         },

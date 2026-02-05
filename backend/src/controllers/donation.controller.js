@@ -233,6 +233,10 @@ exports.createDonation = async (req, res) => {
     // Resolve collector from referral code (safe - returns null if invalid/missing)
     const collector = await resolveCollector(referralCode);
 
+    // BUG FIX: Only set hasCollectorAttribution to true when a valid referralCode was provided
+    // This ensures historical donations (created before referral system) are never attributed
+    const hasCollectorAttribution = collector !== null;
+
     // Create donation with donor snapshot
     
     const donation = await Donation.create({
@@ -240,6 +244,8 @@ exports.createDonation = async (req, res) => {
       // Collector attribution (nullable)
       collectorId: collector?.collectorId || null,
       collectorName: collector?.collectorName || null,
+      // BUG FIX: Explicit flag - only true when referralCode was valid
+      hasCollectorAttribution,
       donor: {
         name,
         mobile,

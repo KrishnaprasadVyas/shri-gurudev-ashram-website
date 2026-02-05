@@ -24,6 +24,14 @@ const donationSchema = new mongoose.Schema(
       type: String, 
       default: null 
     }, // Snapshot for receipts - avoids future lookups
+    // BUG FIX: Explicit flag for collector attribution
+    // Only set to true when referralCode was explicitly provided at donation time
+    // Historical donations without this field are treated as false (no collector attribution)
+    // This prevents old donations from appearing in collector stats
+    hasCollectorAttribution: {
+      type: Boolean,
+      default: false,
+    },
 
     // === DONOR SNAPSHOT (captured at donation time) ===
     donor: {
@@ -79,6 +87,7 @@ const donationSchema = new mongoose.Schema(
 // Index for user donations lookup
 donationSchema.index({ user: 1, createdAt: -1 });
 donationSchema.index({ collectorId: 1, createdAt: -1 }); // Leaderboard & collector stats
+donationSchema.index({ hasCollectorAttribution: 1, status: 1 }); // BUG FIX: Optimized collector queries
 donationSchema.index({ "donor.mobile": 1 });
 donationSchema.index({ status: 1 });
 donationSchema.index({ paymentMethod: 1 });

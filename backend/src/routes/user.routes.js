@@ -11,4 +11,7 @@ router.get("/donations", authMiddleware, donationController.getUserDonations);
 router.get("/profile", authMiddleware, userController.getProfile);
 router.put("/profile", authMiddleware, userController.updateProfile);
 
+// BUG FIX: On-demand referral code generation for users missing one
+router.post("/generate-referral-code", authMiddleware, userController.generateReferralCode);
+
 module.exports = router;

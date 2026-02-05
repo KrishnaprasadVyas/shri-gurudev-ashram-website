@@ -36,6 +36,41 @@ const CollectorDashboard = () => {
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
   const [leaderboardError, setLeaderboardError] = useState(null);
 
+  // BUG FIX: Track if we're generating a referral code
+  const [isGeneratingCode, setIsGeneratingCode] = useState(false);
+
+  /**
+   * BUG FIX: Generate referral code on-demand if missing
+   * This fixes the issue where dashboard shows "generating..." indefinitely
+   */
+  const generateReferralCode = useCallback(async () => {
+    if (!token || isGeneratingCode) return null;
+    
+    setIsGeneratingCode(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/user/generate-referral-code`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        console.error("Failed to generate referral code");
+        return null;
+      }
+
+      const data = await parseJsonResponse(response);
+      return data.referralCode || null;
+    } catch (err) {
+      console.error("Error generating referral code:", err);
+      return null;
+    } finally {
+      setIsGeneratingCode(false);
+    }
+  }, [token, isGeneratingCode]);
+
   /**
    * Fetch collector stats from backend
    */
@@ -66,10 +101,17 @@ const CollectorDashboard = () => {
       }
 
       const data = await parseJsonResponse(response);
+      
+      // BUG FIX: If referralCode is missing, generate one and re-fetch
+      let referralCode = data.referralCode || null;
+      if (!referralCode) {
+        referralCode = await generateReferralCode();
+      }
+
       setStats({
         totalAmount: data.totalAmount || 0,
         donationCount: data.donationCount || 0,
-        referralCode: data.referralCode || null,
+        referralCode: referralCode,
         collectorName: data.collectorName || user?.fullName || "Collector",
       });
     } catch (err) {
@@ -78,7 +120,7 @@ const CollectorDashboard = () => {
     } finally {
       setStatsLoading(false);
     }
-  }, [token, user?.fullName]);
+  }, [token, user?.fullName, generateReferralCode]);
 
   /**
    * Fetch leaderboard from backend

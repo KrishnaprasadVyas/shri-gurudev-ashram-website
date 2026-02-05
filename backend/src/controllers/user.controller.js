@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const { assignReferralCode } = require("../services/collector.service");
 
 /**
  * Update user profile
@@ -65,6 +66,49 @@ exports.getProfile = async (req, res) => {
     });
   } catch (error) {
     console.error("Get profile error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/**
+ * Generate referral code for current user (if missing)
+ * POST /api/user/generate-referral-code
+ * 
+ * BUG FIX: Allows users to request referral code generation on-demand
+ * This fixes the issue where Collector Dashboard shows "generating..." indefinitely
+ * for existing users who don't have a referral code yet.
+ */
+exports.generateReferralCode = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("referralCode fullName");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // If user already has a referral code, return it
+    if (user.referralCode) {
+      return res.json({
+        referralCode: user.referralCode,
+        message: "Referral code already exists",
+      });
+    }
+
+    // Generate new referral code
+    const referralCode = await assignReferralCode(req.user.id);
+
+    if (!referralCode) {
+      return res.status(500).json({ message: "Failed to generate referral code" });
+    }
+
+    console.log(`[USER] Referral code generated on-demand for user ${req.user.id}: ${referralCode}`);
+
+    res.json({
+      referralCode,
+      message: "Referral code generated successfully",
+    });
+  } catch (error) {
+    console.error("Generate referral code error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
