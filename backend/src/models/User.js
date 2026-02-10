@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema(
     address: String,
     role: {
       type: String,
-      enum: ["USER", "WEBSITE_ADMIN", "SYSTEM_ADMIN"],
+      enum: ["USER", "COLLECTOR_PENDING", "COLLECTOR_APPROVED", "WEBSITE_ADMIN", "SYSTEM_ADMIN"],
       default: "USER",
     },
     // Collector/Referral system - permanent, human-readable code
@@ -27,12 +27,36 @@ const userSchema = new mongoose.Schema(
       type: String,
       unique: true,
       sparse: true, // Allows null values while maintaining uniqueness
-      immutable: true, // Cannot be changed after creation
+      // Note: immutable:true was removed because it prevents setting the code
+      // for existing users who don't have one yet. Code is still effectively
+      // immutable since assignReferralCode() checks if it already exists.
     },
     // Admin can disable a collector's referral code (soft-disable)
     collectorDisabled: {
       type: Boolean,
       default: false,
+    },
+    // Collector KYC Profile - for verified collectors
+    collectorProfile: {
+      fullName: String,
+      address: String,
+      panNumber: String,
+      aadharFront: {
+        fileKey: String,
+        uploadedAt: Date,
+      },
+      aadharBack: {
+        fileKey: String,
+        uploadedAt: Date,
+      },
+      status: {
+        type: String,
+        enum: ["none", "pending", "approved", "rejected"],
+        default: "none",
+      },
+      submittedAt: Date,
+      approvedAt: Date,
+      rejectedReason: String,
     },
   },
   { timestamps: true },
@@ -40,5 +64,6 @@ const userSchema = new mongoose.Schema(
 
 userSchema.index({ role: 1 });
 userSchema.index({ referralCode: 1 }); // Fast lookup for donation attribution
+userSchema.index({ "collectorProfile.status": 1 }); // Fast lookup for pending applications
 
 module.exports = mongoose.model("User", userSchema);

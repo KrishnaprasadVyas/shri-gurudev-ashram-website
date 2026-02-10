@@ -1,8 +1,12 @@
 const Donation = require("../models/Donation");
 const User = require("../models/User");
 const path = require("path");
+const fs = require("fs");
 const { generateDonationReceipt } = require("../services/receipt.service");
 const { sendDonationReceiptEmail } = require("../services/email.service");
+const { getKycDocumentPath, deleteKycDocuments } = require("../services/kyc.service");
+const { assignReferralCode } = require("../services/collector.service");
+const { logCollectorApproval, logCollectorRejection } = require("../services/audit.service");
 
 /**
  * Helper: Validate PAN number
@@ -470,7 +474,7 @@ exports.toggleCollectorStatus = async (req, res) => {
     );
 
     res.json({
-      message: `Collector ${disabled ? "disabled" : "enabled"} successfully`,
+      message: `Collector ${user.collectorDisabled ? "disabled" : "enabled"} successfully`,
       collector: {
         id: user._id,
         name: user.fullName,
@@ -527,5 +531,347 @@ exports.getCollectorSummary = async (req, res) => {
   } catch (error) {
     console.error("Get collector summary error:", error);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+// ==================== COLLECTOR KYC MANAGEMENT ====================
+
+/**
+ * Get all pending collector applications
+ * GET /api/admin/system/collector-applications
+ */
+exports.getCollectorApplications = async (req, res) => {
+  try {
+    const { status = "pending" } = req.query;
+
+    // Validate status filter
+    const validStatuses = ["pending", "approved", "rejected", "all"];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status filter. Use: pending, approved, rejected, or all",
+      });
+    }
+
+    const filter = {};
+    if (status !== "all") {
+      filter["collectorProfile.status"] = status;
+    } else {
+      // For 'all', get users with any collectorProfile status except 'none'
+      filter["collectorProfile.status"] = { $in: ["pending", "approved", "rejected"] };
+    }
+
+    const applications = await User.find(filter)
+      .select("fullName email mobile role collectorProfile createdAt")
+      .sort({ "collectorProfile.submittedAt": -1 });
+
+    // Map to response format expected by frontend
+    const result = applications.map((user) => ({
+      userId: user._id,
+      fullName: user.collectorProfile?.fullName || user.fullName,
+      email: user.email,
+      mobile: user.mobile,
+      role: user.role,
+      address: user.collectorProfile?.address,
+      panNumber: user.collectorProfile?.panNumber,
+      status: user.collectorProfile?.status,
+      submittedAt: user.collectorProfile?.submittedAt,
+      approvedAt: user.collectorProfile?.approvedAt,
+      rejectedReason: user.collectorProfile?.rejectedReason,
+      hasAadharFront: !!user.collectorProfile?.aadharFront?.fileKey,
+      hasAadharBack: !!user.collectorProfile?.aadharBack?.fileKey,
+    }));
+
+    res.status(200).json({
+      success: true,
+      count: result.length,
+      applications: result,
+    });
+  } catch (error) {
+    console.error("Get collector applications error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch collector applications",
+    });
+  }
+};
+
+/**
+ * Approve collector application
+ * POST /api/admin/system/collector/:userId/approve
+ */
+exports.approveCollectorApplication = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Validate current state
+    if (user.role !== "COLLECTOR_PENDING") {
+      return res.status(400).json({
+        success: false,
+        message: "User does not have a pending collector application",
+      });
+    }
+
+    if (!user.collectorProfile || user.collectorProfile.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "No pending application found for this user",
+      });
+    }
+
+    // Approve the application
+    user.role = "COLLECTOR_APPROVED";
+    user.collectorProfile.status = "approved";
+    user.collectorProfile.approvedAt = new Date();
+    user.collectorProfile.rejectedReason = null;
+
+    await user.save();
+
+    // Generate referral code if not exists
+    let referralCode = user.referralCode;
+    if (!referralCode) {
+      referralCode = await assignReferralCode(user._id);
+    }
+
+    // Audit log: Collector approved
+    logCollectorApproval(user._id, user.collectorProfile.fullName, req.user.id);
+
+    res.status(200).json({
+      success: true,
+      message: "Collector application approved successfully",
+      data: {
+        userId: user._id,
+        role: user.role,
+        status: user.collectorProfile.status,
+        approvedAt: user.collectorProfile.approvedAt,
+        referralCode: referralCode,
+      },
+    });
+  } catch (error) {
+    console.error("Approve collector error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to approve collector application",
+    });
+  }
+};
+
+/**
+ * Reject collector application
+ * POST /api/admin/system/collector/:userId/reject
+ */
+exports.rejectCollectorApplication = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { reason } = req.body;
+
+    if (!reason || reason.trim().length < 5) {
+      return res.status(400).json({
+        success: false,
+        message: "Rejection reason is required (minimum 5 characters)",
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Validate current state
+    if (user.role !== "COLLECTOR_PENDING") {
+      return res.status(400).json({
+        success: false,
+        message: "User does not have a pending collector application",
+      });
+    }
+
+    if (!user.collectorProfile || user.collectorProfile.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "No pending application found for this user",
+      });
+    }
+
+    // Reject the application
+    user.role = "USER";
+    user.collectorProfile.status = "rejected";
+    user.collectorProfile.rejectedReason = reason.trim();
+
+    await user.save();
+
+    // Audit log: Collector rejected
+    logCollectorRejection(user._id, user.collectorProfile.fullName, req.user.id, reason.trim());
+
+    res.status(200).json({
+      success: true,
+      message: "Collector application rejected",
+      data: {
+        userId: user._id,
+        role: user.role,
+        status: user.collectorProfile.status,
+        rejectedReason: user.collectorProfile.rejectedReason,
+      },
+    });
+  } catch (error) {
+    console.error("Reject collector error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to reject collector application",
+    });
+  }
+};
+
+/**
+ * View KYC document (admin only)
+ * GET /api/admin/system/collector/:userId/kyc/:type
+ * 
+ * Securely streams KYC document to admin
+ * Does NOT expose direct file path
+ */
+exports.viewKycDocument = async (req, res) => {
+  try {
+    const { userId, type } = req.params;
+
+    // Validate type parameter
+    if (!type || !["front", "back"].includes(type)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid document type. Use 'front' or 'back'",
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Check if user has KYC documents
+    if (!user.collectorProfile) {
+      return res.status(404).json({
+        success: false,
+        message: "No collector profile found for this user",
+      });
+    }
+
+    // Get the appropriate document
+    const document = type === "front"
+      ? user.collectorProfile.aadharFront
+      : user.collectorProfile.aadharBack;
+
+    if (!document || !document.fileKey) {
+      return res.status(404).json({
+        success: false,
+        message: `Aadhar ${type} document not found`,
+      });
+    }
+
+    // Get the file path securely
+    const filePath = getKycDocumentPath(document.fileKey);
+    if (!filePath) {
+      return res.status(404).json({
+        success: false,
+        message: "Document file not found on server",
+      });
+    }
+
+    // Stream the file with proper headers
+    res.setHeader("Content-Type", "image/webp");
+    res.setHeader("Content-Disposition", `inline; filename="aadhar_${type}.webp"`);
+    res.setHeader("Cache-Control", "private, no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+
+    // Create read stream and pipe to response
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.on("error", (err) => {
+      console.error("File stream error:", err);
+      if (!res.headersSent) {
+        res.status(500).json({
+          success: false,
+          message: "Error reading document file",
+        });
+      }
+    });
+
+    fileStream.pipe(res);
+  } catch (error) {
+    console.error("View KYC document error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve KYC document",
+    });
+  }
+};
+
+/**
+ * Revoke collector status
+ * POST /api/admin/system/collector/:userId/revoke
+ * 
+ * Revokes an approved collector back to regular user
+ */
+exports.revokeCollectorStatus = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { reason } = req.body;
+
+    if (!reason || reason.trim().length < 5) {
+      return res.status(400).json({
+        success: false,
+        message: "Revocation reason is required (minimum 5 characters)",
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Validate current state
+    if (user.role !== "COLLECTOR_APPROVED") {
+      return res.status(400).json({
+        success: false,
+        message: "User is not an approved collector",
+      });
+    }
+
+    // Revoke the collector status
+    user.role = "USER";
+    user.collectorProfile.status = "rejected";
+    user.collectorProfile.rejectedReason = `Revoked: ${reason.trim()}`;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Collector status revoked successfully",
+      data: {
+        userId: user._id,
+        role: user.role,
+        status: user.collectorProfile.status,
+      },
+    });
+  } catch (error) {
+    console.error("Revoke collector error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to revoke collector status",
+    });
   }
 };

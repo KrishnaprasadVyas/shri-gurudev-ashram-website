@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import SectionHeading from "../components/SectionHeading";
 import PrimaryButton from "../components/PrimaryButton";
+import CollectorStatusCard from "../components/CollectorStatusCard";
 import { formatCurrency } from "../utils/helpers";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE_URL, parseJsonResponse } from "../utils/api";
@@ -307,6 +308,13 @@ const MyDonations = () => {
                 <p className="text-sm text-blue-600">Total Transactions</p>
               </div>
             </div>
+
+            {/* Collector Status Card */}
+            <CollectorStatusCard
+              role={user?.role}
+              collectorProfile={user?.collectorProfile}
+              className="mb-8"
+            />
 
             {/* Donations list */}
             <div className="space-y-4">

@@ -45,6 +45,9 @@ app.use("/api/public", require("./routes/public.routes")); // Public APIs (no au
 app.use("/api/webhooks", require("./routes/webhook.routes"));
 app.use("/api/contact", require("./routes/contact.routes"));
 app.use("/api/user", require("./routes/user.routes"));
+app.use("/api/collector", require("./routes/collector.routes")); // Collector KYC and dashboard
+app.use("/api/referral", require("./routes/referral.routes")); // Referral code validation
+app.use("/api/leaderboard", require("./routes/leaderboard.routes")); // Public leaderboard
 app.use("/api/admin/website", require("./routes/admin.website.routes"));
 app.use("/api/admin/system", require("./routes/admin.system.routes"));
 // app.use("/api/products", require("./routes/product.routes"));

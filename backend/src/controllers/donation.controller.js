@@ -10,7 +10,8 @@ const bcrypt = require("bcrypt");
 const { generateDonationReceipt } = require("../services/receipt.service");
 const { sendDonationReceiptEmail } = require("../services/email.service");
 const { sendLoginOtp } = require("../services/whatsapp.service");
-const { resolveCollector, getTopCollectors, getCollectorStats } = require("../services/collector.service");
+const { resolveCollector, getTopCollectors, getCollectorStats, validateReferralCode } = require("../services/collector.service");
+const { logDonationAttribution } = require("../services/audit.service");
 
 /**
  * Helper: Validate PAN number
@@ -187,6 +188,18 @@ exports.createDonation = async (req, res) => {
       return res.status(400).json({ message: "Invalid donation data" });
     }
 
+    // Production hardening: Donation amount limits
+    const MIN_DONATION = 100; // ₹100 minimum
+    const MAX_DONATION = 10000000; // ₹1 crore maximum
+    const numericAmount = Number(amount);
+
+    if (!Number.isFinite(numericAmount) || numericAmount < MIN_DONATION) {
+      return res.status(400).json({ message: `Minimum donation amount is ₹${MIN_DONATION}` });
+    }
+    if (numericAmount > MAX_DONATION) {
+      return res.status(400).json({ message: `Maximum donation amount is ₹${MAX_DONATION.toLocaleString("en-IN")}` });
+    }
+
     // Validate donor object
     const {
       name,
@@ -230,21 +243,31 @@ exports.createDonation = async (req, res) => {
       return res.status(400).json({ message: ageValidation.message });
     }
 
-    // Resolve collector from referral code (safe - returns null if invalid/missing)
-    const collector = await resolveCollector(referralCode);
-
-    // BUG FIX: Only set hasCollectorAttribution to true when a valid referralCode was provided
-    // This ensures historical donations (created before referral system) are never attributed
-    const hasCollectorAttribution = collector !== null;
+    // Validate referral code if provided - REJECT on invalid
+    let collector = null;
+    let hasCollectorAttribution = false;
+    
+    if (referralCode && referralCode.trim()) {
+      const validation = await validateReferralCode(referralCode);
+      if (!validation.valid) {
+        return res.status(400).json({ 
+          message: validation.error || "Invalid referral code" 
+        });
+      }
+      collector = {
+        collectorId: validation.collectorId,
+        collectorName: validation.collectorName,
+      };
+      hasCollectorAttribution = true;
+    }
 
     // Create donation with donor snapshot
     
     const donation = await Donation.create({
       user: req.user?.id || null,
-      // Collector attribution (nullable)
+      // Collector attribution (nullable - only set when valid referral code provided)
       collectorId: collector?.collectorId || null,
       collectorName: collector?.collectorName || null,
-      // BUG FIX: Explicit flag - only true when referralCode was valid
       hasCollectorAttribution,
       donor: {
         name,
@@ -268,6 +291,11 @@ exports.createDonation = async (req, res) => {
       otpVerified: false,
       status: "PENDING",
     });
+
+    // Audit log: Donation attributed to collector
+    if (hasCollectorAttribution && collector) {
+      logDonationAttribution(donation._id, collector.collectorId, collector.collectorName, amount);
+    }
 
     res.status(201).json({
       message: "Donation initiated",

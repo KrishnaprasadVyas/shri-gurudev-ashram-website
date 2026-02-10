@@ -77,6 +77,8 @@ exports.getProfile = async (req, res) => {
  * BUG FIX: Allows users to request referral code generation on-demand
  * This fixes the issue where Collector Dashboard shows "generating..." indefinitely
  * for existing users who don't have a referral code yet.
+ * 
+ * VALIDATION: Requires fullName to be set before generating referral code
  */
 exports.generateReferralCode = async (req, res) => {
   try {
@@ -91,6 +93,14 @@ exports.generateReferralCode = async (req, res) => {
       return res.json({
         referralCode: user.referralCode,
         message: "Referral code already exists",
+      });
+    }
+
+    // VALIDATION: Require fullName before generating referral code
+    if (!user.fullName || !user.fullName.trim()) {
+      return res.status(400).json({ 
+        message: "Please update your profile with your full name before generating a referral code",
+        requiresName: true 
       });
     }
 

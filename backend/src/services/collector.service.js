@@ -9,7 +9,7 @@ const Donation = require("../models/Donation");
 
 /**
  * Generate a unique, human-readable referral code
- * Format: COL + 5 random alphanumeric chars (e.g., COL7X9K2)
+ * Format: COL + 6 random alphanumeric chars (e.g., COLA7F9X2)
  * Ensures uniqueness by checking against existing codes
  */
 const generateReferralCode = async () => {
@@ -18,7 +18,7 @@ const generateReferralCode = async () => {
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     let code = "COL";
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
 
@@ -30,7 +30,7 @@ const generateReferralCode = async () => {
   }
 
   // Fallback: use timestamp-based code if random fails
-  return `COL${Date.now().toString(36).toUpperCase().slice(-5)}`;
+  return `COL${Date.now().toString(36).toUpperCase().slice(-6)}`;
 };
 
 /**
@@ -97,12 +97,17 @@ const resolveCollector = async (referralCode) => {
     }
 
     const collector = await User.findOne({ referralCode: code })
-      .select("_id fullName collectorDisabled")
+      .select("_id fullName role collectorDisabled")
       .lean();
 
     if (!collector) {
-      // FIX 3: Use warn for expected user input errors
       console.warn(`[CollectorService] Invalid referral code: ${code}`);
+      return null;
+    }
+
+    // Check if collector role is COLLECTOR_APPROVED
+    if (collector.role !== "COLLECTOR_APPROVED") {
+      console.warn(`[CollectorService] Collector not approved: ${code}`);
       return null;
     }
 
@@ -112,7 +117,7 @@ const resolveCollector = async (referralCode) => {
       return null;
     }
 
-    // FIX 2: Use fullName only, return null if missing (no fake fallback)
+    // Use fullName only, return null if missing (no fake fallback)
     if (!collector.fullName) {
       console.warn(`[CollectorService] Collector has no fullName: ${code}`);
       return null;
@@ -125,6 +130,119 @@ const resolveCollector = async (referralCode) => {
   } catch (error) {
     // Never crash - just log and return null
     console.error("[CollectorService] resolveCollector error:", error);
+    return null;
+  }
+};
+
+/**
+ * Validate referral code and return collector info
+ * Strict validation for /api/referral/validate/:code endpoint
+ * @param {string} referralCode - The referral code to validate
+ * @returns {Object} { valid: boolean, collectorId?, collectorName?, error? }
+ */
+const validateReferralCode = async (referralCode) => {
+  // Anti-enumeration: All invalid states return same generic error
+  const GENERIC_ERROR = { valid: false, error: "Invalid or inactive referral code" };
+
+  try {
+    if (!referralCode || typeof referralCode !== "string") {
+      return GENERIC_ERROR;
+    }
+
+    const code = referralCode.trim().toUpperCase();
+    if (!code || code.length < 4) {
+      return GENERIC_ERROR;
+    }
+
+    const collector = await User.findOne({ referralCode: code })
+      .select("_id fullName role collectorDisabled")
+      .lean();
+
+    if (!collector) {
+      return GENERIC_ERROR;
+    }
+
+    if (collector.role !== "COLLECTOR_APPROVED") {
+      return GENERIC_ERROR;
+    }
+
+    if (collector.collectorDisabled) {
+      return GENERIC_ERROR;
+    }
+
+    if (!collector.fullName) {
+      return GENERIC_ERROR;
+    }
+
+    return {
+      valid: true,
+      collectorId: collector._id,
+      collectorName: collector.fullName,
+    };
+  } catch (error) {
+    console.error("[CollectorService] validateReferralCode error:", error);
+    return GENERIC_ERROR;
+  }
+};
+
+/**
+ * Get collector dashboard data
+ * @param {string} userId - Collector's user ID
+ * @returns {Object} Dashboard data with stats, leaderboard, recent donations
+ */
+const getCollectorDashboard = async (userId) => {
+  try {
+    const mongoose = require("mongoose");
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+
+    // Get collector's stats
+    const stats = await Donation.aggregate([
+      {
+        $match: {
+          hasCollectorAttribution: true,
+          collectorId: userObjectId,
+          status: "SUCCESS",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalAmount: { $sum: "$amount" },
+          donationCount: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Get top 5 collectors for leaderboard
+    const top5Collectors = await getTopCollectors(5);
+
+    // Get recent 10 donations for this collector
+    const recentDonations = await Donation.find({
+      hasCollectorAttribution: true,
+      collectorId: userObjectId,
+      status: "SUCCESS",
+    })
+      .select("donor.name donor.anonymousDisplay amount donationHead.name createdAt")
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .lean();
+
+    // Format recent donations
+    const formattedDonations = recentDonations.map((d) => ({
+      donorName: d.donor?.anonymousDisplay ? "Anonymous" : d.donor?.name || "Unknown",
+      amount: d.amount,
+      cause: d.donationHead?.name || "General",
+      date: d.createdAt,
+    }));
+
+    return {
+      totalAmount: stats[0]?.totalAmount || 0,
+      donationCount: stats[0]?.donationCount || 0,
+      top5Collectors,
+      recentDonations: formattedDonations,
+    };
+  } catch (error) {
+    console.error("[CollectorService] getCollectorDashboard error:", error);
     return null;
   }
 };
@@ -232,6 +350,8 @@ module.exports = {
   generateReferralCode,
   assignReferralCode,
   resolveCollector,
+  validateReferralCode,
   getTopCollectors,
   getCollectorStats,
+  getCollectorDashboard,
 };

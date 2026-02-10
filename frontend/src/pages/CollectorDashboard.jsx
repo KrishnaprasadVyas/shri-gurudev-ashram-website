@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { API_BASE_URL, parseJsonResponse } from "../utils/api";
+import { getCollectorDashboard, getLeaderboard } from "../services/collectorApi";
 import { formatCurrency } from "../utils/helpers";
 import SectionHeading from "../components/SectionHeading";
 import ReferralLinkGenerator from "../components/ReferralLinkGenerator";
@@ -36,108 +36,57 @@ const CollectorDashboard = () => {
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
   const [leaderboardError, setLeaderboardError] = useState(null);
 
-  // BUG FIX: Track if we're generating a referral code
-  const [isGeneratingCode, setIsGeneratingCode] = useState(false);
+  // Recent donations state
+  const [recentDonations, setRecentDonations] = useState([]);
 
   /**
-   * BUG FIX: Generate referral code on-demand if missing
-   * This fixes the issue where dashboard shows "generating..." indefinitely
+   * Fetch collector dashboard from new unified endpoint
    */
-  const generateReferralCode = useCallback(async () => {
-    if (!token || isGeneratingCode) return null;
-    
-    setIsGeneratingCode(true);
-    try {
-      const response = await fetch(`${API_BASE_URL}/user/generate-referral-code`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        console.error("Failed to generate referral code");
-        return null;
-      }
-
-      const data = await parseJsonResponse(response);
-      return data.referralCode || null;
-    } catch (err) {
-      console.error("Error generating referral code:", err);
-      return null;
-    } finally {
-      setIsGeneratingCode(false);
-    }
-  }, [token, isGeneratingCode]);
-
-  /**
-   * Fetch collector stats from backend
-   */
-  const fetchStats = useCallback(async () => {
+  const fetchDashboard = useCallback(async () => {
     if (!token) {
       setStatsLoading(false);
+      setLeaderboardLoading(false);
       return;
     }
 
     setStatsLoading(true);
+    setLeaderboardLoading(true);
     setStatsError(null);
+    setLeaderboardError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/donations/my-collector-stats`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const data = await getCollectorDashboard();
 
-      if (response.status === 401) {
-        setStatsError("Session expired. Please login again.");
-        setStatsLoading(false);
-        return;
+      if (data.success && data.data) {
+        setStats({
+          totalAmount: data.data.totalAmount || 0,
+          donationCount: data.data.donationCount || 0,
+          referralCode: data.data.referralCode || null,
+          collectorName: data.data.collectorName || user?.fullName || "Collector",
+        });
+        setLeaderboard(data.data.top5Collectors || []);
+        setRecentDonations(data.data.recentDonations || []);
       }
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch collector stats");
-      }
-
-      const data = await parseJsonResponse(response);
-      
-      // BUG FIX: If referralCode is missing, generate one and re-fetch
-      let referralCode = data.referralCode || null;
-      if (!referralCode) {
-        referralCode = await generateReferralCode();
-      }
-
-      setStats({
-        totalAmount: data.totalAmount || 0,
-        donationCount: data.donationCount || 0,
-        referralCode: referralCode,
-        collectorName: data.collectorName || user?.fullName || "Collector",
-      });
     } catch (err) {
-      console.error("Error fetching collector stats:", err);
+      console.error("Error fetching dashboard:", err);
       setStatsError("Unable to load your stats. Please try again.");
+      setLeaderboardError("Unable to load leaderboard.");
     } finally {
       setStatsLoading(false);
+      setLeaderboardLoading(false);
     }
-  }, [token, user?.fullName, generateReferralCode]);
+  }, [token, user?.fullName]);
 
   /**
-   * Fetch leaderboard from backend
+   * Fetch public leaderboard (fallback if dashboard fails)
    */
   const fetchLeaderboard = useCallback(async () => {
     setLeaderboardLoading(true);
     setLeaderboardError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/donations/leaderboard?limit=5`);
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch leaderboard");
-      }
-
-      const data = await parseJsonResponse(response);
-      setLeaderboard(data.leaderboard || []);
+      const data = await getLeaderboard();
+      setLeaderboard(data.data || []);
     } catch (err) {
       console.error("Error fetching leaderboard:", err);
       setLeaderboardError("Unable to load leaderboard. Please try again.");
@@ -149,10 +98,9 @@ const CollectorDashboard = () => {
   // Fetch data on mount
   useEffect(() => {
     if (isAuthenticated) {
-      fetchStats();
-      fetchLeaderboard();
+      fetchDashboard();
     }
-  }, [isAuthenticated, fetchStats, fetchLeaderboard]);
+  }, [isAuthenticated, fetchDashboard]);
 
   // Show loading state while auth is checking
   if (authLoading) {
@@ -189,7 +137,15 @@ const CollectorDashboard = () => {
             donationCount={stats.donationCount}
             isLoading={statsLoading}
             error={statsError}
-            onRetry={fetchStats}
+            onRetry={fetchDashboard}
+          />
+        </div>
+
+        {/* Recent Donations */}
+        <div className="mt-8">
+          <RecentDonationsSection
+            donations={recentDonations}
+            isLoading={statsLoading}
           />
         </div>
 
@@ -458,6 +414,74 @@ const LeaderboardSection = ({ leaderboard, isLoading, error, onRetry }) => {
             Top 5 collectors are shown here. Keep sharing to climb the ranks!
           </p>
         </>
+      )}
+    </div>
+  );
+};
+
+/**
+ * RecentDonationsSection - Displays last 10 donations attributed to this collector
+ */
+const RecentDonationsSection = ({ donations, isLoading }) => {
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold text-amber-900">Recent Donations</h3>
+        <span className="text-xs text-gray-500">Last 10</span>
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-3">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="animate-pulse flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex-1">
+                <div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-24"></div>
+              </div>
+              <div className="h-5 bg-gray-200 rounded w-20"></div>
+            </div>
+          ))}
+        </div>
+      ) : donations.length === 0 ? (
+        <div className="text-center py-8">
+          <div className="text-4xl mb-3">📋</div>
+          <p className="text-gray-600">
+            No donations yet
+          </p>
+          <p className="text-gray-500 text-sm mt-1">
+            Share your referral link to start collecting donations.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {donations.map((donation, index) => (
+            <div
+              key={index}
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+            >
+              <div>
+                <p className="font-medium text-gray-900">
+                  {donation.donorName || "Anonymous"}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {donation.cause} • {formatDate(donation.date)}
+                </p>
+              </div>
+              <p className="font-bold text-amber-700">
+                {formatCurrency(donation.amount)}
+              </p>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

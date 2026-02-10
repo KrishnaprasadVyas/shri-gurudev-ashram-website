@@ -156,6 +156,18 @@ exports.getMe = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    // Build collector profile response (hide file keys)
+    let collectorProfileResponse = null;
+    if (user.collectorProfile && user.collectorProfile.status !== "none") {
+      collectorProfileResponse = {
+        fullName: user.collectorProfile.fullName,
+        status: user.collectorProfile.status,
+        submittedAt: user.collectorProfile.submittedAt,
+        approvedAt: user.collectorProfile.approvedAt,
+        rejectedReason: user.collectorProfile.rejectedReason,
+      };
+    }
+
     res.json({
       id: user._id,
       fullName: user.fullName,
@@ -164,6 +176,7 @@ exports.getMe = async (req, res) => {
       mobile: user.mobile,
       role: user.role,
       referralCode: user.referralCode || null,
+      collectorProfile: collectorProfileResponse,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error" });

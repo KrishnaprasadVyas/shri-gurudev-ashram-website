@@ -104,3 +104,16 @@ exports.publicApiLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+/**
+ * Collector application rate limiter
+ * 3 requests per hour per IP
+ * Purpose: Prevent application spam
+ */
+exports.collectorApplyLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3,
+  message: { message: "Too many collector applications. Try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});

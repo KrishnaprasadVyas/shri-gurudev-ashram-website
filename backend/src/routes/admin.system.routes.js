@@ -61,4 +61,46 @@ router.patch(
   adminController.toggleCollectorStatus
 );
 
+// ==================== COLLECTOR KYC MANAGEMENT ====================
+
+// Get all collector applications (pending, approved, rejected, or all)
+router.get(
+  "/collector-applications",
+  auth,
+  authorize("SYSTEM_ADMIN"),
+  adminController.getCollectorApplications
+);
+
+// Approve a collector application
+router.post(
+  "/collector/:userId/approve",
+  auth,
+  authorize("SYSTEM_ADMIN"),
+  adminController.approveCollectorApplication
+);
+
+// Reject a collector application
+router.post(
+  "/collector/:userId/reject",
+  auth,
+  authorize("SYSTEM_ADMIN"),
+  adminController.rejectCollectorApplication
+);
+
+// View KYC document (secure streaming - admin only)
+router.get(
+  "/collector/:userId/kyc/:type",
+  auth,
+  authorize("SYSTEM_ADMIN"),
+  adminController.viewKycDocument
+);
+
+// Revoke an approved collector's status
+router.post(
+  "/collector/:userId/revoke",
+  auth,
+  authorize("SYSTEM_ADMIN"),
+  adminController.revokeCollectorStatus
+);
+
 module.exports = router;

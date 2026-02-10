@@ -4,7 +4,7 @@ import SectionHeading from "../../components/SectionHeading";
 import DonationFlow from "./DonationFlow";
 import DonorList from "./DonorList";
 import { donationHeads, donationIcons } from "../../data/dummyData";
-import { API_BASE_URL } from "../../utils/api";
+import { validateReferralCode } from "../../services/collectorApi";
 
 // Heart Icon for donate button
 const HeartIcon = ({ className }) => (
@@ -46,6 +46,10 @@ const DonationPage = () => {
   // Prefill amount from URL
   const [prefillAmount, setPrefillAmount] = useState(null);
 
+  // Manual referral entry state
+  const [manualReferralInput, setManualReferralInput] = useState("");
+  const [manualReferralLoading, setManualReferralLoading] = useState(false);
+
   // Handle URL parameters: ref, cause, amount
   useEffect(() => {
     const refCode = searchParams.get("ref");
@@ -55,7 +59,7 @@ const DonationPage = () => {
 
     // Handle referral code
     if (refCode) {
-      validateReferralCode(refCode);
+      handleValidateReferralCode(refCode);
     }
 
     // Handle cause prefill
@@ -96,12 +100,11 @@ const DonationPage = () => {
   }, [searchParams]);
 
   // Validate referral code via backend
-  const validateReferralCode = async (code) => {
+  const handleValidateReferralCode = async (code) => {
     setReferralData((prev) => ({ ...prev, code, isLoading: true, error: null }));
 
     try {
-      const response = await fetch(`${API_BASE_URL}/public/referral/${encodeURIComponent(code)}`);
-      const data = await response.json();
+      const data = await validateReferralCode(code);
 
       if (data.valid && data.collectorName) {
         setReferralData({
@@ -118,7 +121,7 @@ const DonationPage = () => {
           collectorName: null,
           isValid: false,
           isLoading: false,
-          error: "Referral code not recognized. You can still donate without it.",
+          error: data.error || "Referral code not recognized. You can still donate without it.",
         });
       }
     } catch (error) {
@@ -132,6 +135,53 @@ const DonationPage = () => {
         error: null, // Don't show error for network issues
       });
     }
+  };
+
+  // Handle manual referral code entry
+  const handleManualReferralSubmit = async () => {
+    const code = manualReferralInput.trim().toUpperCase();
+    if (!code) return;
+
+    setManualReferralLoading(true);
+    
+    try {
+      const data = await validateReferralCode(code);
+
+      if (data.valid && data.collectorName) {
+        setReferralData({
+          code,
+          collectorName: data.collectorName,
+          isValid: true,
+          isLoading: false,
+          error: null,
+        });
+        setManualReferralInput("");
+      } else {
+        setReferralData((prev) => ({
+          ...prev,
+          error: data.error || "Invalid referral code. Please check and try again.",
+        }));
+      }
+    } catch {
+      setReferralData((prev) => ({
+        ...prev,
+        error: "Failed to validate referral code. Please try again.",
+      }));
+    } finally {
+      setManualReferralLoading(false);
+    }
+  };
+
+  // Clear referral code
+  const handleClearReferral = () => {
+    setReferralData({
+      code: null,
+      collectorName: null,
+      isValid: false,
+      isLoading: false,
+      error: null,
+    });
+    setManualReferralInput("");
   };
 
   const handleCauseSelect = (head) => {
@@ -251,28 +301,71 @@ const DonationPage = () => {
 
           {/* Referral info banner - show when valid referral code exists */}
           {referralData.isValid && referralData.collectorName && (
-            <div className="mt-8 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
-              <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
+            <div className="mt-8 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-green-800 font-medium">
+                    Referred by: <span className="font-bold">{referralData.collectorName}</span>
+                  </p>
+                  <p className="text-green-600 text-sm">Your donation will be attributed to this collector</p>
+                </div>
               </div>
-              <div>
-                <p className="text-green-800 font-medium">
-                  Collected by: <span className="font-bold">{referralData.collectorName}</span>
-                </p>
-                <p className="text-green-600 text-sm">Your donation will be attributed to this collector</p>
-              </div>
+              <button
+                onClick={handleClearReferral}
+                className="text-green-600 hover:text-green-800 text-sm font-medium"
+              >
+                Clear
+              </button>
+            </div>
+          )}
+
+          {/* Referral loading state */}
+          {referralData.isLoading && (
+            <div className="mt-8 p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-3">
+              <div className="animate-spin h-5 w-5 border-2 border-amber-600 border-t-transparent rounded-full"></div>
+              <p className="text-gray-600">Validating referral code...</p>
             </div>
           )}
 
           {/* Referral error warning - soft, doesn't block donation */}
-          {referralData.error && (
+          {referralData.error && !referralData.isValid && (
             <div className="mt-8 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-3">
               <svg className="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
               <p className="text-amber-700">{referralData.error}</p>
+            </div>
+          )}
+
+          {/* Manual Referral Entry - show when no valid referral */}
+          {!referralData.isValid && !referralData.isLoading && (
+            <div className="mt-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+              <p className="text-gray-700 font-medium mb-3">Have a referral code?</p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Enter referral code (e.g., COLA7F9X2)"
+                  value={manualReferralInput}
+                  onChange={(e) => setManualReferralInput(e.target.value.toUpperCase())}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm font-mono uppercase"
+                  maxLength={9}
+                />
+                <button
+                  onClick={handleManualReferralSubmit}
+                  disabled={!manualReferralInput.trim() || manualReferralLoading}
+                  className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {manualReferralLoading ? "Validating..." : "Apply"}
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                If someone shared a referral code with you, enter it here to attribute your donation to them.
+              </p>
             </div>
           )}
 

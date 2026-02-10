@@ -9,6 +9,7 @@ import { DonationsProvider } from "./context/DonationsContext";
 import MainLayout from "./layouts/MainLayout";
 import ScrollToTop from "./components/ScrollToTop";
 import ProtectedRoute from "./components/ProtectedRoute";
+import CollectorRoute from "./components/CollectorRoute";
 import AdminRoute from "./components/AdminRoute";
 import ErrorBoundary from "./components/ErrorBoundary";
 
@@ -44,11 +45,15 @@ import ExportsView from "./pages/admin/ExportsView";
 import CashDonationForm from "./pages/admin/CashDonationForm";
 import CollectorsView from "./pages/admin/CollectorsView";
 import CollectorDetailView from "./pages/admin/CollectorDetailView";
+import CollectorApplicationsView from "./pages/admin/CollectorApplicationsView";
 
 // Donation Module
 import DonationPage from "./modules/donation/DonationPage";
 import MyDonations from "./pages/MyDonations";
 import CollectorDashboard from "./pages/CollectorDashboard";
+import CollectorApplicationPage from "./pages/CollectorApplicationPage";
+import CollectorReapplyPage from "./pages/CollectorReapplyPage";
+import LeaderboardPage from "./pages/LeaderboardPage";
 
 // E-commerce Module (disabled)
 import ShopComingSoon from "./pages/ShopComingSoon";
@@ -101,11 +106,30 @@ function App() {
                         <Route
                           path="collector"
                           element={
-                            <ProtectedRoute>
+                            <CollectorRoute>
                               <CollectorDashboard />
+                            </CollectorRoute>
+                          }
+                        />
+                        <Route
+                          path="collector/apply"
+                          element={
+                            <ProtectedRoute>
+                              <CollectorApplicationPage />
                             </ProtectedRoute>
                           }
                         />
+                        <Route
+                          path="collector/reapply"
+                          element={
+                            <ProtectedRoute>
+                              <CollectorReapplyPage />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        {/* Public Leaderboard */}
+                        <Route path="leaderboard" element={<LeaderboardPage />} />
 
                         {/* E-commerce Module (coming soon) */}
                         <Route path="shop/*" element={<ShopComingSoon />} />
@@ -166,6 +190,7 @@ function App() {
                           <Route path="donors" element={<DonorsView />} />
                           <Route path="collectors" element={<CollectorsView />} />
                           <Route path="collectors/:id" element={<CollectorDetailView />} />
+                          <Route path="collector-applications" element={<CollectorApplicationsView />} />
                           <Route path="reports" element={<ReportsView />} />
                           <Route path="exports" element={<ExportsView />} />
                           <Route

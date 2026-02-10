@@ -1,0 +1,2 @@
+# This file ensures the kyc folder is tracked by git
+# Actual KYC files should be gitignored

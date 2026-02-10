@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { donationHeads, presetAmounts } from "../data/dummyData";
 import { formatCurrency } from "../utils/helpers";
@@ -11,11 +11,31 @@ import { formatCurrency } from "../utils/helpers";
  * - Editable link with cause and suggested amount
  * - Auto-generated WhatsApp message with copy functionality
  * - No history storage - links generated on-the-fly
+ * - Minimum amount enforcement for specific causes (e.g., Ashram Nirman ₹5000)
  */
 const ReferralLinkGenerator = ({ referralCode, collectorName }) => {
   const [selectedCause, setSelectedCause] = useState("");
   const [selectedAmount, setSelectedAmount] = useState("");
   const [customAmount, setCustomAmount] = useState("");
+  const [amountError, setAmountError] = useState("");
+
+  // Get minimum amount for selected cause
+  const selectedCauseData = useMemo(() => {
+    return donationHeads.find(head => head.name === selectedCause);
+  }, [selectedCause]);
+
+  const minAmount = selectedCauseData?.minAmount || 0;
+
+  // Validate amount when cause or amount changes
+  useEffect(() => {
+    const currentAmount = parseInt(customAmount || selectedAmount) || 0;
+    if (minAmount > 0 && currentAmount > 0 && currentAmount < minAmount) {
+      setAmountError(`Minimum donation for ${selectedCause} is ${formatCurrency(minAmount)}`);
+    } else {
+      setAmountError("");
+    }
+  }, [selectedCause, selectedAmount, customAmount, minAmount]);
+
   const [copied, setCopied] = useState(false);
   const [copiedMessage, setCopiedMessage] = useState(false);
 
@@ -50,23 +70,32 @@ const ReferralLinkGenerator = ({ referralCode, collectorName }) => {
     return `${baseUrl}?ref=${referralCode}`;
   }, [referralCode, baseUrl]);
 
-  // Generate WhatsApp-formatted message
+  // Generate WhatsApp-formatted message with emotionally engaging content
   const whatsappMessage = useMemo(() => {
     if (!referralLink) return "";
 
-    const causeName = selectedCause || "a noble cause";
+    const causeName = selectedCause || "";
     const amount = customAmount || selectedAmount;
 
-    let message = `🙏 *Jai Gurudev!*\n\n`;
-    message += `I invite you to contribute to Shri Gurudev Ashram for *${causeName}*.\n\n`;
+    // Short, clean WhatsApp message
+    let message = "";
+    message += "Jai Gurudev!\n\n";
     
-    if (amount) {
-      message += `Suggested donation: *${formatCurrency(parseInt(amount))}*\n\n`;
+    message += "Shri Gurudev Ashram ki seva mein aapka swagat hai.\n\n";
+    
+    if (selectedCause) {
+      message += `Seva: *${causeName}*\n\n`;
     }
     
-    message += `Your contribution makes a real difference in the lives of many.\n\n`;
-    message += `👉 Donate now: ${referralLink}\n\n`;
-    message += `_Every seva counts. Thank you for your generosity!_ 🙏`;
+    if (amount) {
+      message += `Rashi: Rs. ${parseInt(amount).toLocaleString('en-IN')}\n\n`;
+    }
+    
+    message += "Daan karein:\n";
+    message += `${referralLink}\n\n`;
+    
+    message += "Aapka sahyog bahut maayne rakhta hai.\n\n";
+    message += "Dhanyavaad!";
 
     return message;
   }, [referralLink, selectedCause, selectedAmount, customAmount]);
@@ -184,16 +213,26 @@ const ReferralLinkGenerator = ({ referralCode, collectorName }) => {
           </label>
           <select
             value={selectedCause}
-            onChange={(e) => setSelectedCause(e.target.value)}
+            onChange={(e) => {
+              setSelectedCause(e.target.value);
+              // Reset amount selection when cause changes to avoid invalid amounts
+              setSelectedAmount("");
+              setCustomAmount("");
+            }}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
           >
             <option value="">Any cause</option>
             {donationHeads.map((head) => (
               <option key={head.id} value={head.name}>
-                {head.name}
+                {head.name}{head.minAmount ? ` (Min: ${formatCurrency(head.minAmount)})` : ""}
               </option>
             ))}
           </select>
+          {minAmount > 0 && (
+            <p className="text-xs text-amber-700 mt-1">
+              ⚠️ Minimum donation for {selectedCause}: {formatCurrency(minAmount)}
+            </p>
+          )}
         </div>
 
         {/* Amount Selection */}
@@ -202,7 +241,10 @@ const ReferralLinkGenerator = ({ referralCode, collectorName }) => {
             Suggested Amount (Optional)
           </label>
           <div className="grid grid-cols-3 gap-2 mb-2">
-            {presetAmounts.slice(0, 6).map((amount) => (
+            {presetAmounts
+              .filter(amount => amount >= minAmount) // Filter out amounts below minimum
+              .slice(0, 6)
+              .map((amount) => (
               <button
                 key={amount}
                 onClick={() => handlePresetAmount(amount)}
@@ -219,11 +261,16 @@ const ReferralLinkGenerator = ({ referralCode, collectorName }) => {
           <input
             type="text"
             inputMode="numeric"
-            placeholder="Or enter custom amount"
+            placeholder={minAmount > 0 ? `Enter amount (min: ${formatCurrency(minAmount)})` : "Or enter custom amount"}
             value={customAmount}
             onChange={handleCustomAmount}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 ${
+              amountError ? "border-red-400 bg-red-50" : "border-gray-300"
+            }`}
           />
+          {amountError && (
+            <p className="text-xs text-red-600 mt-1">{amountError}</p>
+          )}
         </div>
 
         {/* Generated Link */}
