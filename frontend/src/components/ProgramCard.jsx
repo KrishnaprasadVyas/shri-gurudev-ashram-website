@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const ProgramCard = ({ program }) => {
+  const { t } = useTranslation();
   // Support both imageUrl and image properties
   const imageSource = program.imageUrl || program.image;
 
@@ -28,7 +30,7 @@ const ProgramCard = ({ program }) => {
           to={`/activities/${program.id}`}
           className="inline-block px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 transition-colors text-sm font-medium"
         >
-          Learn More
+          {t("common.learnMore")}
         </Link>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import SectionHeading from "../components/SectionHeading";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { validateEmail } from "../utils/helpers";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE_URL, parseJsonResponse } from "../utils/api";
@@ -8,6 +9,7 @@ import { API_BASE_URL, parseJsonResponse } from "../utils/api";
 const Signup = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { t } = useTranslation();
 
   // Step: 1 = Enter mobile, 2 = Enter OTP + Profile
   const [step, setStep] = useState(1);
@@ -32,7 +34,7 @@ const Signup = () => {
     e.preventDefault();
 
     if (mobile.length !== 10) {
-      setError("Please enter a valid 10-digit mobile number");
+      setError(t("signup.validMobile"));
       return;
     }
 
@@ -52,7 +54,7 @@ const Signup = () => {
         throw new Error(data.message || "Failed to send OTP");
       }
 
-      setSuccessMessage("OTP sent successfully! Check your phone.");
+      setSuccessMessage(t("signup.otpSent"));
       setStep(2);
     } catch (err) {
       setError(err.message || "Failed to send OTP. Please try again.");
@@ -67,17 +69,19 @@ const Signup = () => {
 
     // Validate profile fields
     const newErrors = {};
-    if (!profile.fullName.trim()) newErrors.fullName = "Full name is required";
-    if (!profile.address.trim()) newErrors.address = "Address is required";
+    if (!profile.fullName.trim())
+      newErrors.fullName = t("signup.fullNameRequired");
+    if (!profile.address.trim())
+      newErrors.address = t("signup.addressRequired");
     if (profile.email && !validateEmail(profile.email)) {
-      newErrors.email = "Please enter a valid email address";
+      newErrors.email = t("signup.emailInvalid");
     }
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
     if (otp.length !== 6) {
-      setError("Please enter a valid 6-digit OTP");
+      setError(t("signup.validOtp"));
       return;
     }
 
@@ -154,11 +158,11 @@ const Signup = () => {
     <section className="py-16 px-4 bg-white min-h-[60vh]">
       <div className="max-w-md mx-auto bg-amber-50 border border-amber-200 rounded-lg shadow-sm p-6">
         <SectionHeading
-          title={step === 1 ? "Create Account" : "Complete Your Profile"}
+          title={
+            step === 1 ? t("signup.createAccount") : t("signup.completeProfile")
+          }
           subtitle={
-            step === 1
-              ? "Enter your mobile number to get started"
-              : "Enter OTP and tell us about yourself"
+            step === 1 ? t("signup.enterMobile") : t("signup.enterOtpProfile")
           }
           center={true}
         />
@@ -183,7 +187,8 @@ const Signup = () => {
             <form onSubmit={handleSendOtp} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  Mobile Number <span className="text-red-500">*</span>
+                  {t("signup.mobileNumber")}{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <div className="flex gap-2">
                   <div className="w-20 px-3 py-2 border border-amber-200 rounded-md bg-gray-50 flex items-center justify-center font-medium text-gray-700">
@@ -193,7 +198,7 @@ const Signup = () => {
                     type="tel"
                     value={mobile}
                     onChange={handleMobileChange}
-                    placeholder="10-digit number"
+                    placeholder={t("signup.mobilePlaceholder")}
                     disabled={isLoading}
                     className="flex-1 px-3 py-2 border border-amber-200 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
                     autoFocus
@@ -227,20 +232,20 @@ const Signup = () => {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       />
                     </svg>
-                    Sending OTP...
+                    {t("signup.sendingOtp")}
                   </>
                 ) : (
-                  "Send OTP"
+                  t("signup.sendOtp")
                 )}
               </button>
 
               <p className="text-sm text-center text-gray-600">
-                Already have an account?{" "}
+                {t("signup.alreadyHaveAccount")}{" "}
                 <Link
                   to="/login"
                   className="text-amber-600 hover:text-amber-700 font-medium"
                 >
-                  Login
+                  {t("signup.loginLink")}
                 </Link>
               </p>
             </form>
@@ -253,7 +258,8 @@ const Signup = () => {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-sm font-semibold text-gray-800">
-                    Enter OTP <span className="text-red-500">*</span>
+                    {t("signup.enterOtp")}{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <button
                     type="button"
@@ -265,16 +271,18 @@ const Signup = () => {
                     }}
                     className="text-sm text-amber-600 hover:text-amber-700"
                   >
-                    Change Number
+                    {t("signup.changeNumber")}
                   </button>
                 </div>
-                <p className="text-xs text-gray-600 mb-2">Sent to {fullMobile}</p>
+                <p className="text-xs text-gray-600 mb-2">
+                  {t("signup.sentTo", { phone: fullMobile })}
+                </p>
                 <input
                   type="text"
                   inputMode="numeric"
                   value={otp}
                   onChange={handleOtpChange}
-                  placeholder="Enter 6-digit OTP"
+                  placeholder={t("signup.enterOtpPlaceholder")}
                   disabled={isLoading}
                   className="w-full px-3 py-3 border border-amber-200 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-center text-xl tracking-widest font-mono disabled:opacity-50"
                   maxLength={6}
@@ -287,7 +295,7 @@ const Signup = () => {
                     disabled={isLoading}
                     className="text-sm text-amber-600 hover:text-amber-700 disabled:opacity-50"
                   >
-                    Didn't receive OTP? Resend
+                    {t("signup.resendOtp")}
                   </button>
                 </div>
               </div>
@@ -297,14 +305,14 @@ const Signup = () => {
               {/* Profile Fields */}
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-1">
-                  Full Name <span className="text-red-500">*</span>
+                  {t("signup.fullName")} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="fullName"
                   value={profile.fullName}
                   onChange={handleProfileChange}
-                  placeholder="Enter your full name"
+                  placeholder={t("signup.fullNamePlaceholder")}
                   disabled={isLoading}
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 disabled:opacity-50 ${
                     errors.fullName
@@ -319,13 +327,13 @@ const Signup = () => {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-1">
-                  Address <span className="text-red-500">*</span>
+                  {t("signup.address")} <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   name="address"
                   value={profile.address}
                   onChange={handleProfileChange}
-                  placeholder="Enter your address"
+                  placeholder={t("signup.addressPlaceholder")}
                   rows={3}
                   disabled={isLoading}
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 disabled:opacity-50 ${
@@ -341,14 +349,14 @@ const Signup = () => {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-1">
-                  Email (Optional)
+                  {t("signup.emailOptional")}
                 </label>
                 <input
                   type="email"
                   name="email"
                   value={profile.email}
                   onChange={handleProfileChange}
-                  placeholder="your@email.com"
+                  placeholder={t("signup.emailPlaceholder")}
                   disabled={isLoading}
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 disabled:opacity-50 ${
                     errors.email
@@ -360,20 +368,20 @@ const Signup = () => {
                   <p className="mt-1 text-xs text-red-600">{errors.email}</p>
                 )}
                 <p className="mt-1 text-xs text-gray-500">
-                  We'll send donation receipts to this email
+                  {t("signup.emailNote")}
                 </p>
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-1">
-                  WhatsApp Number (Optional)
+                  {t("signup.whatsappOptional")}
                 </label>
                 <input
                   type="tel"
                   name="whatsapp"
                   value={profile.whatsapp}
                   onChange={handleProfileChange}
-                  placeholder="WhatsApp number"
+                  placeholder={t("signup.whatsappPlaceholder")}
                   disabled={isLoading}
                   className="w-full px-3 py-2 border border-amber-200 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
                 />
@@ -405,10 +413,10 @@ const Signup = () => {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       />
                     </svg>
-                    Creating Account...
+                    {t("signup.creatingAccount")}
                   </>
                 ) : (
-                  "Complete Signup"
+                  t("signup.completeSignup")
                 )}
               </button>
             </form>
@@ -420,4 +428,3 @@ const Signup = () => {
 };
 
 export default Signup;
-

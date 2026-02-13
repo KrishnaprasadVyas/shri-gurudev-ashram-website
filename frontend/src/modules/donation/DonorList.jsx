@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { formatCurrency } from "../../utils/helpers";
 import { API_BASE_URL, parseJsonResponse } from "../../utils/api";
 
@@ -36,6 +37,7 @@ const DonationIcon = ({ className }) => (
  * Features live scrolling animation for recent donations.
  */
 const DonorList = () => {
+  const { t } = useTranslation();
   // State for API data
   const [recentDonations, setRecentDonations] = useState([]);
   const [topDonors, setTopDonors] = useState([]);
@@ -132,7 +134,7 @@ const DonorList = () => {
   if (recentDonations.length === 0 && topDonors.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
-        <p>Be the first to make a donation!</p>
+        <p>{t("donation.donorList.beFirst")}</p>
       </div>
     );
   }
@@ -143,11 +145,15 @@ const DonorList = () => {
       <div className="bg-amber-50 rounded-lg p-5 h-fit">
         <div className="flex items-center gap-3 mb-4">
           <DonationIcon className="w-6 h-6 text-amber-600" />
-          <h3 className="text-xl font-bold text-amber-900">Recent Donations</h3>
+          <h3 className="text-xl font-bold text-amber-900">
+            {t("donation.donorList.recentDonations")}
+          </h3>
           {recentDonations.length > 5 && (
             <span className="ml-auto flex items-center gap-1">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-              <span className="text-xs text-green-600 font-medium">Live</span>
+              <span className="text-xs text-green-600 font-medium">
+                {t("donation.donorList.live")}
+              </span>
             </span>
           )}
         </div>
@@ -162,7 +168,7 @@ const DonorList = () => {
                   {donor.name}
                 </span>
                 <span className="text-gray-500 text-sm ml-2">
-                  from {donor.city}
+                  {t("donation.donorList.from")} {donor.city}
                 </span>
               </div>
               <div className="font-bold text-amber-700 whitespace-nowrap ml-2">
@@ -177,7 +183,9 @@ const DonorList = () => {
       <div className="bg-gradient-to-br from-amber-100 to-orange-50 rounded-lg p-5 border border-amber-200 h-fit">
         <div className="flex items-center gap-3 mb-4">
           <TrophyIcon className="w-6 h-6 text-amber-600" />
-          <h3 className="text-xl font-bold text-amber-900">Top Donors</h3>
+          <h3 className="text-xl font-bold text-amber-900">
+            {t("donation.donorList.topDonors")}
+          </h3>
         </div>
         <div className="space-y-2">
           {topDonors.length > 0 ? (
@@ -213,7 +221,9 @@ const DonorList = () => {
               </div>
             ))
           ) : (
-            <p className="text-gray-500 text-center py-4">No top donors yet</p>
+            <p className="text-gray-500 text-center py-4">
+              {t("donation.donorList.noTopDonors")}
+            </p>
           )}
         </div>
       </div>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import PrimaryButton from "../components/PrimaryButton";
 import { API_BASE_URL, parseJsonResponse } from "../utils/api";
+import { useTranslation } from "react-i18next";
 
 /**
  * Email Verification Page
@@ -14,13 +15,14 @@ const VerifyEmail = () => {
   const [status, setStatus] = useState("verifying"); // 'verifying' | 'success' | 'error' | 'expired'
   const [email, setEmail] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const { t } = useTranslation();
 
   useEffect(() => {
     const token = searchParams.get("token");
 
     if (!token) {
       setStatus("error");
-      setErrorMessage("Invalid verification link");
+      setErrorMessage(t("verifyEmail.invalidLink"));
       return;
     }
 
@@ -45,7 +47,7 @@ const VerifyEmail = () => {
         }
       } catch (err) {
         setStatus("error");
-        setErrorMessage("Network error. Please try again.");
+        setErrorMessage(t("verifyEmail.networkError"));
       }
     };
 
@@ -81,11 +83,9 @@ const VerifyEmail = () => {
               </svg>
             </div>
             <h1 className="text-2xl font-bold text-amber-900 mb-2">
-              Verifying Email...
+              {t("verifyEmail.verifying")}
             </h1>
-            <p className="text-gray-600">
-              Please wait while we verify your email address.
-            </p>
+            <p className="text-gray-600">{t("verifyEmail.verifyingNote")}</p>
           </>
         )}
 
@@ -108,10 +108,10 @@ const VerifyEmail = () => {
               </svg>
             </div>
             <h1 className="text-2xl font-bold text-green-800 mb-2">
-              Email Verified!
+              {t("verifyEmail.verified")}
             </h1>
             <p className="text-gray-600 mb-2">
-              Your email address has been successfully verified.
+              {t("verifyEmail.verifiedNote")}
             </p>
             {email && (
               <p className="text-sm text-gray-500 mb-6">
@@ -119,14 +119,16 @@ const VerifyEmail = () => {
               </p>
             )}
             <p className="text-sm text-gray-500 mb-6">
-              You will now receive donation receipts at this email address.
+              {t("verifyEmail.receiptNote")}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link to="/">
-                <PrimaryButton variant="outline">Back to Home</PrimaryButton>
+                <PrimaryButton variant="outline">
+                  {t("verifyEmail.backToHome")}
+                </PrimaryButton>
               </Link>
               <Link to="/donate">
-                <PrimaryButton>Make a Donation</PrimaryButton>
+                <PrimaryButton>{t("verifyEmail.makeDonation")}</PrimaryButton>
               </Link>
             </div>
           </>
@@ -151,18 +153,17 @@ const VerifyEmail = () => {
               </svg>
             </div>
             <h1 className="text-2xl font-bold text-amber-900 mb-2">
-              Link Expired
+              {t("verifyEmail.expired")}
             </h1>
-            <p className="text-gray-600 mb-6">
-              This verification link has expired. Please request a new
-              verification email during your next donation.
-            </p>
+            <p className="text-gray-600 mb-6">{t("verifyEmail.expiredNote")}</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link to="/">
-                <PrimaryButton variant="outline">Back to Home</PrimaryButton>
+                <PrimaryButton variant="outline">
+                  {t("verifyEmail.backToHome")}
+                </PrimaryButton>
               </Link>
               <Link to="/donate">
-                <PrimaryButton>Make a Donation</PrimaryButton>
+                <PrimaryButton>{t("verifyEmail.makeDonation")}</PrimaryButton>
               </Link>
             </div>
           </>
@@ -187,18 +188,19 @@ const VerifyEmail = () => {
               </svg>
             </div>
             <h1 className="text-2xl font-bold text-red-900 mb-2">
-              Verification Failed
+              {t("verifyEmail.failed")}
             </h1>
             <p className="text-gray-600 mb-6">
-              {errorMessage ||
-                "Unable to verify email. The link may be invalid or already used."}
+              {errorMessage || t("verifyEmail.failedNote")}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link to="/">
-                <PrimaryButton variant="outline">Back to Home</PrimaryButton>
+                <PrimaryButton variant="outline">
+                  {t("verifyEmail.backToHome")}
+                </PrimaryButton>
               </Link>
               <Link to="/donate">
-                <PrimaryButton>Make a Donation</PrimaryButton>
+                <PrimaryButton>{t("verifyEmail.makeDonation")}</PrimaryButton>
               </Link>
             </div>
           </>

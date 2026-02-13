@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const Footer = () => {
+  const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -10,50 +12,42 @@ const Footer = () => {
           {/* Left Column - Aartis and Discourses */}
           <div className="bg-gray-200 text-slate-950 overflow-hidden rounded-3xl p-8 sm:p-10 lg:p-12 flex flex-col gap-6">
             <h3 className="text-2xl font-semibold text-amber-500 text-center tracking-wide">
-              AARTIS AND DISCOURSES
+              {t("footer.aartisTitle")}
             </h3>
             <div className="space-y-3 text-base 90">
-              <p>काकड़ा आरती - सुबह 4 बजे</p>
-              <p>दैनिक सुबह आरती - सुबह 6 बजे</p>
-              <p>प्रातः भोजन</p>
-              <p>मध्याह्न भोजन</p>
-              <p>हरिपाठ - शाम 6 बजे</p>
-              <p>रात्रि भोजन</p>
-              <p>गीता पाठ - रात 8 बजे</p>
+              <p>{t("footer.kakdaAarti")}</p>
+              <p>{t("footer.morningAarti")}</p>
+              <p>{t("footer.breakfast")}</p>
+              <p>{t("footer.lunch")}</p>
+              <p>{t("footer.haripath")}</p>
+              <p>{t("footer.dinner")}</p>
+              <p>{t("footer.gitaPath")}</p>
             </div>
             <div className="space-y-2 text-left  text-slate-950">
               <h4 className="text-lg font-semibold text-amber-300">
-                Darshan Timings
+                {t("footer.darshanTimings")}
               </h4>
-              <p className="text-base">04:30 am to 01:00 pm</p>
-              <p className="text-base">04:30 pm to 09:00 pm</p>
+              <p className="text-base">{t("footer.darshanMorning")}</p>
+              <p className="text-base">{t("footer.darshanEvening")}</p>
             </div>
-            <p className="text-sm italic">
-              Temple timings may be changed on special occasions.
-            </p>
+            <p className="text-sm italic">{t("footer.timingsNote")}</p>
           </div>
 
           {/* Middle Column - Ashram Information */}
           <div className=" text-slate-950 overflow-hidden rounded-3xl p-8 sm:p-10 lg:p-12 flex flex-col gap-6 text-center">
             <div className="mb-6">
               <h2 className="text-2xl font-semibold text-amber-500 mb-4">
-                Shri Gurudev Ashram
+                {t("footer.ashramName")}
               </h2>
               <div className="text-sm text-gray-600 space-y-1">
-                <p>
-                  श्री गुरुदेव आश्रम, पलसखेड सपकाल, तहसील चिखली, जिला बुलडाणा,
-                  महाराष्ट्र - 443001
-                </p>
-                <p>
-                  स्वामी हरिचैतन्य शान्ति आश्रम ट्रस्ट, दाताला, तहसील मलकापूर,
-                  जिला बुलडाणा - 443102
-                </p>
+                <p>{t("footer.ashramAddress1")}</p>
+                <p>{t("footer.ashramAddress2")}</p>
               </div>
             </div>
 
             <div className="mb-6">
               <h3 className="text-2xl font-semibold text-amber-500 mb-4">
-                FOLLOW US
+                {t("footer.followUs")}
               </h3>
               <div className="flex justify-center space-x-3">
                 <a
@@ -124,13 +118,14 @@ const Footer = () => {
 
             <div className="text-sm text-gray-600 space-y-1">
               <p>
-                <strong>मो.</strong> 9158740007, 9834151577
+                <strong>{t("footer.phone")}:</strong> 9158740007, 9834151577
               </p>
               <p>
-                <strong>Website:</strong> www.shrigurudevashram.org
+                <strong>{t("footer.website")}:</strong>{" "}
+                www.shrigurudevashram.org
               </p>
               <p>
-                <strong>Email:</strong>{" "}
+                <strong>{t("footer.email")}:</strong>{" "}
                 <a
                   href="mailto:info@shrigurudevashram.org"
                   className="text-amber-600 hover:underline"
@@ -148,51 +143,46 @@ const Footer = () => {
             </div>
 
             <div className="mt-6 text-xs text-gray-500">
-              <p>Dedicated to Param Pujya Shri Swami</p>
-              <p>Harichaitanyanand Saraswatiji Maharaj</p>
+              <p>{t("footer.dedicatedTo1")}</p>
+              <p>{t("footer.dedicatedTo2")}</p>
             </div>
           </div>
 
           {/* Right Column - Sunday Schedule / Ashram Branches */}
           <div className="bg-gray-200 text-slate-950 overflow-hidden rounded-3xl p-8 sm:p-10 lg:p-12 flex flex-col gap-6">
             <h3 className="text-lg font-bold text-amber-700 mb-4">
-              आश्रम की शाखाएँ
+              {t("footer.branchesTitle")}
             </h3>
             <div className="space-y-2 text-sm text-gray-600">
-              <p>श्री वैष्णवी गीता आश्रम, मालविहिर, जिला बुलडाणा</p>
-              <p>
-                श्री हरिचैतन्य शांति आश्रम, दाताला, तहसील मलकापूर, जिला बुलडाणा
-              </p>
-              <p>श्री गुरुदेव आश्रम, मुक्ताईनगर, जिला जलगांव</p>
-              <p>श्री गुरुदेव आश्रम, कोथाला, तहसील मानवत, जिला परभणी</p>
-              <p>श्री हरिचैतन्य गोधाम, शिंदी हराली, चिखली, जिला बुलढाणा</p>
-              <p>श्री बालमुकुंद आश्रम, बेलगांव, कर्नाटक</p>
+              <p>{t("footer.branches.malvihir")}</p>
+              <p>{t("footer.branches.datala")}</p>
+              <p>{t("footer.branches.muktainagar")}</p>
+              <p>{t("footer.branches.kothala")}</p>
+              <p>{t("footer.branches.shindi")}</p>
+              <p>{t("footer.branches.belgaum")}</p>
             </div>
 
             <div className="mt-6">
               <h4 className="font-semibold text-amber-700 mb-2">
-                Bank Account Details
+                {t("footer.bankTitle")}
               </h4>
               <div className="text-xs text-gray-600 space-y-2">
                 <div>
-                  <p className="font-semibold">Shri Gurudev Ashram</p>
-                  <p>State Bank of India</p>
-                  <p>A/c No: 32035015646</p>
-                  <p>IFSC: SBIN0008409</p>
-                  <p>Branch: Shelsur</p>
+                  <p className="font-semibold">{t("footer.bank1.name")}</p>
+                  <p>{t("footer.bank1.bank")}</p>
+                  <p>{t("footer.bank1.account")}</p>
+                  <p>{t("footer.bank1.ifsc")}</p>
+                  <p>{t("footer.bank1.branch")}</p>
                 </div>
                 <div className="mt-3">
-                  <p className="font-semibold">
-                    Swami Hari Chaitanya Shanti Ashram Trust
-                  </p>
-                  <p>HDFC Bank</p>
-                  <p>A/c: 50200089955981</p>
-                  <p>IFSC: HDFC0002489</p>
-                  <p>Branch: Buldhana</p>
+                  <p className="font-semibold">{t("footer.bank2.name")}</p>
+                  <p>{t("footer.bank2.bank")}</p>
+                  <p>{t("footer.bank2.account")}</p>
+                  <p>{t("footer.bank2.ifsc")}</p>
+                  <p>{t("footer.bank2.branch")}</p>
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  आयकर अधिनियम 1961 की धारा 80G के अन्तर्गत आयकर छूट के लिए
-                  मान्य।
+                  {t("footer.taxNote")}
                 </p>
               </div>
             </div>
@@ -200,10 +190,7 @@ const Footer = () => {
         </div>
 
         <div className="mt-8 pt-8 border-t border-gray-300 text-center text-sm text-gray-600">
-          <p>
-            &copy; {currentYear} Shri Gurudev Ashram, Palaskhed Sapkal. All
-            rights reserved.
-          </p>
+          <p>{t("footer.copyright", { year: currentYear })}</p>
         </div>
       </div>
     </footer>

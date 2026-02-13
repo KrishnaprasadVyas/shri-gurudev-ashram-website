@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import SectionHeading from "../components/SectionHeading";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE_URL, parseJsonResponse } from "../utils/api";
@@ -21,6 +22,7 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, getRedirectPath } = useAuth();
+  const { t } = useTranslation();
 
   // Form state
   const [step, setStep] = useState(1); // 1: Enter Phone, 2: Enter OTP
@@ -40,7 +42,7 @@ const Login = () => {
 
   const handleCountryChange = (event) => {
     const selected = COUNTRY_OPTIONS.find(
-      (opt) => opt.value === event.target.value
+      (opt) => opt.value === event.target.value,
     );
     if (selected) {
       setCountry(selected);
@@ -67,7 +69,7 @@ const Login = () => {
     e.preventDefault();
 
     if (phone.length !== country.length) {
-      setError(`Please enter a valid ${country.length}-digit phone number`);
+      setError(t("login.validPhone", { length: country.length }));
       return;
     }
 
@@ -87,7 +89,7 @@ const Login = () => {
         throw new Error(data.message || "Failed to send OTP");
       }
 
-      setSuccessMessage("OTP sent successfully! Check your phone.");
+      setSuccessMessage(t("login.otpSent"));
       setStep(2);
     } catch (err) {
       setError(err.message || "Failed to send OTP. Please try again.");
@@ -103,7 +105,7 @@ const Login = () => {
     e.preventDefault();
 
     if (otp.length !== 6) {
-      setError("Please enter a valid 6-digit OTP");
+      setError(t("login.validOtp"));
       return;
     }
 
@@ -163,11 +165,9 @@ const Login = () => {
     <section className="py-16 px-4 bg-white min-h-[60vh]">
       <div className="max-w-md mx-auto bg-amber-50 border border-amber-200 rounded-lg shadow-sm p-6">
         <SectionHeading
-          title="Login"
+          title={t("login.title")}
           subtitle={
-            step === 1
-              ? "Enter your phone number to continue"
-              : "Enter the OTP sent to your phone"
+            step === 1 ? t("login.enterPhone") : t("login.enterOtpSubtitle")
           }
           center={true}
         />
@@ -192,7 +192,7 @@ const Login = () => {
             <form onSubmit={handleSendOtp} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  Phone Number
+                  {t("login.phoneNumber")}
                 </label>
                 <div className="flex gap-2">
                   <select
@@ -251,10 +251,10 @@ const Login = () => {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       />
                     </svg>
-                    Sending OTP...
+                    {t("login.sendingOtp")}
                   </>
                 ) : (
-                  "Send OTP"
+                  t("login.sendOtp")
                 )}
               </button>
             </form>
@@ -266,25 +266,25 @@ const Login = () => {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-sm font-semibold text-gray-800">
-                    Enter OTP
+                    {t("login.enterOtp")}
                   </label>
                   <button
                     type="button"
                     onClick={handleBack}
                     className="text-sm text-amber-600 hover:text-amber-700"
                   >
-                    Change Number
+                    {t("login.changeNumber")}
                   </button>
                 </div>
                 <p className="text-xs text-gray-600 mb-2">
-                  Sent to {fullMobile}
+                  {t("login.sentTo", { phone: fullMobile })}
                 </p>
                 <input
                   type="text"
                   inputMode="numeric"
                   value={otp}
                   onChange={handleOtpChange}
-                  placeholder="Enter 6-digit OTP"
+                  placeholder={t("login.enterOtpPlaceholder")}
                   disabled={isLoading}
                   className="w-full px-3 py-3 border border-amber-200 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-center text-xl tracking-widest font-mono disabled:opacity-50"
                   maxLength={6}
@@ -318,10 +318,10 @@ const Login = () => {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       />
                     </svg>
-                    Verifying...
+                    {t("login.verifying")}
                   </>
                 ) : (
-                  "Verify & Login"
+                  t("login.verifyLogin")
                 )}
               </button>
 
@@ -332,7 +332,7 @@ const Login = () => {
                   disabled={isLoading}
                   className="text-sm text-amber-600 hover:text-amber-700 disabled:opacity-50"
                 >
-                  Didn't receive OTP? Resend
+                  {t("login.resendOtp")}
                 </button>
               </div>
             </form>

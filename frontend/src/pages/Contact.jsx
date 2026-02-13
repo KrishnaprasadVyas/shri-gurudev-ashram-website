@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import SectionHeading from "../components/SectionHeading";
 import FormInput from "../components/FormInput";
 import PrimaryButton from "../components/PrimaryButton";
@@ -6,6 +7,7 @@ import { validateEmail, validatePhone } from "../utils/helpers";
 import { API_BASE_URL, parseJsonResponse } from "../utils/api";
 
 const Contact = () => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -30,27 +32,27 @@ const Contact = () => {
     const newErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
+      newErrors.name = t("contact.nameRequired");
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
+      newErrors.email = t("contact.emailRequired");
     } else if (!validateEmail(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
+      newErrors.email = t("contact.emailInvalid");
     }
 
     if (!formData.phone.trim()) {
-      newErrors.phone = "Phone number is required";
+      newErrors.phone = t("contact.phoneRequired");
     } else if (!validatePhone(formData.phone)) {
-      newErrors.phone = "Please enter a valid 10-digit phone number";
+      newErrors.phone = t("contact.phoneInvalid");
     }
 
     if (!formData.subject.trim()) {
-      newErrors.subject = "Subject is required";
+      newErrors.subject = t("contact.subjectRequired");
     }
 
     if (!formData.message.trim()) {
-      newErrors.message = "Message is required";
+      newErrors.message = t("contact.messageRequired");
     }
 
     setErrors(newErrors);
@@ -95,49 +97,48 @@ const Contact = () => {
           <div className="grid md:grid-cols-2 gap-12">
             {/* Contact Form */}
             <div>
-              <SectionHeading title="Send us a Message" />
+              <SectionHeading title={t("contact.sendMessage")} />
               {submitSuccess && (
                 <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
-                  Thank you! Your message has been sent successfully. We'll get
-                  back to you soon.
+                  {t("contact.successMessage")}
                 </div>
               )}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <FormInput
-                  label="Full Name"
+                  label={t("contact.fullName")}
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder="Enter your full name"
+                  placeholder={t("contact.namePlaceholder")}
                   required
                   error={errors.name}
                 />
                 <FormInput
-                  label="Email"
+                  label={t("contact.emailLabel")}
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder="Enter your email"
+                  placeholder={t("contact.emailPlaceholder")}
                   required
                   error={errors.email}
                 />
                 <FormInput
-                  label="Phone Number"
+                  label={t("contact.phoneLabel")}
                   type="tel"
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  placeholder="Enter your 10-digit phone number"
+                  placeholder={t("contact.phonePlaceholder")}
                   required
                   error={errors.phone}
                 />
                 <FormInput
-                  label="Subject"
+                  label={t("contact.subject")}
                   name="subject"
                   value={formData.subject}
                   onChange={handleChange}
-                  placeholder="What is this regarding?"
+                  placeholder={t("contact.subjectPlaceholder")}
                   required
                   error={errors.subject}
                 />
@@ -146,7 +147,8 @@ const Contact = () => {
                     htmlFor="message"
                     className="block text-sm font-medium text-gray-700 mb-2"
                   >
-                    Message <span className="text-red-500">*</span>
+                    {t("contact.message")}{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     id="message"
@@ -160,7 +162,7 @@ const Contact = () => {
                         ? "border-red-500 focus:ring-red-500"
                         : "border-gray-300 focus:ring-amber-500"
                     }`}
-                    placeholder="Enter your message"
+                    placeholder={t("contact.messagePlaceholder")}
                   />
                   {errors.message && (
                     <p className="mt-1 text-sm text-red-600">
@@ -173,42 +175,48 @@ const Contact = () => {
                   disabled={isSubmitting}
                   className="w-full"
                 >
-                  {isSubmitting ? "Sending..." : "Send Message"}
+                  {isSubmitting
+                    ? t("contact.sending")
+                    : t("contact.sendButton")}
                 </PrimaryButton>
               </form>
             </div>
 
             {/* Contact Information */}
             <div>
-              <SectionHeading title="Get in Touch" />
+              <SectionHeading title={t("contact.getInTouch")} />
               <div className="space-y-6">
                 <div className="bg-amber-50 p-6 rounded-lg">
                   <h3 className="text-xl font-bold text-amber-900 mb-4">
-                    Contact Information
+                    {t("contact.contactInfo")}
                   </h3>
                   <div className="space-y-4">
                     <div className="flex items-start space-x-3">
                       <div>
-                        <p className="font-semibold text-gray-900">Address</p>
+                        <p className="font-semibold text-gray-900">
+                          {t("contact.addressLabel")}
+                        </p>
                         <p className="text-gray-700">
-                          श्री गुरुदेव आश्रम, पलसखेड सपकाल, तहसील चिखली, जिला
-                          बुलडाणा, महाराष्ट्र - 443001
+                          {t("footer.ashramAddress1")}
                           <br />
-                          स्वामी हरिचैतन्य शान्ति आश्रम ट्रस्ट, दाताला, तहसील
-                          मलकापूर, जिला बुलडाणा - 443102
+                          {t("footer.ashramAddress2")}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
                       <div>
-                        <p className="font-semibold text-gray-900">Phone</p>
+                        <p className="font-semibold text-gray-900">
+                          {t("contact.phoneTitle")}
+                        </p>
                         <p className="text-gray-700">9158740007</p>
                         <p className="text-gray-700">9834151577</p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
                       <div>
-                        <p className="font-semibold text-gray-900">Email</p>
+                        <p className="font-semibold text-gray-900">
+                          {t("contact.emailTitle")}
+                        </p>
                         <p className="text-gray-700">
                           <a
                             href="mailto:info@shrigurudevashram.org"
@@ -233,7 +241,7 @@ const Contact = () => {
                 {/* Google Maps Embed */}
                 <div className="bg-amber-50 p-6 rounded-lg">
                   <h3 className="text-xl font-bold text-amber-900 mb-4">
-                    Find Us
+                    {t("contact.findUs")}
                   </h3>
                   <div className="w-full h-64 rounded-lg overflow-hidden">
                     <iframe
@@ -254,7 +262,7 @@ const Contact = () => {
                       rel="noopener noreferrer"
                       className="text-amber-600 hover:underline"
                     >
-                      Open in Google Maps
+                      {t("contact.openMaps")}
                     </a>
                   </p>
                 </div>

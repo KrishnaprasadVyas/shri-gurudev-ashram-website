@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import PrimaryButton from "../../../components/PrimaryButton";
 import { formatCurrency } from "../../../utils/helpers";
 import { useDonations } from "../../../context/DonationsContext";
@@ -9,6 +10,7 @@ const POLL_INTERVAL = 4000; // 4 seconds
 const MAX_POLL_TIME = 30000; // 30 seconds
 
 const Step5Success = ({ data, resetFlow }) => {
+  const { t } = useTranslation();
   const { addDonation } = useDonations();
   const hasSavedRef = useRef(false);
   const pollIntervalRef = useRef(null);
@@ -141,10 +143,10 @@ const Step5Success = ({ data, resetFlow }) => {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       } else {
-        alert("Receipt not available yet. Please try again later.");
+        alert(t("donation.step5.receiptNotReady"));
       }
     } catch (err) {
-      alert("Failed to download receipt. Please try again.");
+      alert(t("donation.step5.receiptDownloadFailed"));
     }
   };
 
@@ -171,11 +173,9 @@ const Step5Success = ({ data, resetFlow }) => {
             </svg>
           </div>
           <h2 className="text-3xl font-bold text-amber-900 mb-2">
-            Donation Confirmed!
+            {t("donation.step5.confirmed")}
           </h2>
-          <p className="text-gray-600">
-            Thank you for your generous contribution
-          </p>
+          <p className="text-gray-600">{t("donation.step5.thankYou")}</p>
         </div>
       );
     }
@@ -199,11 +199,9 @@ const Step5Success = ({ data, resetFlow }) => {
             </svg>
           </div>
           <h2 className="text-3xl font-bold text-red-900 mb-2">
-            Payment Failed
+            {t("donation.step5.paymentFailed")}
           </h2>
-          <p className="text-gray-600">
-            Your payment could not be processed. You can try again.
-          </p>
+          <p className="text-gray-600">{t("donation.step5.failedNote")}</p>
         </div>
       );
     }
@@ -234,11 +232,9 @@ const Step5Success = ({ data, resetFlow }) => {
           </svg>
         </div>
         <h2 className="text-3xl font-bold text-amber-900 mb-2">
-          Processing Payment...
+          {t("donation.step5.processingPayment")}
         </h2>
-        <p className="text-gray-600">
-          Please wait while we confirm your payment
-        </p>
+        <p className="text-gray-600">{t("donation.step5.pleaseWait")}</p>
       </div>
     );
   };
@@ -248,28 +244,36 @@ const Step5Success = ({ data, resetFlow }) => {
       {renderStatusIndicator()}
 
       <div className="bg-amber-50 rounded-lg p-6 mb-6">
-        <h3 className="font-bold text-amber-900 mb-4">Donation Details</h3>
+        <h3 className="font-bold text-amber-900 mb-4">
+          {t("donation.step5.details")}
+        </h3>
         <div className="space-y-2 text-sm text-left">
           <div className="flex justify-between">
-            <span className="text-gray-700">Transaction ID:</span>
+            <span className="text-gray-700">
+              {t("donation.step5.transactionId")}
+            </span>
             <span className="font-semibold text-amber-900 font-mono">
               {data.transactionId || data.razorpayPaymentId || "—"}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-700">Donation Head:</span>
+            <span className="text-gray-700">
+              {t("donation.step5.donationHead")}
+            </span>
             <span className="font-semibold text-amber-900">
               {data.donationHead?.name}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-700">Amount:</span>
+            <span className="text-gray-700">
+              {t("donation.step5.amountLabel")}
+            </span>
             <span className="font-bold text-amber-700 text-lg">
               {formatCurrency(data.amount)}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-700">Date:</span>
+            <span className="text-gray-700">{t("donation.step5.date")}</span>
             <span className="font-semibold text-amber-900">
               {new Date().toLocaleDateString("en-IN", {
                 year: "numeric",
@@ -279,7 +283,7 @@ const Step5Success = ({ data, resetFlow }) => {
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-700">Status:</span>
+            <span className="text-gray-700">{t("donation.step5.status")}</span>
             <span
               className={`font-semibold ${
                 paymentStatus === "SUCCESS"
@@ -290,10 +294,10 @@ const Step5Success = ({ data, resetFlow }) => {
               }`}
             >
               {paymentStatus === "SUCCESS"
-                ? "Confirmed"
+                ? t("donation.step5.statusConfirmed")
                 : paymentStatus === "FAILED"
-                  ? "Failed"
-                  : "Processing..."}
+                  ? t("donation.step5.statusFailed")
+                  : t("donation.step5.statusProcessing")}
             </span>
           </div>
         </div>
@@ -306,7 +310,9 @@ const Step5Success = ({ data, resetFlow }) => {
             className="w-full"
             disabled={!receiptAvailable}
           >
-            {receiptAvailable ? "Download Receipt" : "Receipt Generating..."}
+            {receiptAvailable
+              ? t("donation.step5.downloadReceipt")
+              : t("donation.step5.receiptGenerating")}
           </PrimaryButton>
 
           {/* Receipt Delivery Status */}
@@ -324,7 +330,7 @@ const Step5Success = ({ data, resetFlow }) => {
                     clipRule="evenodd"
                   />
                 </svg>
-                <span>Receipt will be sent to your verified email</span>
+                <span>{t("donation.step5.receiptSentEmail")}</span>
               </div>
             ) : data.emailOptIn && !data.emailVerified ? (
               <div className="flex items-start space-x-2 text-sm text-amber-700">
@@ -340,10 +346,11 @@ const Step5Success = ({ data, resetFlow }) => {
                   />
                 </svg>
                 <div>
-                  <span className="font-medium">Email not verified</span>
+                  <span className="font-medium">
+                    {t("donation.step5.emailNotVerified")}
+                  </span>
                   <p className="text-xs mt-1">
-                    Verify your email in future donations to receive receipts
-                    automatically.
+                    {t("donation.step5.emailNotVerifiedNote")}
                   </p>
                 </div>
               </div>
@@ -360,7 +367,7 @@ const Step5Success = ({ data, resetFlow }) => {
                     clipRule="evenodd"
                   />
                 </svg>
-                <span>Receipt available for download</span>
+                <span>{t("donation.step5.receiptAvailable")}</span>
               </div>
             )}
           </div>
@@ -370,27 +377,23 @@ const Step5Success = ({ data, resetFlow }) => {
       <div className="flex gap-4">
         <Link to="/" className="flex-1">
           <PrimaryButton variant="outline" className="w-full">
-            Back to Home
+            {t("donation.step5.backToHome")}
           </PrimaryButton>
         </Link>
         <PrimaryButton onClick={resetFlow} className="flex-1">
-          {paymentStatus === "FAILED" ? "Try Again" : "Make Another Donation"}
+          {paymentStatus === "FAILED"
+            ? t("donation.step5.tryAgain")
+            : t("donation.step5.makeAnother")}
         </PrimaryButton>
       </div>
 
       <p className="text-sm text-gray-600 mt-6">
         {paymentStatus === "SUCCESS" ? (
-          <>
-            Thank you for your generous contribution.
-            <br />
-            May you be blessed with peace, prosperity, and spiritual growth!
-          </>
+          <>{t("donation.step5.blessingMessage")}</>
         ) : paymentStatus === "FAILED" ? (
-          <>
-            If money was deducted, it will be refunded within 5-7 business days.
-          </>
+          <>{t("donation.step5.refundNote")}</>
         ) : (
-          <>Please do not close this page. We are confirming your payment.</>
+          <>{t("donation.step5.doNotClose")}</>
         )}
       </p>
     </div>

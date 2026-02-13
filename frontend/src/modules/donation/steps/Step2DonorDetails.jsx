@@ -3,6 +3,7 @@ import FormInput from "../../../components/FormInput";
 import PrimaryButton from "../../../components/PrimaryButton";
 import { validateEmail } from "../../../utils/helpers";
 import { API_BASE_URL, parseJsonResponse } from "../../../utils/api";
+import { useTranslation } from "react-i18next";
 
 const COUNTRY_OPTIONS = [
   { value: "IN", label: "India", dialCode: "+91", length: 10 },
@@ -34,6 +35,7 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
   const [emailVerificationSent, setEmailVerificationSent] = useState(false);
   const [emailVerificationError, setEmailVerificationError] = useState("");
   const [resendCooldown, setResendCooldown] = useState(0); // Cooldown timer in seconds
+  const { t } = useTranslation();
 
   /**
    * Get JWT token from localStorage for authenticated requests
@@ -45,13 +47,13 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
    */
   const handleRequestEmailVerification = async () => {
     if (!data.email || !validateEmail(data.email)) {
-      setEmailVerificationError("Please enter a valid email address first");
+      setEmailVerificationError(t("donation.step2.validEmailPlaceholder"));
       return;
     }
 
     const token = getAuthToken();
     if (!token) {
-      setEmailVerificationError("Please login to verify your email");
+      setEmailVerificationError(t("donation.step2.loginToVerify"));
       return;
     }
 
@@ -195,38 +197,40 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
 
     // Full Name
     if (!data.name.trim()) {
-      newErrors.name = "Full name is required";
+      newErrors.name = t("donation.step2.nameRequired");
     }
 
     // Mobile Number
     if (!data.mobile.trim()) {
-      newErrors.mobile = "Mobile number is required";
+      newErrors.mobile = t("donation.step2.mobileRequired");
     } else if (data.mobile.length !== country.length) {
-      newErrors.mobile = `Please enter a valid ${country.length}-digit mobile number`;
+      newErrors.mobile = t("donation.step2.mobileDigitInvalid", {
+        length: country.length,
+      });
     }
 
     // Email (optional)
     if (showEmailInput && data.email) {
       if (!validateEmail(data.email)) {
-        newErrors.email = "Please enter a valid email address";
+        newErrors.email = t("donation.step2.emailInvalid");
       }
     }
 
     // Address
     if (!data.address.trim()) {
-      newErrors.address = "Address is required";
+      newErrors.address = t("donation.step2.addressRequired");
     }
 
     // PAN Number (mandatory)
     if (!data.pan || data.pan.length !== 10) {
-      newErrors.pan = "Please enter a valid 10-character PAN number";
+      newErrors.pan = t("donation.step2.panLengthInvalid");
     } else if (!validatePAN(data.pan)) {
-      newErrors.pan = "PAN must be in format: AAAAA9999A";
+      newErrors.pan = t("donation.step2.panInvalid");
     }
 
     // DOB
     if (!data.dateOfBirth) {
-      newErrors.dateOfBirth = "Date of Birth is required";
+      newErrors.dateOfBirth = t("donation.step2.dobRequired");
     }
 
     setErrors(newErrors);
@@ -270,7 +274,7 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
     e.preventDefault();
 
     if (otp.length !== 6) {
-      setOtpError("Please enter a valid 6-digit OTP");
+      setOtpError(t("donation.step2.otpRequired"));
       return;
     }
 
@@ -347,10 +351,12 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
     return (
       <div className="max-w-md mx-auto">
         <h2 className="text-2xl font-bold text-amber-900 mb-2 text-center">
-          Verify Mobile Number
+          {t("donation.step2.verifyMobile")}
         </h2>
         <p className="text-gray-600 text-center mb-6">
-          Enter the OTP sent to {country.dialCode} {data.mobile}
+          {t("donation.step2.otpSentTo", {
+            phone: `${country.dialCode} ${data.mobile}`,
+          })}
         </p>
 
         {otpError && (
@@ -361,14 +367,14 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
 
         {otpSent && !otpError && (
           <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-700 text-sm">
-            OTP sent successfully! Check your phone.
+            {t("donation.step2.otpSentSuccess")}
           </div>
         )}
 
         <form onSubmit={handleVerifyOtp} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Enter OTP
+              {t("donation.step2.enterOtp")}
             </label>
             <input
               type="text"
@@ -379,7 +385,7 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
                 setOtp(value);
                 setOtpError("");
               }}
-              placeholder="Enter 6-digit OTP"
+              placeholder={t("donation.step2.enterOtpPlaceholder")}
               disabled={isLoading}
               className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-center text-xl tracking-widest font-mono disabled:opacity-50"
               maxLength={6}
@@ -392,7 +398,9 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
             disabled={isLoading || otp.length !== 6}
             className="w-full"
           >
-            {isLoading ? "Verifying..." : "Verify & Continue"}
+            {isLoading
+              ? t("donation.step2.verifying")
+              : t("donation.step2.verifyAndContinue")}
           </PrimaryButton>
 
           <div className="flex justify-between items-center text-sm">
@@ -401,7 +409,7 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
               onClick={handleBackToForm}
               className="text-amber-600 hover:text-amber-700"
             >
-              ← Change Details
+              {t("donation.step2.changeDetails")}
             </button>
             <button
               type="button"
@@ -409,7 +417,7 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
               disabled={isLoading}
               className="text-amber-600 hover:text-amber-700 disabled:opacity-50"
             >
-              Resend OTP
+              {t("donation.step2.resendOtp")}
             </button>
           </div>
         </form>
@@ -421,7 +429,7 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
   return (
     <div className="max-w-md mx-auto">
       <h2 className="text-2xl font-bold text-amber-900 mb-6 text-center">
-        Donor Details
+        {t("donation.step2.donorDetails")}
       </h2>
 
       {otpError && (
@@ -433,11 +441,11 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
       <form onSubmit={handleSendOtp} className="space-y-4">
         {/* Full Name (required) */}
         <FormInput
-          label="Full Name"
+          label={t("donation.step2.fullName")}
           name="name"
           value={data.name}
           onChange={handleChange}
-          placeholder="Enter your full name"
+          placeholder={t("donation.step2.namePlaceholder")}
           required
           error={errors.name}
         />
@@ -445,15 +453,17 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
         {/* Mobile Number with Country Code */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Country
+            {t("donation.step2.country")}
           </label>
           <select
             value={country.value}
             onChange={(e) => {
-              const selected = COUNTRY_OPTIONS.find(opt => opt.value === e.target.value);
+              const selected = COUNTRY_OPTIONS.find(
+                (opt) => opt.value === e.target.value,
+              );
               if (selected) {
                 setCountry(selected);
-                updateData({ mobile: '' });
+                updateData({ mobile: "" });
               }
             }}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white mb-3"
@@ -466,7 +476,8 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
           </select>
 
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Mobile Number <span className="text-red-500">*</span>
+            {t("donation.step2.mobileNumber")}{" "}
+            <span className="text-red-500">*</span>
           </label>
           <div className="flex">
             <span className="inline-flex items-center px-4 py-3 border border-r-0 border-gray-300 bg-gray-100 text-gray-700 rounded-l-lg font-medium">
@@ -476,13 +487,17 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
               type="tel"
               value={data.mobile}
               onChange={(e) => {
-                const mobile = e.target.value.replace(/\D/g, "").slice(0, country.length);
+                const mobile = e.target.value
+                  .replace(/\D/g, "")
+                  .slice(0, country.length);
                 updateData({ mobile });
                 if (errors.mobile) {
                   setErrors((prev) => ({ ...prev, mobile: "" }));
                 }
               }}
-              placeholder={`Enter ${country.length}-digit number`}
+              placeholder={t("donation.step2.digitPlaceholder", {
+                length: country.length,
+              })}
               className="flex-1 px-4 py-3 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
             />
           </div>
@@ -502,19 +517,19 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
               className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
             />
             <span className="text-sm font-medium text-gray-700">
-              Add email ID to receive receipt & updates
+              {t("donation.step2.addEmailReceipt")}
             </span>
           </label>
 
           {showEmailInput && (
             <div>
               <FormInput
-                label="Email Address"
+                label={t("donation.step2.emailAddress")}
                 type="email"
                 name="email"
                 value={data.email}
                 onChange={handleChange}
-                placeholder="Enter your email"
+                placeholder={t("donation.step2.emailPlaceholder")}
                 error={errors.email}
               />
               {data.email && validateEmail(data.email) && (
@@ -533,7 +548,7 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
                           clipRule="evenodd"
                         />
                       </svg>
-                      Email verified
+                      {t("donation.step2.emailVerified")}
                     </div>
                   ) : emailVerificationSent ? (
                     // Verification sent - waiting for user to click link
@@ -549,11 +564,10 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
                         </svg>
                         <div className="flex-1">
                           <p className="text-sm text-blue-800 font-medium">
-                            Verification email sent!
+                            {t("donation.step2.verificationSent")}
                           </p>
                           <p className="text-xs text-blue-600 mt-1">
-                            Check your inbox and click the link to verify. Link
-                            expires in 15 minutes.
+                            {t("donation.step2.checkInbox")}
                           </p>
                           <div className="flex items-center gap-3 mt-2">
                             <button
@@ -561,7 +575,7 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
                               onClick={checkEmailStatus}
                               className="text-xs text-blue-700 underline hover:text-blue-800"
                             >
-                              I've verified, check now
+                              {t("donation.step2.iveVerified")}
                             </button>
                             <span className="text-xs text-gray-400">|</span>
                             <button
@@ -571,10 +585,12 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
                               className="text-xs text-blue-700 underline hover:text-blue-800 disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed"
                             >
                               {emailVerifying
-                                ? "Sending..."
+                                ? t("donation.step2.sending")
                                 : resendCooldown > 0
-                                  ? `Resend in ${resendCooldown}s`
-                                  : "Resend email"}
+                                  ? t("donation.step2.resendIn", {
+                                      n: resendCooldown,
+                                    })
+                                  : t("donation.step2.resendEmail")}
                             </button>
                           </div>
                         </div>
@@ -622,12 +638,12 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
                               <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                               <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                             </svg>
-                            Verify Email
+                            {t("donation.step2.verifyEmail")}
                           </>
                         )}
                       </button>
                       <p className="text-xs text-gray-500 mt-1">
-                        Click to receive a verification link
+                        {t("donation.step2.clickVerifyLink")}
                       </p>
                       {emailVerificationError && (
                         <p className="text-xs text-red-600 mt-1">
@@ -640,7 +656,7 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
               )}
               {data.email && !validateEmail(data.email) && (
                 <p className="text-xs text-gray-500 mt-1">
-                  Enter a valid email to verify
+                  {t("donation.step2.enterValidEmail")}
                 </p>
               )}
             </div>
@@ -649,11 +665,11 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
 
         {/* Address (required) */}
         <FormInput
-          label="Address"
+          label={t("donation.step2.address")}
           name="address"
           value={data.address}
           onChange={handleChange}
-          placeholder="Enter your complete address"
+          placeholder={t("donation.step2.addressPlaceholder")}
           required
           error={errors.address}
         />
@@ -661,12 +677,12 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
         {/* PAN Number (Mandatory) */}
         <div className="space-y-3">
           <FormInput
-            label="PAN Number"
+            label={t("donation.step2.panNumber")}
             type="text"
             name="pan"
             value={data.pan}
             onChange={handlePanChange}
-            placeholder="Enter 10-character PAN number (e.g., ABCDE1234F)"
+            placeholder={t("donation.step2.panPlaceholder")}
             required
             error={errors.pan}
             maxLength={10}
@@ -675,8 +691,7 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
           {/* Helper Text for PAN */}
           <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
             <p className="text-xs text-blue-700">
-              PAN is mandatory for statutory donation records as per Income Tax regulations. 
-              Your information is kept confidential.
+              {t("donation.step2.panNote")}
             </p>
           </div>
         </div>
@@ -684,7 +699,8 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
         {/* Date of Birth */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Date of Birth <span className="text-red-500">*</span>
+            {t("donation.step2.dateOfBirth")}{" "}
+            <span className="text-red-500">*</span>
           </label>
           <input
             type="date"
@@ -714,12 +730,11 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
               className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
             />
             <span className="text-sm text-gray-700">
-              Display my name as Anonymous publicly
+              {t("donation.step2.anonymousLabel")}
             </span>
           </label>
           <p className="text-xs text-gray-500 mt-1 ml-6">
-            This only affects public donation lists. All details are still
-            collected internally.
+            {t("donation.step2.anonymousNote")}
           </p>
         </div>
 
@@ -731,10 +746,12 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
             className="flex-1"
             disabled={isLoading}
           >
-            Back
+            {t("donation.step2.back")}
           </PrimaryButton>
           <PrimaryButton type="submit" className="flex-1" disabled={isLoading}>
-            {isLoading ? "Sending OTP..." : "Send OTP & Continue"}
+            {isLoading
+              ? t("donation.step2.sendingOtp")
+              : t("donation.step2.sendOtpContinue")}
           </PrimaryButton>
         </div>
       </form>

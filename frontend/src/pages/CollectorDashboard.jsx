@@ -1,17 +1,21 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { getCollectorDashboard, getLeaderboard } from "../services/collectorApi";
+import {
+  getCollectorDashboard,
+  getLeaderboard,
+} from "../services/collectorApi";
 import { formatCurrency } from "../utils/helpers";
 import SectionHeading from "../components/SectionHeading";
 import ReferralLinkGenerator from "../components/ReferralLinkGenerator";
+import { useTranslation } from "react-i18next";
 
 /**
  * CollectorDashboard - Dashboard for collectors to view stats and share referral links
- * 
+ *
  * Every logged-in user is automatically a collector.
  * No commission or incentive system - purely for donation attribution.
- * 
+ *
  * Sections:
  * 1. Welcome Section (name, referral code)
  * 2. Stats Cards (total collected, donation count)
@@ -19,8 +23,9 @@ import ReferralLinkGenerator from "../components/ReferralLinkGenerator";
  * 4. Referral Link Generator
  */
 const CollectorDashboard = () => {
+  const { t } = useTranslation();
   const { user, token, isAuthenticated, isLoading: authLoading } = useAuth();
-  
+
   // Collector stats state
   const [stats, setStats] = useState({
     totalAmount: 0,
@@ -62,7 +67,8 @@ const CollectorDashboard = () => {
           totalAmount: data.data.totalAmount || 0,
           donationCount: data.data.donationCount || 0,
           referralCode: data.data.referralCode || null,
-          collectorName: data.data.collectorName || user?.fullName || "Collector",
+          collectorName:
+            data.data.collectorName || user?.fullName || "Collector",
         });
         setLeaderboard(data.data.top5Collectors || []);
         setRecentDonations(data.data.recentDonations || []);
@@ -108,7 +114,9 @@ const CollectorDashboard = () => {
       <div className="min-h-screen flex items-center justify-center bg-amber-50">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-amber-200 border-t-amber-600"></div>
-          <p className="mt-4 text-gray-600 font-medium">Loading...</p>
+          <p className="mt-4 text-gray-600 font-medium">
+            {t("collector.dashboard.loading")}
+          </p>
         </div>
       </div>
     );
@@ -118,8 +126,8 @@ const CollectorDashboard = () => {
     <section className="py-12 px-4 bg-gradient-to-b from-amber-50 to-white min-h-screen">
       <div className="max-w-4xl mx-auto">
         <SectionHeading
-          title="Collector Dashboard"
-          subtitle="Thank you for supporting our mission"
+          title={t("collector.dashboard.title")}
+          subtitle={t("collector.dashboard.subtitle")}
           center={true}
         />
 
@@ -173,7 +181,7 @@ const CollectorDashboard = () => {
             to="/my-donations"
             className="text-amber-700 hover:text-amber-800 font-medium underline"
           >
-            View Your Personal Donations →
+            {t("collector.dashboard.viewPersonalDonations")}
           </Link>
         </div>
       </div>
@@ -185,6 +193,7 @@ const CollectorDashboard = () => {
  * WelcomeSection - Displays collector name and referral code
  */
 const WelcomeSection = ({ collectorName, referralCode, isLoading }) => {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   const copyReferralCode = async () => {
@@ -210,13 +219,17 @@ const WelcomeSection = ({ collectorName, referralCode, isLoading }) => {
           <div className="flex items-center justify-center gap-2 mb-2">
             <span className="text-3xl">🙏</span>
             <h2 className="text-2xl font-bold text-amber-900">
-              Jai Gurudev, {collectorName || "Collector"}!
+              {t("collector.dashboard.greeting", {
+                name: collectorName || "Collector",
+              })}
             </h2>
           </div>
 
           {referralCode ? (
             <div className="mt-4">
-              <p className="text-gray-600 text-sm mb-2">Your Referral Code</p>
+              <p className="text-gray-600 text-sm mb-2">
+                {t("collector.dashboard.yourReferralCode")}
+              </p>
               <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2">
                 <span className="text-xl font-bold text-amber-900 font-mono tracking-wider">
                   {referralCode}
@@ -227,23 +240,43 @@ const WelcomeSection = ({ collectorName, referralCode, isLoading }) => {
                   title="Copy referral code"
                 >
                   {copied ? (
-                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <svg
+                      className="w-5 h-5 text-green-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                   ) : (
-                    <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    <svg
+                      className="w-5 h-5 text-amber-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                      />
                     </svg>
                   )}
                 </button>
               </div>
               <p className="text-gray-500 text-sm mt-3">
-                Share your referral link to help collect donations for the Ashram.
+                {t("collector.dashboard.shareNote")}
               </p>
             </div>
           ) : (
             <p className="text-gray-500 text-sm mt-2">
-              Your referral code is being generated...
+              {t("collector.dashboard.codeGenerating")}
             </p>
           )}
         </>
@@ -255,7 +288,14 @@ const WelcomeSection = ({ collectorName, referralCode, isLoading }) => {
 /**
  * StatsCards - Displays collector statistics
  */
-const StatsCards = ({ totalAmount, donationCount, isLoading, error, onRetry }) => {
+const StatsCards = ({
+  totalAmount,
+  donationCount,
+  isLoading,
+  error,
+  onRetry,
+}) => {
+  const { t } = useTranslation();
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
@@ -264,7 +304,7 @@ const StatsCards = ({ totalAmount, donationCount, isLoading, error, onRetry }) =
           onClick={onRetry}
           className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium"
         >
-          Try Again
+          {t("collector.dashboard.tryAgain")}
         </button>
       </div>
     );
@@ -282,16 +322,28 @@ const StatsCards = ({ totalAmount, donationCount, isLoading, error, onRetry }) =
         ) : (
           <>
             <div className="flex items-center gap-2 text-gray-600 mb-2">
-              <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-5 h-5 text-amber-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
-              <span className="text-sm font-medium">Total Collected</span>
+              <span className="text-sm font-medium">
+                {t("collector.dashboard.totalCollected")}
+              </span>
             </div>
             <p className="text-3xl font-bold text-amber-900">
               {formatCurrency(totalAmount)}
             </p>
             <p className="text-xs text-gray-500 mt-1">
-              Donations attributed to your referrals
+              {t("collector.dashboard.attributedNote")}
             </p>
           </>
         )}
@@ -307,16 +359,26 @@ const StatsCards = ({ totalAmount, donationCount, isLoading, error, onRetry }) =
         ) : (
           <>
             <div className="flex items-center gap-2 text-gray-600 mb-2">
-              <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              <svg
+                className="w-5 h-5 text-amber-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                />
               </svg>
-              <span className="text-sm font-medium">Donations Collected</span>
+              <span className="text-sm font-medium">
+                {t("collector.dashboard.donationsCollected")}
+              </span>
             </div>
-            <p className="text-3xl font-bold text-amber-900">
-              {donationCount}
-            </p>
+            <p className="text-3xl font-bold text-amber-900">{donationCount}</p>
             <p className="text-xs text-gray-500 mt-1">
-              Number of successful donations
+              {t("collector.dashboard.successfulDonations")}
             </p>
           </>
         )}
@@ -330,17 +392,20 @@ const StatsCards = ({ totalAmount, donationCount, isLoading, error, onRetry }) =
  * Privacy-conscious: Shows only names and amounts, no codes or counts
  */
 const LeaderboardSection = ({ leaderboard, isLoading, error, onRetry }) => {
+  const { t } = useTranslation();
   if (error) {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-6">
-        <h3 className="text-lg font-bold text-amber-900 mb-4">Top Collectors</h3>
+        <h3 className="text-lg font-bold text-amber-900 mb-4">
+          {t("collector.dashboard.topCollectors")}
+        </h3>
         <div className="text-center py-4">
           <p className="text-red-600 mb-3">{error}</p>
           <button
             onClick={onRetry}
             className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
           >
-            Try Again
+            {t("collector.dashboard.tryAgain")}
           </button>
         </div>
       </div>
@@ -350,8 +415,12 @@ const LeaderboardSection = ({ leaderboard, isLoading, error, onRetry }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-amber-900">Top Collectors</h3>
-        <span className="text-xs text-gray-500">Top 5</span>
+        <h3 className="text-lg font-bold text-amber-900">
+          {t("collector.dashboard.topCollectors")}
+        </h3>
+        <span className="text-xs text-gray-500">
+          {t("collector.dashboard.top5")}
+        </span>
       </div>
 
       {isLoading ? (
@@ -367,11 +436,9 @@ const LeaderboardSection = ({ leaderboard, isLoading, error, onRetry }) => {
       ) : leaderboard.length === 0 ? (
         <div className="text-center py-8">
           <div className="text-4xl mb-3">🌱</div>
-          <p className="text-gray-600">
-            Be the first to collect donations!
-          </p>
+          <p className="text-gray-600">{t("collector.dashboard.beFirst")}</p>
           <p className="text-gray-500 text-sm mt-1">
-            Share your referral link to get started.
+            {t("collector.dashboard.shareToStart")}
           </p>
         </div>
       ) : (
@@ -383,12 +450,17 @@ const LeaderboardSection = ({ leaderboard, isLoading, error, onRetry }) => {
                 className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg"
               >
                 {/* Rank Badge */}
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                  index === 0 ? "bg-amber-400 text-amber-900" :
-                  index === 1 ? "bg-gray-300 text-gray-700" :
-                  index === 2 ? "bg-amber-200 text-amber-800" :
-                  "bg-gray-200 text-gray-600"
-                }`}>
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                    index === 0
+                      ? "bg-amber-400 text-amber-900"
+                      : index === 1
+                        ? "bg-gray-300 text-gray-700"
+                        : index === 2
+                          ? "bg-amber-200 text-amber-800"
+                          : "bg-gray-200 text-gray-600"
+                  }`}
+                >
                   {collector.rank || index + 1}
                 </div>
 
@@ -411,7 +483,7 @@ const LeaderboardSection = ({ leaderboard, isLoading, error, onRetry }) => {
 
           {/* Soft message for users not in top 5 */}
           <p className="text-center text-gray-500 text-xs mt-4">
-            Top 5 collectors are shown here. Keep sharing to climb the ranks!
+            {t("collector.dashboard.climbRanks")}
           </p>
         </>
       )}
@@ -423,6 +495,7 @@ const LeaderboardSection = ({ leaderboard, isLoading, error, onRetry }) => {
  * RecentDonationsSection - Displays last 10 donations attributed to this collector
  */
 const RecentDonationsSection = ({ donations, isLoading }) => {
+  const { t } = useTranslation();
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-IN", {
@@ -435,14 +508,21 @@ const RecentDonationsSection = ({ donations, isLoading }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-amber-900">Recent Donations</h3>
-        <span className="text-xs text-gray-500">Last 10</span>
+        <h3 className="text-lg font-bold text-amber-900">
+          {t("collector.dashboard.recentDonations")}
+        </h3>
+        <span className="text-xs text-gray-500">
+          {t("collector.dashboard.last10")}
+        </span>
       </div>
 
       {isLoading ? (
         <div className="space-y-3">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="animate-pulse flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div
+              key={i}
+              className="animate-pulse flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+            >
               <div className="flex-1">
                 <div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
                 <div className="h-3 bg-gray-200 rounded w-24"></div>
@@ -455,10 +535,10 @@ const RecentDonationsSection = ({ donations, isLoading }) => {
         <div className="text-center py-8">
           <div className="text-4xl mb-3">📋</div>
           <p className="text-gray-600">
-            No donations yet
+            {t("collector.dashboard.noDonationsYet")}
           </p>
           <p className="text-gray-500 text-sm mt-1">
-            Share your referral link to start collecting donations.
+            {t("collector.dashboard.shareToCollect")}
           </p>
         </div>
       ) : (

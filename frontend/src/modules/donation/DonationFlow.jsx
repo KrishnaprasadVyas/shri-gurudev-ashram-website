@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import Step1AmountSelection from "./steps/Step1AmountSelection";
 import Step2DonorDetails from "./steps/Step2DonorDetails";
 import Step3Review from "./steps/Step3Review";
@@ -13,13 +14,19 @@ import Step5Success from "./steps/Step5Success";
  * - Controls step navigation (next, prev, reset)
  * - Passes props to step components
  * - Does NOT call backend directly (Step4Payment handles API calls)
- * 
+ *
  * Props:
  * - selectedCause: The donation cause selected by user
  * - referralData: { code, collectorName, isValid } from URL params
  * - prefillAmount: Suggested amount from URL params
  */
-const DonationFlow = ({ selectedCause, onCauseProcessed, referralData, prefillAmount }) => {
+const DonationFlow = ({
+  selectedCause,
+  onCauseProcessed,
+  referralData,
+  prefillAmount,
+}) => {
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(1);
 
   // Core donation state - aligned with backend API requirements
@@ -50,8 +57,8 @@ const DonationFlow = ({ selectedCause, onCauseProcessed, referralData, prefillAm
     customAmount: "",
 
     // Referral/Collector info (from URL params, immutable during flow)
-    referralCode: null,      // Code from URL - sent to backend
-    collectorName: null,     // Resolved collector name - for display only
+    referralCode: null, // Code from URL - sent to backend
+    collectorName: null, // Resolved collector name - for display only
 
     // Backend-generated IDs (set by Step4Payment after API calls)
     donationId: null, // From POST /donations/create
@@ -155,11 +162,11 @@ const DonationFlow = ({ selectedCause, onCauseProcessed, referralData, prefillAm
 
   // Step definitions for progress indicator
   const steps = [
-    { number: 1, title: "Amount" },
-    { number: 2, title: "Donor Details" },
-    { number: 3, title: "Review" },
-    { number: 4, title: "Payment" },
-    { number: 5, title: "Success" },
+    { number: 1, title: t("donation.flow.amount") },
+    { number: 2, title: t("donation.flow.donorDetails") },
+    { number: 3, title: t("donation.flow.review") },
+    { number: 4, title: t("donation.flow.payment") },
+    { number: 5, title: t("donation.flow.success") },
   ];
 
   return (
