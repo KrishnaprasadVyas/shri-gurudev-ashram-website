@@ -17,7 +17,7 @@ const Gurudev = () => {
                 <img
                   src="/assets/gurudev.jpg"
                   alt="Param Pujya Shri Swami Harichaitanyanand Saraswatiji Maharaj"
-                  className="w-full h-full object-cover object-top"
+                  className="w-full h-full object-cover object-[65%-38%]"
                 />
               </div>
               {/* Subtle decorative ring */}
