@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import HeroSection from "../components/HeroSection";
 import SectionHeading from "../components/SectionHeading";
 import ProgramCard from "../components/ProgramCard";
@@ -10,6 +11,7 @@ import { useEvents } from "../context/EventsContext";
 import { useActivities } from "../context/ActivitiesContext";
 
 const Home = () => {
+  const { t } = useTranslation();
   const { getVisibleEvents } = useEvents();
   const { getVisibleActivities } = useActivities();
   const featuredActivities = getVisibleActivities().slice(0, 6);
@@ -20,8 +22,8 @@ const Home = () => {
   return (
     <>
       <HeroSection
-        title="Shri Gurudev Ashram Palaskhed Sapkal"
-        subtitle="Param Pujya Shri Swami Harichaitanyanand Saraswatiji Maharaj's seva kshetra for bhakti, gyan and nishkam seva"
+        title={t("home.title")}
+        subtitle={t("home.subtitle")}
         image="/assets/Home_Page.JPG"
         showCTA={true}
       />
@@ -30,8 +32,8 @@ const Home = () => {
       <section className="py-16 px-4 bg-gradient-to-b from-amber-50/50 to-white">
         <div className="max-w-6xl mx-auto">
           <SectionHeading
-            title="About Our Ashram"
-            subtitle="Serving devotees through satsang, annadan, शिक्षा, गोसेवा और निस्वार्थ सेवा"
+            title={t("home.aboutTitle")}
+            subtitle={t("home.aboutSubtitle")}
             center={true}
           />
 
@@ -48,10 +50,10 @@ const Home = () => {
                 </div>
                 <div className="p-5 text-center bg-gradient-to-b from-amber-50/50 to-white">
                   <h3 className="text-lg font-serif font-bold text-amber-900">
-                    Param Pujya Shri Swami
+                    {t("home.gurudevName1")}
                   </h3>
                   <p className="text-amber-800 font-serif">
-                    Harichaitanyanand Saraswatiji Maharaj
+                    {t("home.gurudevName2")}
                   </p>
                 </div>
               </div>
@@ -85,15 +87,13 @@ const Home = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-amber-900 mb-2">
-                      Ashram Locations
+                      {t("home.ashramLocations")}
                     </h3>
                     <p className="text-gray-700 text-sm leading-relaxed">
-                      श्री गुरुदेव आश्रम, पलसखेड सपकाल, तहसील चिखली, जिला
-                      बुलडाणा, महाराष्ट्र - 443001
+                      {t("home.ashramAddress1")}
                     </p>
                     <p className="text-gray-700 text-sm leading-relaxed mt-2">
-                      स्वामी हरिचैतन्य शान्ति आश्रम ट्रस्ट, दाताला, तहसील
-                      मलकापूर, जिला बुलडाणा - 443102
+                      {t("home.ashramAddress2")}
                     </p>
                   </div>
                 </div>
@@ -119,7 +119,7 @@ const Home = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-amber-900 mb-2">
-                      Contact Numbers
+                      {t("home.contactNumbers")}
                     </h3>
                     <p className="text-gray-700">
                       <span className="font-medium">मो.</span> 9158740007,
@@ -149,7 +149,7 @@ const Home = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-amber-900 mb-2">
-                      Email & Website
+                      {t("home.emailWebsite")}
                     </h3>
                     <p className="text-gray-700 text-sm">
                       info@shrigurudevashram.org
@@ -172,8 +172,8 @@ const Home = () => {
       <section className="py-16 px-4 bg-amber-50">
         <div className="max-w-7xl mx-auto">
           <SectionHeading
-            title="Our Activities"
-            subtitle="अन्नदान, गुरुकुलम्, आदिवासी सेवा, गौशाला, अनाथ आश्रम और सेवा तीर्थ धाम जैसी प्रमुख सेवाएँ"
+            title={t("home.ourActivities")}
+            subtitle={t("home.activitiesSubtitle")}
             center={true}
           />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -186,7 +186,7 @@ const Home = () => {
               to="/activities"
               className="inline-block px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-semibold"
             >
-              View All Activities
+              {t("home.viewAllActivities")}
             </Link>
           </div>
         </div>
@@ -196,8 +196,8 @@ const Home = () => {
       <section className="py-16 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <SectionHeading
-            title="Upcoming Events"
-            subtitle="Join us for spiritual gatherings, seva programs, and special celebrations"
+            title={t("home.upcomingEvents")}
+            subtitle={t("home.eventsSubtitle")}
             center={true}
           />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -210,7 +210,7 @@ const Home = () => {
               to="/events"
               className="inline-block px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-semibold"
             >
-              View All Events
+              {t("home.viewAllEvents")}
             </Link>
           </div>
         </div>
@@ -220,8 +220,8 @@ const Home = () => {
       <section className="py-16 px-4 bg-amber-50">
         <div className="max-w-7xl mx-auto">
           <SectionHeading
-            title="Support Our Cause"
-            subtitle="Your generous contributions help us serve more people and spread love and compassion"
+            title={t("home.supportCause")}
+            subtitle={t("home.supportSubtitle")}
             center={true}
           />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -234,10 +234,10 @@ const Home = () => {
 
       {/* CTA Banner */}
       <CTABanner
-        title="Join Us in Making a Difference"
-        description="Your support helps us continue our mission of service and spiritual growth"
-        primaryAction={{ path: "/donate", label: "Donate Now" }}
-        secondaryAction={{ label: "Shop Coming Soon", disabled: true }}
+        title={t("home.ctaTitle")}
+        description={t("home.ctaDescription")}
+        primaryAction={{ path: "/donate", label: t("home.ctaDonate") }}
+        secondaryAction={{ label: t("home.ctaShop"), disabled: true }}
       />
     </>
   );

@@ -6,12 +6,14 @@ import CollectorStatusCard from "../components/CollectorStatusCard";
 import { formatCurrency } from "../utils/helpers";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE_URL, parseJsonResponse } from "../utils/api";
+import { useTranslation } from "react-i18next";
 
 const MyDonations = () => {
   const { user, token, isAuthenticated, isLoading: authLoading } = useAuth();
   const [donations, setDonations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { t } = useTranslation();
 
   /**
    * Fetch user donations
@@ -33,7 +35,7 @@ const MyDonations = () => {
       });
 
       if (response.status === 401) {
-        setError("Session expired. Please login again.");
+        setError(t("myDonations.sessionExpired"));
         setIsLoading(false);
         return;
       }
@@ -73,7 +75,7 @@ const MyDonations = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (response.ok) {
@@ -87,10 +89,10 @@ const MyDonations = () => {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       } else {
-        alert("Receipt not available yet.");
+        alert(t("myDonations.receiptNotAvailable"));
       }
     } catch (err) {
-      alert("Failed to download receipt.");
+      alert(t("myDonations.receiptDownloadFailed"));
     }
   };
 
@@ -98,6 +100,7 @@ const MyDonations = () => {
    * Render status badge
    */
   const StatusBadge = ({ status }) => {
+    const { t } = useTranslation();
     const styles = {
       SUCCESS: "bg-green-100 text-green-800",
       PENDING: "bg-amber-100 text-amber-800",
@@ -105,9 +108,9 @@ const MyDonations = () => {
     };
 
     const labels = {
-      SUCCESS: "Confirmed",
-      PENDING: "Processing",
-      FAILED: "Failed",
+      SUCCESS: t("myDonations.statusConfirmed"),
+      PENDING: t("myDonations.statusProcessing"),
+      FAILED: t("myDonations.statusFailed"),
     };
 
     return (
@@ -153,8 +156,8 @@ const MyDonations = () => {
       <section className="py-16 px-4 bg-white min-h-screen">
         <div className="max-w-4xl mx-auto">
           <SectionHeading
-            title="My Donations"
-            subtitle="View your donation history"
+            title={t("myDonations.title")}
+            subtitle={t("myDonations.viewHistory")}
             center={true}
           />
           <DonationSkeleton />
@@ -168,7 +171,7 @@ const MyDonations = () => {
     return (
       <section className="py-16 px-4 bg-white min-h-screen">
         <div className="max-w-4xl mx-auto">
-          <SectionHeading title="My Donations" center={true} />
+          <SectionHeading title={t("myDonations.title")} center={true} />
           <div className="text-center py-12 bg-amber-50 rounded-lg border border-amber-200">
             <svg
               className="w-16 h-16 mx-auto text-amber-400 mb-4"
@@ -184,13 +187,11 @@ const MyDonations = () => {
               />
             </svg>
             <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              Login Required
+              {t("myDonations.loginRequired")}
             </h3>
-            <p className="text-gray-600 mb-6">
-              Please login to view your donation history
-            </p>
+            <p className="text-gray-600 mb-6">{t("myDonations.loginToView")}</p>
             <Link to="/login" state={{ from: "/my-donations" }}>
-              <PrimaryButton>Login to Continue</PrimaryButton>
+              <PrimaryButton>{t("myDonations.loginToContinue")}</PrimaryButton>
             </Link>
           </div>
         </div>
@@ -203,7 +204,7 @@ const MyDonations = () => {
     return (
       <section className="py-16 px-4 bg-white min-h-screen">
         <div className="max-w-4xl mx-auto">
-          <SectionHeading title="My Donations" center={true} />
+          <SectionHeading title={t("myDonations.title")} center={true} />
           <div className="text-center py-12 bg-red-50 rounded-lg border border-red-200">
             <svg
               className="w-16 h-16 mx-auto text-red-400 mb-4"
@@ -219,7 +220,7 @@ const MyDonations = () => {
               />
             </svg>
             <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              Something went wrong
+              {t("myDonations.somethingWrong")}
             </h3>
             <p className="text-red-600 mb-6">{error}</p>
             <div className="flex justify-center gap-4">
@@ -227,13 +228,13 @@ const MyDonations = () => {
                 onClick={fetchDonations}
                 className="px-6 py-2 bg-amber-600 text-white rounded-md font-medium hover:bg-amber-700 transition-colors"
               >
-                Try Again
+                {t("myDonations.tryAgain")}
               </button>
               <Link
                 to="/login"
                 className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 transition-colors"
               >
-                Login Again
+                {t("myDonations.loginAgain")}
               </Link>
             </div>
           </div>
@@ -248,8 +249,10 @@ const MyDonations = () => {
         {/* Header with user info */}
         <div className="mb-8">
           <SectionHeading
-            title="My Donations"
-            subtitle={`Welcome back${user?.fullName ? `, ${user.fullName}` : ""}! Here's your donation history.`}
+            title={t("myDonations.title")}
+            subtitle={t("myDonations.welcomeBack", {
+              name: user?.fullName ? `, ${user.fullName}` : "",
+            })}
             center={true}
           />
         </div>
@@ -271,14 +274,15 @@ const MyDonations = () => {
               />
             </svg>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">
-              No donations yet
+              {t("myDonations.noDonations")}
             </h3>
             <p className="text-gray-600 mb-6 max-w-md mx-auto">
-              You haven&apos;t made any donations yet. Your generosity can make
-              a difference in someone&apos;s life.
+              {t("myDonations.noDonationsNote")}
             </p>
             <Link to="/donate">
-              <PrimaryButton>Make Your First Donation</PrimaryButton>
+              <PrimaryButton>
+                {t("myDonations.makeFirstDonation")}
+              </PrimaryButton>
             </Link>
           </div>
         ) : (
@@ -289,23 +293,29 @@ const MyDonations = () => {
                 <p className="text-2xl font-bold text-green-700">
                   {donations.filter((d) => d.status === "SUCCESS").length}
                 </p>
-                <p className="text-sm text-green-600">Successful Donations</p>
+                <p className="text-sm text-green-600">
+                  {t("myDonations.successfulDonations")}
+                </p>
               </div>
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
                 <p className="text-2xl font-bold text-amber-700">
                   {formatCurrency(
                     donations
                       .filter((d) => d.status === "SUCCESS")
-                      .reduce((sum, d) => sum + d.amount, 0)
+                      .reduce((sum, d) => sum + d.amount, 0),
                   )}
                 </p>
-                <p className="text-sm text-amber-600">Total Donated</p>
+                <p className="text-sm text-amber-600">
+                  {t("myDonations.totalDonated")}
+                </p>
               </div>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
                 <p className="text-2xl font-bold text-blue-700">
                   {donations.length}
                 </p>
-                <p className="text-sm text-blue-600">Total Transactions</p>
+                <p className="text-sm text-blue-600">
+                  {t("myDonations.totalTransactions")}
+                </p>
               </div>
             </div>
 
@@ -344,13 +354,15 @@ const MyDonations = () => {
                               day: "numeric",
                               hour: "2-digit",
                               minute: "2-digit",
-                            }
+                            },
                           )}
                         </span>
                         {donation.receiptNumber && (
                           <>
                             <span>•</span>
-                            <span className="font-mono text-xs">{donation.receiptNumber}</span>
+                            <span className="font-mono text-xs">
+                              {donation.receiptNumber}
+                            </span>
                           </>
                         )}
                       </div>
@@ -374,18 +386,18 @@ const MyDonations = () => {
                               d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                             />
                           </svg>
-                          Download Receipt
+                          {t("myDonations.downloadReceipt")}
                         </button>
                       )}
                       {donation.status === "PENDING" && (
                         <span className="text-sm text-amber-600">
-                          Processing...
+                          {t("myDonations.processing")}
                         </span>
                       )}
                       {donation.status === "FAILED" && (
                         <Link to="/donate">
                           <button className="inline-flex items-center px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors">
-                            Retry
+                            {t("myDonations.retry")}
                           </button>
                         </Link>
                       )}
@@ -400,13 +412,13 @@ const MyDonations = () => {
         {/* Footer actions */}
         <div className="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
           <Link to="/donate">
-            <PrimaryButton>Make Another Donation</PrimaryButton>
+            <PrimaryButton>{t("myDonations.makeAnother")}</PrimaryButton>
           </Link>
           <Link
             to="/"
             className="text-amber-600 hover:text-amber-700 font-medium text-sm"
           >
-            ← Back to Home
+            {t("myDonations.backToHome")}
           </Link>
         </div>
       </div>

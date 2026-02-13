@@ -1,4 +1,5 @@
 import { Component } from "react";
+import i18n from "../i18n";
 
 /**
  * ErrorBoundary component to catch and handle React rendering errors
@@ -19,7 +20,7 @@ class ErrorBoundary extends Component {
     // Log error to console in development
     console.error("ErrorBoundary caught an error:", error, errorInfo);
     this.setState({ errorInfo });
-    
+
     // In production, you could send this to an error reporting service
     // Example: reportErrorToService(error, errorInfo);
   }
@@ -39,15 +40,15 @@ class ErrorBoundary extends Component {
         <div style={styles.container}>
           <div style={styles.content}>
             <div style={styles.icon}>⚠️</div>
-            <h1 style={styles.title}>Something went wrong</h1>
-            <p style={styles.message}>
-              We apologize for the inconvenience. An unexpected error has occurred.
-            </p>
-            
+            <h1 style={styles.title}>{i18n.t("error.somethingWrong")}</h1>
+            <p style={styles.message}>{i18n.t("error.apology")}</p>
+
             {/* Show error details only in development */}
             {import.meta.env.DEV && this.state.error && (
               <details style={styles.details}>
-                <summary style={styles.summary}>Error Details</summary>
+                <summary style={styles.summary}>
+                  {i18n.t("error.errorDetails")}
+                </summary>
                 <pre style={styles.errorText}>
                   {this.state.error.toString()}
                   {this.state.errorInfo?.componentStack}
@@ -57,10 +58,13 @@ class ErrorBoundary extends Component {
 
             <div style={styles.buttonContainer}>
               <button onClick={this.handleReload} style={styles.primaryButton}>
-                Reload Page
+                {i18n.t("error.reloadPage")}
               </button>
-              <button onClick={this.handleGoHome} style={styles.secondaryButton}>
-                Go to Home
+              <button
+                onClick={this.handleGoHome}
+                style={styles.secondaryButton}
+              >
+                {i18n.t("error.goHome")}
               </button>
             </div>
           </div>

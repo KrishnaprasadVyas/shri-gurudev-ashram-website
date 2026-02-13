@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const HeroSection = ({ title, subtitle, image, showCTA = true }) => {
+  const { t } = useTranslation();
   return (
     <div
       className={`relative h-[60vh] md:h-[70vh] flex ${
@@ -34,7 +36,7 @@ const HeroSection = ({ title, subtitle, image, showCTA = true }) => {
               : "text-4xl md:text-6xl"
           }`}
         >
-          {title || "Welcome to Gurudev Ashram"}
+          {title || t("hero.welcome")}
         </h1>
         {subtitle && (
           <p
@@ -53,16 +55,16 @@ const HeroSection = ({ title, subtitle, image, showCTA = true }) => {
               to="/donate"
               className="px-8 py-3 bg-amber-600 text-white rounded-lg text-lg font-semibold hover:bg-amber-700 transition-colors shadow-lg"
             >
-              Donate Now
+              {t("hero.donateNow")}
             </Link>
             <button
               type="button"
               disabled
               className="px-8 py-3 bg-white text-amber-500 rounded-lg text-lg font-semibold shadow-lg cursor-not-allowed opacity-80"
               aria-disabled="true"
-              title="Shop coming soon"
+              title={t("nav.comingSoon")}
             >
-              Shop Coming Soon
+              {t("hero.shopComingSoon")}
             </button>
           </div>
         </div>
@@ -75,16 +77,16 @@ const HeroSection = ({ title, subtitle, image, showCTA = true }) => {
               to="/donate"
               className="px-8 py-3 bg-amber-600 text-white rounded-lg text-lg font-semibold hover:bg-amber-700 transition-colors shadow-lg"
             >
-              Donate Now
+              {t("hero.donateNow")}
             </Link>
             <button
               type="button"
               disabled
               className="px-8 py-3 bg-white text-amber-500 rounded-lg text-lg font-semibold shadow-lg cursor-not-allowed opacity-80"
               aria-disabled="true"
-              title="Shop coming soon"
+              title={t("nav.comingSoon")}
             >
-              Shop Coming Soon
+              {t("hero.shopComingSoon")}
             </button>
           </div>
         </div>

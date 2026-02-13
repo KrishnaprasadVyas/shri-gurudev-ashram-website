@@ -1,5 +1,6 @@
-import { Link } from 'react-router-dom';
-import { donationIcons } from '../data/dummyData';
+import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { donationIcons } from "../data/dummyData";
 
 const HeartIcon = ({ className }) => (
   <svg
@@ -16,34 +17,35 @@ const HeartIcon = ({ className }) => (
 const CauseIcon = ({ iconKey, className }) => {
   const iconSvg = donationIcons[iconKey];
   if (!iconSvg) return null;
-  
+
   return (
-    <div 
-      className={className}
-      dangerouslySetInnerHTML={{ __html: iconSvg }}
-    />
+    <div className={className} dangerouslySetInnerHTML={{ __html: iconSvg }} />
   );
 };
 
 const DonationCard = ({ donation }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow p-6 border border-amber-100">
       <div className="flex items-start space-x-4">
         <div className="flex-shrink-0">
-          <CauseIcon 
-            iconKey={donation.icon} 
-            className="w-12 h-12 text-amber-600 [&>svg]:w-full [&>svg]:h-full [&>svg]:fill-current" 
+          <CauseIcon
+            iconKey={donation.icon}
+            className="w-12 h-12 text-amber-600 [&>svg]:w-full [&>svg]:h-full [&>svg]:fill-current"
           />
         </div>
         <div className="flex-1">
-          <h3 className="text-xl font-bold text-amber-900 mb-2">{donation.name}</h3>
+          <h3 className="text-xl font-bold text-amber-900 mb-2">
+            {donation.name}
+          </h3>
           <p className="text-gray-600 mb-4">{donation.description}</p>
           <Link
             to="/donate"
             className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-md transition-colors text-sm font-medium"
           >
             <HeartIcon className="w-4 h-4" />
-            Donate Now
+            {t("donation.donateNow")}
           </Link>
         </div>
       </div>
@@ -52,4 +54,3 @@ const DonationCard = ({ donation }) => {
 };
 
 export default DonationCard;
-

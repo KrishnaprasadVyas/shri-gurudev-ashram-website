@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import PrimaryButton from "../../../components/PrimaryButton";
 import { formatCurrency } from "../../../utils/helpers";
 import { API_BASE_URL, parseJsonResponse } from "../../../utils/api";
+import { useTranslation } from "react-i18next";
 
 /**
  * Step4Payment - Handles payment processing
@@ -21,6 +22,7 @@ const Step4Payment = ({ data, updateData, nextStep, prevStep }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
   const [paymentStage, setPaymentStage] = useState("idle"); // idle | creating | ordering | checkout
+  const { t } = useTranslation();
 
   /**
    * Get JWT token from localStorage
@@ -74,8 +76,12 @@ const Step4Payment = ({ data, updateData, nextStep, prevStep }) => {
     };
 
     // Validate donationHead exists before proceeding
-    if (!data.donationHead || !data.donationHead.id || !data.donationHead.name) {
-      throw new Error("Please select a donation cause before proceeding");
+    if (
+      !data.donationHead ||
+      !data.donationHead.id ||
+      !data.donationHead.name
+    ) {
+      throw new Error(t("donation.step4.selectCauseFirst"));
     }
 
     // Build donationHead object (not just ID)
@@ -100,7 +106,9 @@ const Step4Payment = ({ data, updateData, nextStep, prevStep }) => {
    * Step 2: Create Razorpay order
    */
   const createOrder = async (donationId) => {
-    const result = await localApiRequest("/donations/create-order", { donationId });
+    const result = await localApiRequest("/donations/create-order", {
+      donationId,
+    });
     return result;
   };
 
@@ -112,11 +120,7 @@ const Step4Payment = ({ data, updateData, nextStep, prevStep }) => {
       return new Promise((resolve, reject) => {
         // Ensure Razorpay script is loaded - critical safety check
         if (typeof window.Razorpay !== "function") {
-          reject(
-            new Error(
-              "Razorpay SDK not loaded. Please refresh the page and try again.",
-            ),
-          );
+          reject(new Error(t("donation.step4.razorpaySdkError")));
           return;
         }
 
@@ -148,7 +152,7 @@ const Step4Payment = ({ data, updateData, nextStep, prevStep }) => {
           modal: {
             ondismiss: function () {
               // User closed the checkout without completing payment
-              reject(new Error("Payment cancelled. You can try again."));
+              reject(new Error(t("donation.step4.cancelled")));
             },
             escape: true,
             backdropclose: false,
@@ -160,8 +164,7 @@ const Step4Payment = ({ data, updateData, nextStep, prevStep }) => {
         rzp.on("payment.failed", function (response) {
           reject(
             new Error(
-              response.error?.description ||
-                "Payment failed. Please try again.",
+              response.error?.description || t("donation.step4.failed"),
             ),
           );
         });
@@ -244,44 +247,50 @@ const Step4Payment = ({ data, updateData, nextStep, prevStep }) => {
   const getStageMessage = () => {
     switch (paymentStage) {
       case "creating":
-        return "Creating donation record...";
+        return t("donation.step4.creating");
       case "ordering":
-        return "Preparing payment...";
+        return t("donation.step4.preparing");
       case "checkout":
-        return "Opening payment gateway...";
+        return t("donation.step4.opening");
       default:
-        return "Processing...";
+        return t("donation.step4.processing");
     }
   };
 
   return (
     <div className="max-w-2xl mx-auto">
       <h2 className="text-2xl font-bold text-amber-900 mb-6 text-center">
-        Payment
+        {t("donation.step4.payment")}
       </h2>
 
       {/* Order Summary */}
       <div className="bg-amber-50 rounded-lg p-6 mb-6">
-        <h3 className="font-bold text-amber-900 mb-4">Donation Summary</h3>
+        <h3 className="font-bold text-amber-900 mb-4">
+          {t("donation.step4.donationSummary")}
+        </h3>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-gray-700">Donation Head:</span>
+            <span className="text-gray-700">
+              {t("donation.step4.donationHead")}
+            </span>
             <span className="font-semibold text-amber-900">
               {data.donationHead?.name}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-700">Donor Name:</span>
+            <span className="text-gray-700">
+              {t("donation.step4.donorName")}
+            </span>
             <span className="font-semibold text-amber-900">{data.name}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-700">Mobile:</span>
+            <span className="text-gray-700">{t("donation.step4.mobile")}</span>
             <span className="font-semibold text-amber-900">{data.mobile}</span>
           </div>
           <div className="border-t pt-2 mt-2">
             <div className="flex justify-between">
               <span className="text-lg font-bold text-amber-900">
-                Total Amount:
+                {t("donation.step4.totalAmount")}
               </span>
               <span className="text-2xl font-bold text-amber-700">
                 {formatCurrency(data.amount)}
@@ -307,7 +316,9 @@ const Step4Payment = ({ data, updateData, nextStep, prevStep }) => {
               />
             </svg>
             <div>
-              <p className="text-red-700 font-medium">Payment Error</p>
+              <p className="text-red-700 font-medium">
+                {t("donation.step4.payError")}
+              </p>
               <p className="text-red-600 text-sm">{error}</p>
             </div>
           </div>
@@ -358,11 +369,11 @@ const Step4Payment = ({ data, updateData, nextStep, prevStep }) => {
             />
           </svg>
           <div>
-            <p className="text-gray-700 text-sm font-medium">Secure Payment</p>
+            <p className="text-gray-700 text-sm font-medium">
+              {t("donation.step4.securePayment")}
+            </p>
             <p className="text-gray-500 text-xs">
-              You will be redirected to Razorpay&apos;s secure payment gateway
-              to complete your donation. All payment methods (UPI, Cards, Net
-              Banking, Wallets) are supported.
+              {t("donation.step4.paymentNote")}
             </p>
           </div>
         </div>
@@ -377,7 +388,7 @@ const Step4Payment = ({ data, updateData, nextStep, prevStep }) => {
           className="flex-1"
           disabled={isProcessing || paymentStage === "checkout"}
         >
-          Back
+          {t("donation.step4.back")}
         </PrimaryButton>
         <PrimaryButton
           onClick={handlePayment}
@@ -386,13 +397,14 @@ const Step4Payment = ({ data, updateData, nextStep, prevStep }) => {
         >
           {isProcessing
             ? getStageMessage()
-            : `Pay ${formatCurrency(data.amount)}`}
+            : t("donation.step4.payAmount", {
+                amount: formatCurrency(data.amount),
+              })}
         </PrimaryButton>
       </div>
 
       <p className="text-xs text-gray-500 mt-4 text-center">
-        Your payment is secure and encrypted. We use Razorpay for secure payment
-        processing.
+        {t("donation.step4.secureNote")}
       </p>
     </div>
   );

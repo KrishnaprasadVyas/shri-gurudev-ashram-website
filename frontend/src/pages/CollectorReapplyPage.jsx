@@ -1,8 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { reapplyForCollector, getCollectorStatus } from "../services/collectorApi";
+import {
+  reapplyForCollector,
+  getCollectorStatus,
+} from "../services/collectorApi";
 import SectionHeading from "../components/SectionHeading";
+import { useTranslation } from "react-i18next";
 
 // Constants
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
@@ -14,31 +18,38 @@ const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png"];
  */
 const CollectorReapplyPage = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated, isLoading: authLoading, checkAuth } = useAuth();
-  
+  const {
+    user,
+    isAuthenticated,
+    isLoading: authLoading,
+    checkAuth,
+  } = useAuth();
+
   // Previous rejection info
   const [previousRejection, setPreviousRejection] = useState(null);
-  
+
   // Form state
   const [formData, setFormData] = useState({
     fullName: "",
     address: "",
     panNumber: "",
   });
-  
+
   // File state
   const [aadharFront, setAadharFront] = useState(null);
   const [aadharBack, setAadharBack] = useState(null);
   const [frontPreview, setFrontPreview] = useState(null);
   const [backPreview, setBackPreview] = useState(null);
-  
+
   // UI state
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [checkingEligibility, setCheckingEligibility] = useState(true);
-  
+
+  const { t } = useTranslation();
+
   // Refs for file inputs
   const frontInputRef = useRef(null);
   const backInputRef = useRef(null);
@@ -47,30 +58,33 @@ const CollectorReapplyPage = () => {
   useEffect(() => {
     const checkEligibility = async () => {
       if (!isAuthenticated || authLoading) return;
-      
+
       setCheckingEligibility(true);
       try {
         const response = await getCollectorStatus();
         const { role, collectorProfile } = response.data || {};
-        
+
         // Only rejected users can reapply
         if (collectorProfile?.status !== "rejected") {
           if (role === "COLLECTOR_PENDING") {
             navigate("/", { replace: true });
           } else if (role === "COLLECTOR_APPROVED") {
             navigate("/collector", { replace: true });
-          } else if (role === "USER" && collectorProfile?.status !== "rejected") {
+          } else if (
+            role === "USER" &&
+            collectorProfile?.status !== "rejected"
+          ) {
             navigate("/collector/apply", { replace: true });
           }
           return;
         }
-        
+
         // Store previous rejection info
         setPreviousRejection({
           reason: collectorProfile.rejectedReason,
           submittedAt: collectorProfile.submittedAt,
         });
-        
+
         // Prefill form with previous data
         if (collectorProfile.fullName) {
           setFormData((prev) => ({
@@ -86,7 +100,7 @@ const CollectorReapplyPage = () => {
         setCheckingEligibility(false);
       }
     };
-    
+
     checkEligibility();
   }, [isAuthenticated, authLoading, navigate]);
 
@@ -95,22 +109,22 @@ const CollectorReapplyPage = () => {
    */
   const validateFile = (file, fieldName) => {
     if (!file) {
-      return `${fieldName} is required`;
+      return t("collector.application.fileRequired", { field: fieldName });
     }
-    
+
     if (!ALLOWED_TYPES.includes(file.type)) {
-      return `Only JPG, JPEG, PNG files are allowed`;
+      return t("collector.application.fileTypeError");
     }
-    
+
     const ext = "." + file.name.split(".").pop().toLowerCase();
     if (!ALLOWED_EXTENSIONS.includes(ext)) {
-      return `Invalid file extension. Only .jpg, .jpeg, .png allowed`;
+      return t("collector.application.fileExtError");
     }
-    
+
     if (file.size > MAX_FILE_SIZE) {
-      return `File size must be less than 2MB`;
+      return t("collector.application.fileSizeError");
     }
-    
+
     return null;
   };
 
@@ -121,8 +135,13 @@ const CollectorReapplyPage = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const error = validateFile(file, type === "front" ? "Aadhaar Front" : "Aadhaar Back");
-    
+    const error = validateFile(
+      file,
+      type === "front"
+        ? t("collector.application.aadharFront")
+        : t("collector.application.aadharBack"),
+    );
+
     if (error) {
       setErrors((prev) => ({
         ...prev,
@@ -171,7 +190,7 @@ const CollectorReapplyPage = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    
+
     if (errors[name]) {
       setErrors((prev) => {
         const newErrors = { ...prev };
@@ -188,29 +207,35 @@ const CollectorReapplyPage = () => {
     const newErrors = {};
 
     if (!formData.fullName.trim()) {
-      newErrors.fullName = "Full name is required";
+      newErrors.fullName = t("collector.application.nameRequired");
     } else if (formData.fullName.trim().length < 2) {
-      newErrors.fullName = "Full name must be at least 2 characters";
+      newErrors.fullName = t("collector.application.nameMinLength");
     }
 
     if (!formData.address.trim()) {
-      newErrors.address = "Address is required";
+      newErrors.address = t("collector.application.addressRequired");
     } else if (formData.address.trim().length < 10) {
-      newErrors.address = "Address must be at least 10 characters";
+      newErrors.address = t("collector.application.addressMinLength");
     }
 
     const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
     const panUpper = formData.panNumber.toUpperCase().trim();
     if (!panUpper) {
-      newErrors.panNumber = "PAN number is required";
+      newErrors.panNumber = t("collector.application.panRequired");
     } else if (!panRegex.test(panUpper)) {
-      newErrors.panNumber = "Invalid PAN format (e.g., ABCDE1234F)";
+      newErrors.panNumber = t("collector.application.panInvalid");
     }
 
-    const frontError = validateFile(aadharFront, "Aadhaar Front");
+    const frontError = validateFile(
+      aadharFront,
+      t("collector.application.aadharFront"),
+    );
     if (frontError) newErrors.aadharFront = frontError;
 
-    const backError = validateFile(aadharBack, "Aadhaar Back");
+    const backError = validateFile(
+      aadharBack,
+      t("collector.application.aadharBack"),
+    );
     if (backError) newErrors.aadharBack = backError;
 
     setErrors(newErrors);
@@ -239,16 +264,18 @@ const CollectorReapplyPage = () => {
       data.append("aadharBack", aadharBack);
 
       await reapplyForCollector(data);
-      
+
       setSubmitSuccess(true);
       await checkAuth();
-      
+
       setTimeout(() => {
         navigate("/", { replace: true });
       }, 2000);
     } catch (err) {
       console.error("Reapplication error:", err);
-      setSubmitError(err.message || "Failed to submit application. Please try again.");
+      setSubmitError(
+        err.message || "Failed to submit application. Please try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -260,7 +287,9 @@ const CollectorReapplyPage = () => {
       <div className="min-h-screen flex items-center justify-center bg-amber-50">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-amber-200 border-t-amber-600"></div>
-          <p className="mt-4 text-gray-600 font-medium">Loading...</p>
+          <p className="mt-4 text-gray-600 font-medium">
+            {t("collector.dashboard.loading")}
+          </p>
         </div>
       </div>
     );
@@ -279,16 +308,29 @@ const CollectorReapplyPage = () => {
         <div className="max-w-lg mx-auto">
           <div className="bg-white rounded-xl shadow-lg p-8 text-center">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                className="w-10 h-10 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">Application Resubmitted!</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+              {t("collector.reapply.submitted")}
+            </h2>
             <p className="text-gray-600 mb-6">
-              Your collector application has been resubmitted successfully. 
-              We will review your updated documents and notify you soon.
+              {t("collector.reapply.submittedNote")}
             </p>
-            <p className="text-sm text-gray-500">Redirecting to home...</p>
+            <p className="text-sm text-gray-500">
+              {t("collector.reapply.redirecting")}
+            </p>
           </div>
         </div>
       </div>
@@ -299,8 +341,8 @@ const CollectorReapplyPage = () => {
     <div className="py-16 px-4 bg-amber-50 min-h-screen">
       <div className="max-w-2xl mx-auto">
         <SectionHeading
-          title="Reapply for Collector"
-          subtitle="Submit updated information to reapply as a collector"
+          title={t("collector.reapply.title")}
+          subtitle={t("collector.reapply.subtitle")}
           center
         />
 
@@ -308,12 +350,26 @@ const CollectorReapplyPage = () => {
         {previousRejection && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
             <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               <div>
-                <p className="text-red-800 font-medium text-sm">Previous Application Rejected</p>
-                <p className="text-red-700 text-sm mt-1">{previousRejection.reason}</p>
+                <p className="text-red-800 font-medium text-sm">
+                  {t("collector.reapply.previousRejection")}
+                </p>
+                <p className="text-red-700 text-sm mt-1">
+                  {previousRejection.reason}
+                </p>
               </div>
             </div>
           </div>
@@ -325,8 +381,18 @@ const CollectorReapplyPage = () => {
             {submitError && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="w-5 h-5 text-red-600 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   <p className="text-red-800 text-sm">{submitError}</p>
                 </div>
@@ -336,7 +402,8 @@ const CollectorReapplyPage = () => {
             {/* Full Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name <span className="text-red-500">*</span>
+                {t("collector.application.fullName")}{" "}
+                <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -346,7 +413,7 @@ const CollectorReapplyPage = () => {
                 className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 transition-colors ${
                   errors.fullName ? "border-red-500" : "border-gray-300"
                 }`}
-                placeholder="Enter your full name as per Aadhaar"
+                placeholder={t("collector.application.fullNamePlaceholder")}
               />
               {errors.fullName && (
                 <p className="mt-1 text-sm text-red-600">{errors.fullName}</p>
@@ -356,7 +423,8 @@ const CollectorReapplyPage = () => {
             {/* Address */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Address <span className="text-red-500">*</span>
+                {t("collector.application.address")}{" "}
+                <span className="text-red-500">*</span>
               </label>
               <textarea
                 name="address"
@@ -366,7 +434,7 @@ const CollectorReapplyPage = () => {
                 className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 transition-colors resize-none ${
                   errors.address ? "border-red-500" : "border-gray-300"
                 }`}
-                placeholder="Enter your complete address"
+                placeholder={t("collector.application.addressPlaceholder")}
               />
               {errors.address && (
                 <p className="mt-1 text-sm text-red-600">{errors.address}</p>
@@ -376,7 +444,8 @@ const CollectorReapplyPage = () => {
             {/* PAN Number */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                PAN Number <span className="text-red-500">*</span>
+                {t("collector.application.panNumber")}{" "}
+                <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -387,7 +456,7 @@ const CollectorReapplyPage = () => {
                 className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 transition-colors uppercase ${
                   errors.panNumber ? "border-red-500" : "border-gray-300"
                 }`}
-                placeholder="ABCDE1234F"
+                placeholder={t("collector.application.panPlaceholder")}
               />
               {errors.panNumber && (
                 <p className="mt-1 text-sm text-red-600">{errors.panNumber}</p>
@@ -397,12 +466,21 @@ const CollectorReapplyPage = () => {
             {/* Aadhaar Front */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Aadhaar Card (Front) <span className="text-red-500">*</span>
-                <span className="text-gray-500 font-normal ml-1">(Upload new)</span>
+                {t("collector.application.aadharFront")}{" "}
+                <span className="text-red-500">*</span>
+                <span className="text-gray-500 font-normal ml-1">
+                  (Upload new)
+                </span>
               </label>
-              <div className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
-                errors.aadharFront ? "border-red-300 bg-red-50" : frontPreview ? "border-green-300 bg-green-50" : "border-gray-300 hover:border-amber-400"
-              }`}>
+              <div
+                className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
+                  errors.aadharFront
+                    ? "border-red-300 bg-red-50"
+                    : frontPreview
+                      ? "border-green-300 bg-green-50"
+                      : "border-gray-300 hover:border-amber-400"
+                }`}
+              >
                 {frontPreview ? (
                   <div className="relative">
                     <img
@@ -415,22 +493,48 @@ const CollectorReapplyPage = () => {
                       onClick={() => removeFile("front")}
                       className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                     </button>
-                    <p className="text-sm text-green-600 mt-2">{aadharFront?.name}</p>
+                    <p className="text-sm text-green-600 mt-2">
+                      {aadharFront?.name}
+                    </p>
                   </div>
                 ) : (
                   <div
                     onClick={() => frontInputRef.current?.click()}
                     className="cursor-pointer py-8"
                   >
-                    <svg className="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <svg
+                      className="w-12 h-12 mx-auto text-gray-400 mb-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
                     </svg>
-                    <p className="text-gray-600 text-sm">Click to upload Aadhaar front</p>
-                    <p className="text-gray-400 text-xs mt-1">JPG, JPEG, PNG (max 2MB)</p>
+                    <p className="text-gray-600 text-sm">
+                      {t("collector.application.uploadFront")}
+                    </p>
+                    <p className="text-gray-400 text-xs mt-1">
+                      {t("collector.application.fileTypeNote")}
+                    </p>
                   </div>
                 )}
                 <input
@@ -442,19 +546,30 @@ const CollectorReapplyPage = () => {
                 />
               </div>
               {errors.aadharFront && (
-                <p className="mt-1 text-sm text-red-600">{errors.aadharFront}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.aadharFront}
+                </p>
               )}
             </div>
 
             {/* Aadhaar Back */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Aadhaar Card (Back) <span className="text-red-500">*</span>
-                <span className="text-gray-500 font-normal ml-1">(Upload new)</span>
+                {t("collector.application.aadharBack")}{" "}
+                <span className="text-red-500">*</span>
+                <span className="text-gray-500 font-normal ml-1">
+                  (Upload new)
+                </span>
               </label>
-              <div className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
-                errors.aadharBack ? "border-red-300 bg-red-50" : backPreview ? "border-green-300 bg-green-50" : "border-gray-300 hover:border-amber-400"
-              }`}>
+              <div
+                className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
+                  errors.aadharBack
+                    ? "border-red-300 bg-red-50"
+                    : backPreview
+                      ? "border-green-300 bg-green-50"
+                      : "border-gray-300 hover:border-amber-400"
+                }`}
+              >
                 {backPreview ? (
                   <div className="relative">
                     <img
@@ -467,22 +582,48 @@ const CollectorReapplyPage = () => {
                       onClick={() => removeFile("back")}
                       className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                     </button>
-                    <p className="text-sm text-green-600 mt-2">{aadharBack?.name}</p>
+                    <p className="text-sm text-green-600 mt-2">
+                      {aadharBack?.name}
+                    </p>
                   </div>
                 ) : (
                   <div
                     onClick={() => backInputRef.current?.click()}
                     className="cursor-pointer py-8"
                   >
-                    <svg className="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <svg
+                      className="w-12 h-12 mx-auto text-gray-400 mb-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
                     </svg>
-                    <p className="text-gray-600 text-sm">Click to upload Aadhaar back</p>
-                    <p className="text-gray-400 text-xs mt-1">JPG, JPEG, PNG (max 2MB)</p>
+                    <p className="text-gray-600 text-sm">
+                      {t("collector.application.uploadBack")}
+                    </p>
+                    <p className="text-gray-400 text-xs mt-1">
+                      {t("collector.application.fileTypeNote")}
+                    </p>
                   </div>
                 )}
                 <input
@@ -510,20 +651,34 @@ const CollectorReapplyPage = () => {
             >
               {isSubmitting ? (
                 <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  <svg
+                    className="animate-spin h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
                   </svg>
-                  Submitting...
+                  {t("collector.reapply.resubmitting")}
                 </span>
               ) : (
-                "Resubmit Application"
+                t("collector.reapply.resubmit")
               )}
             </button>
 
             <p className="text-center text-xs text-gray-500">
-              Please ensure all documents are clear and readable. 
-              Incomplete or unclear submissions may be rejected.
+              {t("collector.application.disclaimer")}
             </p>
           </form>
         </div>

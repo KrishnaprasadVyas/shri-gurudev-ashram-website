@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const HeartIcon = ({ className }) => (
   <svg
@@ -12,8 +13,9 @@ const HeartIcon = ({ className }) => (
 );
 
 const FloatingDonateButton = () => {
+  const { t } = useTranslation();
   const location = useLocation();
-  
+
   // Hide on donation page since user is already there
   if (location.pathname === "/donate") {
     return null;
@@ -26,11 +28,11 @@ const FloatingDonateButton = () => {
       aria-label="Donate Now"
     >
       <HeartIcon className="w-5 h-5 animate-pulse" />
-      <span className="font-semibold">Donate</span>
-      
+      <span className="font-semibold">{t("floatingDonate.donate")}</span>
+
       {/* Ripple effect ring */}
       <span className="absolute inset-0 rounded-full bg-orange-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
-      
+
       {/* Ping animation for attention */}
       <span className="absolute -top-1 -right-1 flex h-3 w-3">
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-300 opacity-75"></span>

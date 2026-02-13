@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import AnnouncementBanner from "./AnnouncementBanner";
+import LanguageSwitcher from "./LanguageSwitcher";
 import { Link, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 
 const Navbar = ({ showAnnouncement = false }) => {
+  const { t } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -73,20 +76,29 @@ const Navbar = ({ showAnnouncement = false }) => {
   }, [showAnnouncement, isMenuOpen, isScrolled]);
 
   const navLinks = [
-    { path: "/", label: "HOME" },
-    { path: "/about", label: "ABOUT", hasDropdown: true },
-    { path: "/gurudev", label: "GURUDEV" },
-    { path: "/activities", label: "ACTIVITIES" },
-    { path: "/events", label: "EVENTS" },
-    { path: "/gallery", label: "GALLERY" },
-    { path: "/testimonials", label: "TESTIMONIALS" },
-    { path: "/contact", label: "CONTACT" },
+    { path: "/", label: t("nav.home") },
+    { path: "/about", label: t("nav.about"), hasDropdown: true },
+    { path: "/gurudev", label: t("nav.gurudev") },
+    { path: "/activities", label: t("nav.activities") },
+    { path: "/events", label: t("nav.events") },
+    { path: "/gallery", label: t("nav.gallery") },
+    { path: "/testimonials", label: t("nav.testimonials") },
+    { path: "/contact", label: t("nav.contact") },
   ];
 
   // About submenu items
   const aboutSubMenu = [
-    { path: "/about", label: "Shri Gurudev Ashram", icon: "home" },
-    { path: "#", label: "Shanti Ashram", icon: "external", isExternal: true },
+    {
+      path: "/about",
+      label: t("nav.aboutSubmenu.shriGurudevAshram"),
+      icon: "home",
+    },
+    {
+      path: "#",
+      label: t("nav.aboutSubmenu.shantiAshram"),
+      icon: "external",
+      isExternal: true,
+    },
   ];
 
   return (
@@ -191,15 +203,15 @@ const Navbar = ({ showAnnouncement = false }) => {
                 >
                   <path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
                 </svg>
-                <span>Quick Donate</span>
+                <span>{t("nav.quickDonate")}</span>
               </Link>
               <button
                 type="button"
                 disabled
-                title="Shop coming soon"
+                title={t("nav.comingSoon")}
                 className="px-4 py-2 border-2 border-amber-200 rounded-md text-amber-500 text-sm font-semibold bg-white cursor-not-allowed opacity-70 transition-all duration-300 flex items-center space-x-2 relative shadow-sm"
               >
-                <span>Shop (Coming Soon)</span>
+                <span>{t("nav.shopComingSoon")}</span>
               </button>
 
               {/* Auth Button / Profile Dropdown */}
@@ -220,7 +232,7 @@ const Navbar = ({ showAnnouncement = false }) => {
                         clipRule="evenodd"
                       />
                     </svg>
-                    <span>{user?.fullName || "My Account"}</span>
+                    <span>{user?.fullName || t("nav.myAccount")}</span>
                     <svg
                       className={`w-4 h-4 transition-transform duration-200 ${
                         isProfileOpen ? "rotate-180" : ""
@@ -260,7 +272,7 @@ const Navbar = ({ showAnnouncement = false }) => {
                               d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
                             />
                           </svg>
-                          Dashboard
+                          {t("nav.dashboard")}
                         </Link>
                       )}
                       <Link
@@ -281,7 +293,7 @@ const Navbar = ({ showAnnouncement = false }) => {
                             d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        My Donations
+                        {t("nav.myDonations")}
                       </Link>
                       {/* Collector link - conditional based on role */}
                       {user?.role === "COLLECTOR_APPROVED" ? (
@@ -303,7 +315,7 @@ const Navbar = ({ showAnnouncement = false }) => {
                               d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
                             />
                           </svg>
-                          Collector Dashboard
+                          {t("nav.collectorDashboard")}
                         </Link>
                       ) : user?.role === "COLLECTOR_PENDING" ? (
                         <div className="flex items-center px-4 py-2 text-sm text-yellow-700 bg-yellow-50">
@@ -320,7 +332,7 @@ const Navbar = ({ showAnnouncement = false }) => {
                               d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                             />
                           </svg>
-                          Application Pending
+                          {t("nav.applicationPending")}
                         </div>
                       ) : user?.collectorProfile?.status === "rejected" ? (
                         <Link
@@ -341,7 +353,7 @@ const Navbar = ({ showAnnouncement = false }) => {
                               d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                             />
                           </svg>
-                          Reapply as Collector
+                          {t("nav.reapplyAsCollector")}
                         </Link>
                       ) : (
                         <Link
@@ -362,7 +374,7 @@ const Navbar = ({ showAnnouncement = false }) => {
                               d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                             />
                           </svg>
-                          Become a Collector
+                          {t("nav.becomeCollector")}
                         </Link>
                       )}
                       <hr className="my-2 border-amber-100" />
@@ -386,7 +398,7 @@ const Navbar = ({ showAnnouncement = false }) => {
                             d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                           />
                         </svg>
-                        Logout
+                        {t("nav.logout")}
                       </button>
                     </div>
                   )}
@@ -407,10 +419,12 @@ const Navbar = ({ showAnnouncement = false }) => {
                       clipRule="evenodd"
                     />
                   </svg>
-                  <span>Login</span>
+                  <span>{t("nav.login")}</span>
                 </Link>
               )}
             </div>
+            {/* Language Switcher */}
+            <LanguageSwitcher />
           </div>
         </div>
       </div>
@@ -422,7 +436,7 @@ const Navbar = ({ showAnnouncement = false }) => {
           <div className="flex xl:hidden items-center justify-between py-3 px-3 gap-3">
             <div className="flex flex-col items-center justify-center gap-1">
               <p className="text-sm font-semibold text-amber-700 leading-tight text-center">
-                श्री गुरुदेव आश्रम
+                {t("nav.ashramNameHi")}
               </p>
               <Link to="/" className="flex items-center justify-center">
                 <img
@@ -438,7 +452,7 @@ const Navbar = ({ showAnnouncement = false }) => {
                 to="/donate"
                 className="sm:hidden px-2.5 py-1 border-2 border-amber-400 rounded-md text-amber-700 text-xs font-semibold hover:bg-amber-100 shadow-sm flex-shrink-0"
               >
-                Donate
+                {t("nav.donate")}
               </Link>
               {/* Full actions shown from sm and up */}
               <div className="hidden sm:flex items-center space-x-2">
@@ -446,15 +460,15 @@ const Navbar = ({ showAnnouncement = false }) => {
                   to="/donate"
                   className="px-3 py-1.5 border-2 border-amber-400 rounded-md text-amber-700 text-sm font-semibold hover:bg-amber-100 shadow-sm"
                 >
-                  Donate
+                  {t("nav.donate")}
                 </Link>
                 <button
                   type="button"
                   disabled
-                  title="Shop coming soon"
+                  title={t("nav.comingSoon")}
                   className="px-3 py-1.5 border-2 border-amber-200 rounded-md text-amber-500 text-sm font-semibold bg-white cursor-not-allowed opacity-70 relative shadow-sm"
                 >
-                  Shop (Coming Soon)
+                  {t("nav.shopComingSoon")}
                 </button>
                 {isAuthenticated ? (
                   <button
@@ -472,14 +486,16 @@ const Navbar = ({ showAnnouncement = false }) => {
                         clipRule="evenodd"
                       />
                     </svg>
-                    <span>{user?.fullName?.split(" ")[0] || "Account"}</span>
+                    <span>
+                      {user?.fullName?.split(" ")[0] || t("nav.account")}
+                    </span>
                   </button>
                 ) : (
                   <Link
                     to="/login"
                     className="px-3 py-1.5 border-2 border-amber-400 rounded-md text-amber-700 text-sm font-semibold hover:bg-amber-100 shadow-sm"
                   >
-                    Login
+                    {t("nav.login")}
                   </Link>
                 )}
               </div>
@@ -574,7 +590,7 @@ const Navbar = ({ showAnnouncement = false }) => {
                               </svg>
                               <span>{item.label}</span>
                               <span className="ml-auto text-xs text-gray-400">
-                                Coming Soon
+                                {t("nav.comingSoon")}
                               </span>
                             </a>
                           ) : (
@@ -630,8 +646,16 @@ const Navbar = ({ showAnnouncement = false }) => {
                 className="text-base md:text-lg text-gray-700 font-semibold tracking-wide leading-tight whitespace-nowrap text-center"
                 style={{ fontFamily: "sans-serif" }}
               >
-                श्री गुरुदेव आश्रम,
-                <br></br>पळसखेड (सपकाळ)
+                {t("nav.ashramLocationHi", {
+                  defaultValue: "श्री गुरुदेव आश्रम,\nपळसखेड (सपकाळ)",
+                })
+                  .split("\n")
+                  .map((line, i) => (
+                    <span key={i}>
+                      {line}
+                      {i === 0 && <br />}
+                    </span>
+                  ))}
               </h1>
             </div>
             {/* Desktop Navigation - Right Side */}
@@ -713,7 +737,7 @@ const Navbar = ({ showAnnouncement = false }) => {
                             </svg>
                             {item.label}
                             <span className="ml-auto text-xs text-gray-400">
-                              Soon
+                              {t("nav.soon")}
                             </span>
                           </a>
                         ) : (
@@ -764,14 +788,15 @@ const Navbar = ({ showAnnouncement = false }) => {
                 disabled
                 className="block w-full px-4 py-3.5 bg-amber-200 text-amber-700 rounded-md text-center font-semibold cursor-not-allowed opacity-80 transition-colors relative"
               >
-                Shop (Coming Soon)
+                {t("nav.shopComingSoon")}
               </button>
               <Link
                 to="/cart"
                 onClick={() => setIsMenuOpen(false)}
                 className="block px-4 py-3.5 bg-amber-400 text-white rounded-md text-center font-semibold hover:bg-amber-500 transition-colors relative"
               >
-                Cart {getCartItemCount() > 0 && `(${getCartItemCount()})`}
+                {t("nav.cart")}{" "}
+                {getCartItemCount() > 0 && `(${getCartItemCount()})`}
               </Link>
 
               {/* Auth Section for Mobile */}
@@ -779,7 +804,7 @@ const Navbar = ({ showAnnouncement = false }) => {
                 <>
                   <div className="pt-2 border-t border-amber-200">
                     <p className="px-4 py-2 text-sm text-gray-500">
-                      Signed in as{" "}
+                      {t("nav.signedInAs")}{" "}
                       <span className="font-semibold text-amber-700">
                         {user?.fullName || user?.mobile}
                       </span>
@@ -804,7 +829,7 @@ const Navbar = ({ showAnnouncement = false }) => {
                           d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
                         />
                       </svg>
-                      Dashboard
+                      {t("nav.dashboard")}
                     </Link>
                   )}
                   <Link
@@ -825,7 +850,7 @@ const Navbar = ({ showAnnouncement = false }) => {
                         d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    My Donations
+                    {t("nav.myDonations")}
                   </Link>
                   {/* Collector link - conditional based on role (mobile) */}
                   {user?.role === "COLLECTOR_APPROVED" ? (
@@ -847,7 +872,7 @@ const Navbar = ({ showAnnouncement = false }) => {
                           d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
                         />
                       </svg>
-                      Collector Dashboard
+                      {t("nav.collectorDashboard")}
                     </Link>
                   ) : user?.role === "COLLECTOR_PENDING" ? (
                     <div className="flex items-center px-4 py-3.5 border border-yellow-300 text-yellow-700 rounded-md font-semibold bg-yellow-50">
@@ -864,7 +889,7 @@ const Navbar = ({ showAnnouncement = false }) => {
                           d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      Application Pending
+                      {t("nav.applicationPending")}
                     </div>
                   ) : user?.collectorProfile?.status === "rejected" ? (
                     <Link
@@ -885,7 +910,7 @@ const Navbar = ({ showAnnouncement = false }) => {
                           d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      Reapply as Collector
+                      {t("nav.reapplyAsCollector")}
                     </Link>
                   ) : (
                     <Link
@@ -906,7 +931,7 @@ const Navbar = ({ showAnnouncement = false }) => {
                           d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                         />
                       </svg>
-                      Become a Collector
+                      {t("nav.becomeCollector")}
                     </Link>
                   )}
                   <button
@@ -929,7 +954,7 @@ const Navbar = ({ showAnnouncement = false }) => {
                         d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                       />
                     </svg>
-                    Logout
+                    {t("nav.logout")}
                   </button>
                 </>
               ) : (
@@ -938,7 +963,7 @@ const Navbar = ({ showAnnouncement = false }) => {
                   onClick={() => setIsMenuOpen(false)}
                   className="block px-4 py-3.5 border border-amber-300 text-amber-700 rounded-md text-center font-semibold hover:bg-amber-100 transition-colors"
                 >
-                  Login
+                  {t("nav.login")}
                 </Link>
               )}
             </div>

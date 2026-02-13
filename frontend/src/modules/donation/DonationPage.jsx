@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import SectionHeading from "../../components/SectionHeading";
 import DonationFlow from "./DonationFlow";
 import DonorList from "./DonorList";
@@ -29,6 +30,7 @@ const CauseIcon = ({ iconKey, className }) => {
 };
 
 const DonationPage = () => {
+  const { t } = useTranslation();
   const donationFlowRef = useRef(null);
   const [selectedCause, setSelectedCause] = useState(null);
   const [imageErrors, setImageErrors] = useState({});
@@ -36,11 +38,11 @@ const DonationPage = () => {
 
   // Referral state from URL params
   const [referralData, setReferralData] = useState({
-    code: null,           // Referral code from URL
-    collectorName: null,  // Resolved collector name
-    isValid: false,       // Whether code was validated
-    isLoading: false,     // Loading state during validation
-    error: null,          // Soft error for invalid codes
+    code: null, // Referral code from URL
+    collectorName: null, // Resolved collector name
+    isValid: false, // Whether code was validated
+    isLoading: false, // Loading state during validation
+    error: null, // Soft error for invalid codes
   });
 
   // Prefill amount from URL
@@ -65,7 +67,7 @@ const DonationPage = () => {
     // Handle cause prefill
     if (causeName) {
       const matchedCause = donationHeads.find(
-        (h) => h.name.toLowerCase() === causeName.toLowerCase()
+        (h) => h.name.toLowerCase() === causeName.toLowerCase(),
       );
       if (matchedCause) {
         setSelectedCause(matchedCause);
@@ -101,7 +103,12 @@ const DonationPage = () => {
 
   // Validate referral code via backend
   const handleValidateReferralCode = async (code) => {
-    setReferralData((prev) => ({ ...prev, code, isLoading: true, error: null }));
+    setReferralData((prev) => ({
+      ...prev,
+      code,
+      isLoading: true,
+      error: null,
+    }));
 
     try {
       const data = await validateReferralCode(code);
@@ -121,7 +128,9 @@ const DonationPage = () => {
           collectorName: null,
           isValid: false,
           isLoading: false,
-          error: data.error || "Referral code not recognized. You can still donate without it.",
+          error:
+            data.error ||
+            "Referral code not recognized. You can still donate without it.",
         });
       }
     } catch (error) {
@@ -143,7 +152,7 @@ const DonationPage = () => {
     if (!code) return;
 
     setManualReferralLoading(true);
-    
+
     try {
       const data = await validateReferralCode(code);
 
@@ -159,7 +168,8 @@ const DonationPage = () => {
       } else {
         setReferralData((prev) => ({
           ...prev,
-          error: data.error || "Invalid referral code. Please check and try again.",
+          error:
+            data.error || "Invalid referral code. Please check and try again.",
         }));
       }
     } catch {
@@ -206,8 +216,8 @@ const DonationPage = () => {
       <section className="py-16 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <SectionHeading
-            title="Make a Donation"
-            subtitle="Choose a cause close to your heart and make a difference"
+            title={t("donation.makeTitle")}
+            subtitle={t("donation.makeSubtitle")}
             center={true}
           />
 
@@ -269,7 +279,9 @@ const DonationPage = () => {
                   <p className="text-gray-600 text-sm">{head.description}</p>
                   {head.minAmount && (
                     <p className="text-xs text-amber-700 mt-1 font-medium">
-                      Min. donation: ₹{head.minAmount.toLocaleString("en-IN")}
+                      {t("donation.minDonation", {
+                        amount: head.minAmount.toLocaleString("en-IN"),
+                      })}
                     </p>
                   )}
                 </div>
@@ -279,19 +291,27 @@ const DonationPage = () => {
 
           {/* Impact Section */}
           <div className="bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-lg p-8 mb-12">
-            <h2 className="text-3xl font-bold mb-6 text-center">Your Impact</h2>
+            <h2 className="text-3xl font-bold mb-6 text-center">
+              {t("donation.impactTitle")}
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
               <div>
                 <div className="text-4xl font-bold mb-2">10,000+</div>
-                <div className="text-amber-100">Families Fed</div>
+                <div className="text-amber-100">
+                  {t("donation.familiesFed")}
+                </div>
               </div>
               <div>
                 <div className="text-4xl font-bold mb-2">5,000+</div>
-                <div className="text-amber-100">Children Educated</div>
+                <div className="text-amber-100">
+                  {t("donation.childrenEducated")}
+                </div>
               </div>
               <div>
                 <div className="text-4xl font-bold mb-2">2,000+</div>
-                <div className="text-amber-100">Medical Camps</div>
+                <div className="text-amber-100">
+                  {t("donation.medicalCamps")}
+                </div>
               </div>
             </div>
           </div>
@@ -304,22 +324,37 @@ const DonationPage = () => {
             <div className="mt-8 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  <svg
+                    className="w-5 h-5 text-green-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
                   </svg>
                 </div>
                 <div>
                   <p className="text-green-800 font-medium">
-                    Referred by: <span className="font-bold">{referralData.collectorName}</span>
+                    {t("donation.referredBy")}{" "}
+                    <span className="font-bold">
+                      {referralData.collectorName}
+                    </span>
                   </p>
-                  <p className="text-green-600 text-sm">Your donation will be attributed to this collector</p>
+                  <p className="text-green-600 text-sm">
+                    {t("donation.attributeNote")}
+                  </p>
                 </div>
               </div>
               <button
                 onClick={handleClearReferral}
                 className="text-green-600 hover:text-green-800 text-sm font-medium"
               >
-                Clear
+                {t("donation.clear")}
               </button>
             </div>
           )}
@@ -328,15 +363,27 @@ const DonationPage = () => {
           {referralData.isLoading && (
             <div className="mt-8 p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-3">
               <div className="animate-spin h-5 w-5 border-2 border-amber-600 border-t-transparent rounded-full"></div>
-              <p className="text-gray-600">Validating referral code...</p>
+              <p className="text-gray-600">
+                {t("donation.validatingReferral")}
+              </p>
             </div>
           )}
 
           {/* Referral error warning - soft, doesn't block donation */}
           {referralData.error && !referralData.isValid && (
             <div className="mt-8 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-3">
-              <svg className="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              <svg
+                className="w-5 h-5 text-amber-600 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
               </svg>
               <p className="text-amber-700">{referralData.error}</p>
             </div>
@@ -345,26 +392,34 @@ const DonationPage = () => {
           {/* Manual Referral Entry - show when no valid referral */}
           {!referralData.isValid && !referralData.isLoading && (
             <div className="mt-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-              <p className="text-gray-700 font-medium mb-3">Have a referral code?</p>
+              <p className="text-gray-700 font-medium mb-3">
+                {t("donation.haveReferral")}
+              </p>
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="Enter referral code (e.g., COLA7F9X2)"
+                  placeholder={t("donation.enterReferral")}
                   value={manualReferralInput}
-                  onChange={(e) => setManualReferralInput(e.target.value.toUpperCase())}
+                  onChange={(e) =>
+                    setManualReferralInput(e.target.value.toUpperCase())
+                  }
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm font-mono uppercase"
                   maxLength={9}
                 />
                 <button
                   onClick={handleManualReferralSubmit}
-                  disabled={!manualReferralInput.trim() || manualReferralLoading}
+                  disabled={
+                    !manualReferralInput.trim() || manualReferralLoading
+                  }
                   className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {manualReferralLoading ? "Validating..." : "Apply"}
+                  {manualReferralLoading
+                    ? t("donation.validating")
+                    : t("donation.apply")}
                 </button>
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                If someone shared a referral code with you, enter it here to attribute your donation to them.
+                {t("donation.referralNote")}
               </p>
             </div>
           )}
@@ -372,8 +427,8 @@ const DonationPage = () => {
           {/* Donation Flow - Only show when a cause is selected */}
           {selectedCause && (
             <div ref={donationFlowRef} className="mt-12">
-              <DonationFlow 
-                selectedCause={selectedCause} 
+              <DonationFlow
+                selectedCause={selectedCause}
                 referralData={referralData}
                 prefillAmount={prefillAmount}
               />
