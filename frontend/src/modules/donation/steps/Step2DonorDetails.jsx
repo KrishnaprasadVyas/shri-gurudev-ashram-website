@@ -1,7 +1,6 @@
 import { useState } from "react";
 import FormInput from "../../../components/FormInput";
 import PrimaryButton from "../../../components/PrimaryButton";
-import { validateEmail } from "../../../utils/helpers";
 import { API_BASE_URL, parseJsonResponse } from "../../../utils/api";
 import { useTranslation } from "react-i18next";
 
@@ -21,7 +20,6 @@ const COUNTRY_OPTIONS = [
 const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
   const [errors, setErrors] = useState({});
   const [country, setCountry] = useState(COUNTRY_OPTIONS[0]);
-  const [showEmailInput, setShowEmailInput] = useState(data.emailOptIn);
 
   // OTP state
   const [otpStep, setOtpStep] = useState("form"); // 'form' | 'otp'
@@ -30,136 +28,19 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
 
-  // Email verification state
-  const [emailVerifying, setEmailVerifying] = useState(false);
-  const [emailVerificationSent, setEmailVerificationSent] = useState(false);
-  const [emailVerificationError, setEmailVerificationError] = useState("");
-  const [resendCooldown, setResendCooldown] = useState(0); // Cooldown timer in seconds
   const { t } = useTranslation();
-
-  /**
-   * Get JWT token from localStorage for authenticated requests
-   */
-  const getAuthToken = () => localStorage.getItem("token");
-
-  /**
-   * Request email verification - sends verification link to email
-   */
-  const handleRequestEmailVerification = async () => {
-    if (!data.email || !validateEmail(data.email)) {
-      setEmailVerificationError(t("donation.step2.validEmailPlaceholder"));
-      return;
-    }
-
-    const token = getAuthToken();
-    if (!token) {
-      setEmailVerificationError(t("donation.step2.loginToVerify"));
-      return;
-    }
-
-    setEmailVerifying(true);
-    setEmailVerificationError("");
-    setEmailVerificationSent(false);
-
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/auth/request-email-verification`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ email: data.email }),
-        },
-      );
-
-      const result = await parseJsonResponse(response);
-
-      if (!response.ok) {
-        throw new Error(result.message || "Failed to send verification email");
-      }
-
-      if (result.alreadyVerified) {
-        // Email already verified
-        updateData({ emailVerified: true });
-      } else {
-        setEmailVerificationSent(true);
-        // Start 60 second cooldown for resend
-        setResendCooldown(60);
-        const timer = setInterval(() => {
-          setResendCooldown((prev) => {
-            if (prev <= 1) {
-              clearInterval(timer);
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
-      }
-    } catch (err) {
-      setEmailVerificationError(
-        err.message || "Failed to send verification email",
-      );
-    } finally {
-      setEmailVerifying(false);
-    }
-  };
-
-  /**
-   * Check email verification status (poll from backend)
-   */
-  const checkEmailStatus = async () => {
-    const token = getAuthToken();
-    if (!token) return;
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/auth/email-status`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const result = await parseJsonResponse(response);
-        if (result.email === data.email && result.emailVerified) {
-          updateData({ emailVerified: true });
-          setEmailVerificationSent(false);
-        }
-      }
-    } catch (err) {
-      // Silent fail
-    }
-  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
     if (type === "checkbox") {
-      if (name === "emailOptIn") {
-        setShowEmailInput(checked);
-        updateData({
-          emailOptIn: checked,
-          email: checked ? data.email : "",
-          emailVerified: false,
-        });
-        // Reset email verification state
-        setEmailVerificationSent(false);
-        setEmailVerificationError("");
-      } else if (name === "anonymousDisplay") {
+      if (name === "anonymousDisplay") {
         updateData({ anonymousDisplay: checked });
       }
     } else {
       updateData({ [name]: value });
       if (errors[name]) {
         setErrors((prev) => ({ ...prev, [name]: "" }));
-      }
-
-      // Reset email verified status when email changes
-      if (name === "email") {
-        updateData({ emailVerified: false });
-        setEmailVerificationSent(false);
-        setEmailVerificationError("");
       }
     }
   };
@@ -207,13 +88,6 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
       newErrors.mobile = t("donation.step2.mobileDigitInvalid", {
         length: country.length,
       });
-    }
-
-    // Email (optional)
-    if (showEmailInput && data.email) {
-      if (!validateEmail(data.email)) {
-        newErrors.email = t("donation.step2.emailInvalid");
-      }
     }
 
     // Address
@@ -503,163 +377,6 @@ const Step2DonorDetails = ({ data, updateData, nextStep, prevStep }) => {
           </div>
           {errors.mobile && (
             <p className="text-red-500 text-sm mt-1">{errors.mobile}</p>
-          )}
-        </div>
-
-        {/* Email (Optional - Opt-in only) */}
-        <div>
-          <label className="flex items-center space-x-2 mb-2">
-            <input
-              type="checkbox"
-              name="emailOptIn"
-              checked={data.emailOptIn}
-              onChange={handleChange}
-              className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
-            />
-            <span className="text-sm font-medium text-gray-700">
-              {t("donation.step2.addEmailReceipt")}
-            </span>
-          </label>
-
-          {showEmailInput && (
-            <div>
-              <FormInput
-                label={t("donation.step2.emailAddress")}
-                type="email"
-                name="email"
-                value={data.email}
-                onChange={handleChange}
-                placeholder={t("donation.step2.emailPlaceholder")}
-                error={errors.email}
-              />
-              {data.email && validateEmail(data.email) && (
-                <div className="mt-2 space-y-2">
-                  {data.emailVerified ? (
-                    // Verified state
-                    <div className="flex items-center text-sm text-green-600">
-                      <svg
-                        className="w-4 h-4 mr-1"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      {t("donation.step2.emailVerified")}
-                    </div>
-                  ) : emailVerificationSent ? (
-                    // Verification sent - waiting for user to click link
-                    <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-                      <div className="flex items-start space-x-2">
-                        <svg
-                          className="w-5 h-5 text-blue-600 mt-0.5"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                          <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                        </svg>
-                        <div className="flex-1">
-                          <p className="text-sm text-blue-800 font-medium">
-                            {t("donation.step2.verificationSent")}
-                          </p>
-                          <p className="text-xs text-blue-600 mt-1">
-                            {t("donation.step2.checkInbox")}
-                          </p>
-                          <div className="flex items-center gap-3 mt-2">
-                            <button
-                              type="button"
-                              onClick={checkEmailStatus}
-                              className="text-xs text-blue-700 underline hover:text-blue-800"
-                            >
-                              {t("donation.step2.iveVerified")}
-                            </button>
-                            <span className="text-xs text-gray-400">|</span>
-                            <button
-                              type="button"
-                              onClick={handleRequestEmailVerification}
-                              disabled={emailVerifying || resendCooldown > 0}
-                              className="text-xs text-blue-700 underline hover:text-blue-800 disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed"
-                            >
-                              {emailVerifying
-                                ? t("donation.step2.sending")
-                                : resendCooldown > 0
-                                  ? t("donation.step2.resendIn", {
-                                      n: resendCooldown,
-                                    })
-                                  : t("donation.step2.resendEmail")}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    // Not verified - show verify button
-                    <div>
-                      <button
-                        type="button"
-                        onClick={handleRequestEmailVerification}
-                        disabled={emailVerifying}
-                        className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-100 border border-amber-300 rounded-md hover:bg-amber-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {emailVerifying ? (
-                          <>
-                            <svg
-                              className="animate-spin w-4 h-4 mr-2"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              ></circle>
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                              ></path>
-                            </svg>
-                            Sending...
-                          </>
-                        ) : (
-                          <>
-                            <svg
-                              className="w-4 h-4 mr-1"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                              <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                            </svg>
-                            {t("donation.step2.verifyEmail")}
-                          </>
-                        )}
-                      </button>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {t("donation.step2.clickVerifyLink")}
-                      </p>
-                      {emailVerificationError && (
-                        <p className="text-xs text-red-600 mt-1">
-                          {emailVerificationError}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-              {data.email && !validateEmail(data.email) && (
-                <p className="text-xs text-gray-500 mt-1">
-                  {t("donation.step2.enterValidEmail")}
-                </p>
-              )}
-            </div>
           )}
         </div>
 

@@ -45,7 +45,7 @@ const Home = () => {
                   <img
                     src="/assets/gurudev.jpg"
                     alt="Param Pujya Shri Swami Harichaitanyanand Saraswatiji Maharaj"
-                    className="w-full h-full object-cover object-top"
+                    className="w-full h-full object-cover object-[65%-38%]"
                   />
                 </div>
                 <div className="p-5 text-center bg-gradient-to-b from-amber-50/50 to-white">
