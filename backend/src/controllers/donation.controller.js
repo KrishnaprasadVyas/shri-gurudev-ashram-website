@@ -189,7 +189,7 @@ exports.createDonation = async (req, res) => {
     }
 
     // Production hardening: Donation amount limits
-    const MIN_DONATION = 100; // ₹100 minimum
+    const MIN_DONATION = 10; // ₹10 minimum
     const MAX_DONATION = 10000000; // ₹1 crore maximum
     const numericAmount = Number(amount);
 
@@ -457,20 +457,43 @@ exports.downloadReceipt = async (req, res) => {
         .json({ message: "Receipt not available for this donation" });
     }
 
-    // Check if receipt exists
-    if (!donation.receiptUrl) {
-      return res.status(404).json({ message: "Receipt not generated yet" });
-    }
-
-    // Construct receipt file path
+    // Determine expected receipt file path
+    const expectedFileName = `receipt_${donation._id}.pdf`;
     const receiptPath = path.join(
       __dirname,
       "../../receipts",
-      path.basename(donation.receiptUrl),
+      donation.receiptUrl ? path.basename(donation.receiptUrl) : expectedFileName,
     );
 
+    // If receipt file doesn't exist, regenerate it on-the-fly
     if (!fs.existsSync(receiptPath)) {
-      return res.status(404).json({ message: "Receipt file not found" });
+      try {
+        // Ensure donation has a receipt number
+        if (!donation.receiptNumber) {
+          donation.receiptNumber = `GRD-${new Date(donation.createdAt).getFullYear()}-${donation._id.toString().slice(-6).toUpperCase()}`;
+        }
+
+        const generatedPath = await generateDonationReceipt(donation);
+
+        if (generatedPath && fs.existsSync(generatedPath)) {
+          // Update donation record with new receipt URL
+          donation.receiptUrl = `/receipts/${path.basename(generatedPath)}`;
+          await donation.save();
+        } else {
+          return res.status(500).json({ message: "Failed to generate receipt" });
+        }
+
+        // Use the newly generated path
+        const filename = `receipt-${donation.receiptNumber || donation._id}.pdf`;
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+        const fileStream = fs.createReadStream(generatedPath);
+        fileStream.pipe(res);
+        return;
+      } catch (genErr) {
+        console.error("Receipt regeneration error:", genErr);
+        return res.status(500).json({ message: "Failed to generate receipt" });
+      }
     }
 
     // Set headers for PDF download

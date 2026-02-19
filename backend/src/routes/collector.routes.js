@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const auth = require("../middlewares/auth.middleware");
-const { authorize } = require("../middlewares/authorize");
 const { collectorApplyLimiter } = require("../middlewares/rateLimit");
 const {
   uploadKycDocuments,
@@ -44,12 +43,11 @@ router.post(
   collectorController.reapplyForCollector
 );
 
-// Get collector dashboard (approved collectors only)
+// Get collector dashboard (any authenticated user — every user is a collector)
 // GET /api/collector/dashboard
 router.get(
   "/dashboard",
   auth,
-  authorize("COLLECTOR_APPROVED"),
   collectorController.getDashboard
 );
 

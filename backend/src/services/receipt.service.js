@@ -4,10 +4,11 @@ const path = require("path");
 
 /**
  * Convert filesystem path to public URL path
- * @param {string} fileName - The receipt filename
+ * @param {string} filePath - The full filesystem path or filename
  * @returns {string} Public URL path for the receipt
  */
-const getPublicReceiptUrl = (fileName) => {
+const getReceiptPublicUrl = (filePath) => {
+  const fileName = require("path").basename(filePath);
   return `/receipts/${fileName}`;
 };
 
@@ -274,7 +275,7 @@ y = 50 + imageSize + 20; // Move title up more
       y += 15;
 
       // ===== RECEIPT NO & DATE =====
-      const receiptNo = "GRD-2026-C960FA";
+      const receiptNo = donation.receiptNumber || "N/A";
 
       const d = new Date(donation.createdAt);
       const dateStr = `${d.getDate().toString().padStart(2, "0")}/${(
@@ -316,7 +317,7 @@ y = 50 + imageSize + 20; // Move title up more
         },
         {
           label: "Address",
-          value: "Behind Renuka Petrol Pump Jaina Road Chikhli"
+          value: donation.donor.address || "-"
         },
         {
           label: "PAN",
@@ -324,7 +325,7 @@ y = 50 + imageSize + 20; // Move title up more
         },
         {
           label: "Referal Name",
-          value: "-"
+          value: donation.collectorName || "-"
         },
         {
           label: "On Account of",
@@ -459,7 +460,7 @@ y = 50 + imageSize + 20; // Move title up more
         .fontSize(7)
         .fillColor("#666666")
         .text(
-          "Transaction ID : pay_S6EgBGEG0hOljy",
+          `Transaction ID : ${donation.paymentId || donation.transactionRef || "N/A"}`,
           50,
           y,
           { align: "center", width: contentWidth }
@@ -471,3 +472,5 @@ y = 50 + imageSize + 20; // Move title up more
     }
   });
 };
+
+exports.getReceiptPublicUrl = getReceiptPublicUrl;

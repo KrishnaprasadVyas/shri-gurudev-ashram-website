@@ -88,18 +88,35 @@ const DonationsView = () => {
     });
   }, [donations, causeFilter, searchQuery]);
 
-  const handleDownloadReceipt = (donation) => {
-    if (donation.receiptUrl) {
-      // Handle both relative URL paths (/receipts/...) and old absolute paths
-      let url = donation.receiptUrl;
-      
-      // If it's an absolute filesystem path, extract the filename
-      if (url.includes('\\') || (url.includes('/') && !url.startsWith('/'))) {
-        const fileName = url.split(/[\\/]/).pop();
-        url = `/receipts/${fileName}`;
+  const handleDownloadReceipt = async (donation) => {
+    if (!donation._id || donation.status !== "SUCCESS") return;
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/donations/${donation._id}/receipt`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `receipt-${donation.receiptNumber || donation._id}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        alert("Receipt not available yet.");
       }
-      
-      window.open(url, "_blank");
+    } catch (err) {
+      console.error("Receipt download error:", err);
+      alert("Failed to download receipt.");
     }
   };
 
@@ -347,7 +364,7 @@ const DonationsView = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {donation.receiptUrl && donation.status === "SUCCESS" ? (
+                      {donation.status === "SUCCESS" ? (
                         <button
                           type="button"
                           onClick={() => handleDownloadReceipt(donation)}

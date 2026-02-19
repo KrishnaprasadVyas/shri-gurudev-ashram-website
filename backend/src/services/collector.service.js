@@ -97,17 +97,11 @@ const resolveCollector = async (referralCode) => {
     }
 
     const collector = await User.findOne({ referralCode: code })
-      .select("_id fullName role collectorDisabled")
+      .select("_id fullName collectorProfile.fullName collectorDisabled")
       .lean();
 
     if (!collector) {
       console.warn(`[CollectorService] Invalid referral code: ${code}`);
-      return null;
-    }
-
-    // Check if collector role is COLLECTOR_APPROVED
-    if (collector.role !== "COLLECTOR_APPROVED") {
-      console.warn(`[CollectorService] Collector not approved: ${code}`);
       return null;
     }
 
@@ -117,15 +111,16 @@ const resolveCollector = async (referralCode) => {
       return null;
     }
 
-    // Use fullName only, return null if missing (no fake fallback)
-    if (!collector.fullName) {
+    // Use fullName or fall back to collectorProfile.fullName
+    const name = collector.fullName || collector.collectorProfile?.fullName;
+    if (!name) {
       console.warn(`[CollectorService] Collector has no fullName: ${code}`);
       return null;
     }
 
     return {
       collectorId: collector._id,
-      collectorName: collector.fullName,
+      collectorName: name,
     };
   } catch (error) {
     // Never crash - just log and return null
@@ -155,14 +150,10 @@ const validateReferralCode = async (referralCode) => {
     }
 
     const collector = await User.findOne({ referralCode: code })
-      .select("_id fullName role collectorDisabled")
+      .select("_id fullName collectorProfile.fullName collectorDisabled")
       .lean();
 
     if (!collector) {
-      return GENERIC_ERROR;
-    }
-
-    if (collector.role !== "COLLECTOR_APPROVED") {
       return GENERIC_ERROR;
     }
 
@@ -170,14 +161,16 @@ const validateReferralCode = async (referralCode) => {
       return GENERIC_ERROR;
     }
 
-    if (!collector.fullName) {
+    // Use fullName or fall back to collectorProfile.fullName
+    const name = collector.fullName || collector.collectorProfile?.fullName;
+    if (!name) {
       return GENERIC_ERROR;
     }
 
     return {
       valid: true,
       collectorId: collector._id,
-      collectorName: collector.fullName,
+      collectorName: name,
     };
   } catch (error) {
     console.error("[CollectorService] validateReferralCode error:", error);
