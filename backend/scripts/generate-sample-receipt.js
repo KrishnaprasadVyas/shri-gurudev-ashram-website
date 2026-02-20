@@ -14,8 +14,7 @@ const sampleDonation = {
     name: "Krishnaprasad Vyas",
     mobile: "8668308867",
     email: "shriharichaitanyaji@gmail.com",
-    address:
-      "Swami Harichaitanya Shanti Ashram Trust Buldhana\nMalkapur Road Datala, Malkapur, Buldhana,\nMaharashtra, 443001",
+    address: "Behind Renuka Petrol Pump Jaina Road Chikhli",
     anonymousDisplay: false,
     idType: "PAN",
     idNumber: "ABCDE1234F",
