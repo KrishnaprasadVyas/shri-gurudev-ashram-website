@@ -122,7 +122,7 @@ exports.generateDonationReceipt = (donation) => {
       const imageRadius = imageSize / 2;
 
       // ===== LOGO (TOP LEFT - CIRCULAR) =====
-      const logoPath = path.join(__dirname, "../../assets/recieptLogo.jpg.png");
+      const logoPath = path.join(__dirname, "../../assets/recieptLogo.jpeg");
       if (fs.existsSync(logoPath)) {
         doc.save();
         doc.circle(50 + imageRadius, 50 + imageRadius, imageRadius).clip();
@@ -141,7 +141,7 @@ exports.generateDonationReceipt = (donation) => {
       }
 
       // ===== GURUDEV IMAGE (TOP RIGHT - CIRCULAR) =====
-      const gurudevPath = path.join(__dirname, "../../assets/gurudev.jpg.png");
+      const gurudevPath = path.join(__dirname, "../../assets/gurudev.jpeg");
       if (fs.existsSync(gurudevPath)) {
         const rightX = pageWidth - 50 - imageSize;
         doc.save();
@@ -310,10 +310,8 @@ y = 50 + imageSize + 20; // Move title up more
           valueBold: false
         },
         {
-          label: "Mobile & Email",
-          value: donation.donor.email
-            ? `${donation.donor.mobile}  |  ${donation.donor.email}`
-            : donation.donor.mobile
+          label: "Mobile",
+          value: donation.donor.mobile
         },
         {
           label: "Address",
@@ -322,10 +320,6 @@ y = 50 + imageSize + 20; // Move title up more
         {
           label: "PAN",
           value: donation.donor.idNumber || "-"
-        },
-        {
-          label: "Referal Name",
-          value: donation.collectorName || "-"
         },
         {
           label: "On Account of",
