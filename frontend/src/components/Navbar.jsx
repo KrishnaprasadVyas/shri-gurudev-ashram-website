@@ -110,9 +110,15 @@ const Navbar = ({ showAnnouncement = false }) => {
       style={{ top: "0" }}
     >
       {/* Top Bar - Social Media, Heading & Action Buttons */}
-      <div className="bg-amber-50/90 border-b border-amber-200/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="hidden xl:flex justify-between items-center h-24 py-8">
+      <div className="bg-amber-50/90 border-b border-amber-200/30 relative">
+        <div
+          className="hidden xl:block absolute top-1/2 -translate-y-1/2 z-10"
+          style={{ right: "max(1rem, calc((100% - 80rem) / 2 - 6rem))" }}
+        >
+          <LanguageSwitcher />
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="hidden xl:flex justify-between items-center h-24 py-8 relative">
             {/* Social Media Icons */}
             <div className="flex items-center space-x-4">
               <a
@@ -176,8 +182,8 @@ const Navbar = ({ showAnnouncement = false }) => {
                 </svg>
               </a>
             </div>
-            {/* Logo */}
-            <div className="flex justify-center">
+            {/* Logo - absolutely centered */}
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
               <Link
                 to="/"
                 className="group transition-transform duration-300 hover:scale-105"
@@ -423,8 +429,6 @@ const Navbar = ({ showAnnouncement = false }) => {
                 </Link>
               )}
             </div>
-            {/* Language Switcher */}
-            <LanguageSwitcher />
           </div>
         </div>
       </div>
@@ -499,9 +503,10 @@ const Navbar = ({ showAnnouncement = false }) => {
                   </Link>
                 )}
               </div>
+              <LanguageSwitcher variant="mobile" />
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="ml-2 p-2 rounded-md text-amber-700 hover:bg-amber-100 transition-colors flex-shrink-0"
+                className="ml-1 p-2 rounded-md text-amber-700 hover:bg-amber-100 transition-colors flex-shrink-0"
                 aria-label="Toggle menu"
                 aria-expanded={isMenuOpen}
               >
@@ -524,7 +529,7 @@ const Navbar = ({ showAnnouncement = false }) => {
             </div>
           </div>
 
-          {/* Desktop Navigation - Centered Layout (Grid for perfect centering) */}
+          {/* Desktop Navigation - Centered Layout */}
           <div className="hidden xl:flex justify-between items-center py-5 relative">
             {/* Desktop Navigation - Left Side */}
             <div className="flex items-center justify-between space-x-6">
@@ -573,10 +578,10 @@ const Navbar = ({ showAnnouncement = false }) => {
                               key={item.label}
                               href={item.path}
                               onClick={() => setIsAboutDropdownOpen(false)}
-                              className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition-colors"
+                              className="flex items-center px-4 py-3 text-sm text-gray-600 hover:bg-amber-100 hover:text-amber-600 rounded-md"
                             >
                               <svg
-                                className="w-5 h-5 mr-3 text-amber-500"
+                                className="w-4 h-4 mr-2 text-amber-500"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -598,10 +603,10 @@ const Navbar = ({ showAnnouncement = false }) => {
                               key={item.path}
                               to={item.path}
                               onClick={() => setIsAboutDropdownOpen(false)}
-                              className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition-colors"
+                              className="flex items-center px-4 py-3 text-sm text-gray-600 hover:bg-amber-100 hover:text-amber-600 rounded-md"
                             >
                               <svg
-                                className="w-5 h-5 mr-3 text-amber-500"
+                                className="w-4 h-4 mr-2 text-amber-500"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -640,10 +645,10 @@ const Navbar = ({ showAnnouncement = false }) => {
               )}
             </div>
 
-            {/* Center Title */}
-            <div className="text-center justify-self-center">
+            {/* Center Title - absolutely centered */}
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
               <h1
-                className="text-base md:text-lg text-gray-700 font-semibold tracking-wide leading-tight whitespace-nowrap text-center"
+                className="text-base md:text-lg text-gray-700 font-semibold tracking-wide leading-tight text-center"
                 style={{ fontFamily: "sans-serif" }}
               >
                 {t("nav.ashramLocationHi", {
