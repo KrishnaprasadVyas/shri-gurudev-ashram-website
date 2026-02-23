@@ -7,7 +7,7 @@ const SystemAdminLayout = () => {
   const navItems = [
     { path: "/admin/system/overview", label: "Overview", active: false, disabled: false },
     { path: "/admin/system/donations", label: "Donations", active: false, disabled: false },
-    { path: "/admin/system/cash-donation", label: "Add Cash Donation", active: false, disabled: false, indent: true },
+    { path: "/admin/system/cash-donation", label: "Add Donation", active: false, disabled: false, indent: true },
     { path: "/admin/system/donors", label: "Donors", active: false, disabled: false },
     { path: "/admin/system/collectors", label: "Collectors", active: false, disabled: false },
     { path: "/admin/system/collector-applications", label: "Collector Applications", active: false, disabled: false, indent: true },

@@ -55,7 +55,14 @@ exports.getAllDonations = async (req, res) => {
     const { paymentMethod, status, startDate, endDate } = req.query;
 
     const filter = {};
-    if (paymentMethod) filter.paymentMethod = paymentMethod;
+    if (paymentMethod) {
+      // Support comma-separated methods for future flexibility
+      if (paymentMethod.includes(",")) {
+        filter.paymentMethod = { $in: paymentMethod.split(",") };
+      } else {
+        filter.paymentMethod = paymentMethod;
+      }
+    }
     if (status) filter.status = status;
     if (startDate || endDate) {
       filter.createdAt = {};
@@ -81,17 +88,40 @@ exports.getAllDonations = async (req, res) => {
 };
 
 /**
- * Create cash donation (Admin only)
- * POST /api/admin/system/donations/cash
- * Admin can add cash donations with donor details
+ * Create offline donation (Admin only) - supports CASH, UPI, CHEQUE
+ * POST /api/admin/system/donations/cash  (backward-compatible route)
+ * POST /api/admin/system/donations/offline (new route alias)
+ * Admin can add donations with donor details and payment method
  */
 exports.createCashDonation = async (req, res) => {
   try {
-    const { donor, donationHead, amount, paymentDate } = req.body;
+    const { donor, donationHead, amount, paymentDate, paymentMethod, paymentDetails } = req.body;
 
     // Validate required fields
     if (!donor || !donationHead || !amount || amount <= 0) {
       return res.status(400).json({ message: "Invalid donation data" });
+    }
+
+    // Determine effective payment method (backward compat: default to CASH)
+    const effectiveMethod = paymentMethod || "CASH";
+    const validMethods = ["CASH", "UPI", "CHEQUE"];
+    if (!validMethods.includes(effectiveMethod)) {
+      return res.status(400).json({ message: `Invalid payment method. Must be one of: ${validMethods.join(", ")}` });
+    }
+
+    // Validate payment-method-specific required fields
+    if (effectiveMethod === "UPI") {
+      if (!paymentDetails?.utrNumber || !paymentDetails.utrNumber.trim()) {
+        return res.status(400).json({ message: "UTR number is required for UPI payments" });
+      }
+    }
+    if (effectiveMethod === "CHEQUE") {
+      if (!paymentDetails?.chequeNumber || !paymentDetails.chequeNumber.trim()) {
+        return res.status(400).json({ message: "Cheque number is required for cheque payments" });
+      }
+      if (!paymentDetails?.bankName || !paymentDetails.bankName.trim()) {
+        return res.status(400).json({ message: "Bank name is required for cheque payments" });
+      }
     }
 
     // Validate donor object
@@ -100,14 +130,16 @@ exports.createCashDonation = async (req, res) => {
       mobile,
       email,
       address,
+      addressObj,
       anonymousDisplay,
       dob,
       idType,
       idNumber,
     } = donor;
 
-    // Only name, address, dob, and ID are required for cash donations
-    if (!name || !address || !dob || !idType || !idNumber) {
+    // Validate required fields - address can come as legacy string OR structured addressObj
+    const hasAddress = address || (addressObj && (addressObj.line || addressObj.city));
+    if (!name || !hasAddress || !dob || !idType || !idNumber) {
       return res.status(400).json({
         message: "Missing required donor details (name, address, dob, ID type, ID number)",
       });
@@ -139,8 +171,37 @@ exports.createCashDonation = async (req, res) => {
       }
     }
 
-    // Generate unique transaction reference for cash
-    const transactionRef = `CASH-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+    // Build structured address if provided
+    const structuredAddress = addressObj ? {
+      line: addressObj.line || "",
+      city: addressObj.city || "",
+      state: addressObj.state || "",
+      country: addressObj.country || "India",
+      pincode: addressObj.pincode || "",
+    } : undefined;
+
+    // Build legacy address string for backward compatibility
+    const legacyAddress = address || (structuredAddress
+      ? [structuredAddress.line, structuredAddress.city, structuredAddress.state, structuredAddress.country, structuredAddress.pincode].filter(Boolean).join(", ")
+      : "");
+
+    // Generate unique transaction reference
+    const methodPrefix = effectiveMethod === "UPI" ? "UPI" : effectiveMethod === "CHEQUE" ? "CHQ" : "CASH";
+    const transactionRef = `${methodPrefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
+    // Build payment sub-document
+    const paymentDoc = {
+      method: effectiveMethod,
+      status: "SUCCESS",
+    };
+    if (effectiveMethod === "UPI" && paymentDetails?.utrNumber) {
+      paymentDoc.utrNumber = paymentDetails.utrNumber.trim();
+    }
+    if (effectiveMethod === "CHEQUE") {
+      if (paymentDetails?.chequeNumber) paymentDoc.chequeNumber = paymentDetails.chequeNumber.trim();
+      if (paymentDetails?.bankName) paymentDoc.bankName = paymentDetails.bankName.trim();
+      if (paymentDetails?.chequeDate) paymentDoc.chequeDate = new Date(paymentDetails.chequeDate);
+    }
 
     // Create donation with donor snapshot - directly as SUCCESS
     const donation = await Donation.create({
@@ -151,7 +212,8 @@ exports.createCashDonation = async (req, res) => {
         email: email || undefined,
         emailOptIn: !!email,
         emailVerified: false,
-        address,
+        address: legacyAddress,
+        addressObj: structuredAddress || undefined,
         anonymousDisplay: anonymousDisplay || false,
         dob: new Date(dob),
         idType,
@@ -163,7 +225,8 @@ exports.createCashDonation = async (req, res) => {
       },
       amount,
       status: "SUCCESS",
-      paymentMethod: "CASH",
+      paymentMethod: effectiveMethod,
+      payment: paymentDoc,
       transactionRef,
       otpVerified: false,
       addedBy: req.user.id,
@@ -205,11 +268,12 @@ exports.createCashDonation = async (req, res) => {
     }
 
     res.status(201).json({
-      message: "Cash donation recorded successfully",
+      message: `${effectiveMethod} donation recorded successfully`,
       donationId: donation._id,
       receiptNumber: donation.receiptNumber,
       receiptUrl: donation.receiptUrl,
       transactionRef: donation.transactionRef,
+      paymentMethod: effectiveMethod,
       status: donation.status,
     });
   } catch (error) {

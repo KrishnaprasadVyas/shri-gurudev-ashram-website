@@ -133,7 +133,7 @@ const DonationsView = () => {
     paymentMethodFilter !== "all" || statusFilter !== "all" || searchQuery;
 
   return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
+    <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 overflow-hidden">
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Donations</h1>
@@ -146,7 +146,7 @@ const DonationsView = () => {
           className="inline-flex items-center px-4 py-2 bg-amber-600 text-white font-semibold rounded-md hover:bg-amber-700 transition-colors"
         >
           <Plus className="w-5 h-5 mr-2" />
-          Add Cash Donation
+          Add Donation
         </button>
       </div>
 
@@ -205,6 +205,8 @@ const DonationsView = () => {
               <option value="all">All Methods</option>
               <option value="ONLINE">Online</option>
               <option value="CASH">Cash</option>
+              <option value="UPI">UPI</option>
+              <option value="CHEQUE">Cheque</option>
             </select>
           </div>
 
@@ -288,69 +290,74 @@ const DonationsView = () => {
 
       {/* Table */}
       {!isLoading && (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Donor Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Amount
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Cause
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Method
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Receipt
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredDonations.length === 0 ? (
+        <div className="-mx-6 overflow-x-auto">
+          <div className="inline-block min-w-full align-middle">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
-                    No donations found
-                  </td>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Date
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Donor Name
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Amount
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Cause
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Method
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Receipt
+                  </th>
                 </tr>
-              ) : (
-                filteredDonations.map((donation) => (
-                  <tr key={donation._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatDate(donation.createdAt)}
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredDonations.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                      No donations found
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {donation.donor?.anonymousDisplay 
-                        ? "Anonymous" 
-                        : donation.donor?.name || "Unknown"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                      {formatCurrency(donation.amount)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {donation.donationHead?.name || donation.cause || "General Seva"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          donation.paymentMethod === "CASH"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-purple-100 text-purple-800"
-                        }`}
-                      >
-                        {donation.paymentMethod || "ONLINE"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                  </tr>
+                ) : (
+                  filteredDonations.map((donation) => (
+                    <tr key={donation._id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                        {formatDate(donation.createdAt)}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900 max-w-[200px] truncate" title={donation.donor?.name}>
+                        {donation.donor?.anonymousDisplay 
+                          ? "Anonymous" 
+                          : donation.donor?.name || "Unknown"}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-900">
+                        {formatCurrency(donation.amount)}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700 max-w-[160px] truncate" title={donation.donationHead?.name}>
+                        {donation.donationHead?.name || donation.cause || "General Seva"}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            donation.paymentMethod === "CASH"
+                              ? "bg-blue-100 text-blue-800"
+                              : donation.paymentMethod === "UPI"
+                              ? "bg-green-100 text-green-800"
+                              : donation.paymentMethod === "CHEQUE"
+                              ? "bg-orange-100 text-orange-800"
+                              : "bg-purple-100 text-purple-800"
+                          }`}
+                        >
+                          {donation.paymentMethod || "ONLINE"}
+                        </span>
+                      </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
                       <span
                         className={`px-2 py-1 text-xs font-medium rounded-full ${
                           donation.status === "SUCCESS"
@@ -363,7 +370,7 @@ const DonationsView = () => {
                         {donation.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm">
                       {donation.status === "SUCCESS" ? (
                         <button
                           type="button"
@@ -382,6 +389,7 @@ const DonationsView = () => {
               )}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
@@ -396,7 +404,7 @@ const DonationsView = () => {
               <span className="text-sm text-gray-700">
                 Online: {formatCurrency(
                   filteredDonations
-                    .filter(d => d.paymentMethod !== "CASH" && d.status === "SUCCESS")
+                    .filter(d => d.paymentMethod === "ONLINE" && d.status === "SUCCESS")
                     .reduce((sum, d) => sum + d.amount, 0)
                 )}
               </span>
@@ -404,6 +412,20 @@ const DonationsView = () => {
                 Cash: {formatCurrency(
                   filteredDonations
                     .filter(d => d.paymentMethod === "CASH" && d.status === "SUCCESS")
+                    .reduce((sum, d) => sum + d.amount, 0)
+                )}
+              </span>
+              <span className="text-sm text-gray-700">
+                UPI: {formatCurrency(
+                  filteredDonations
+                    .filter(d => d.paymentMethod === "UPI" && d.status === "SUCCESS")
+                    .reduce((sum, d) => sum + d.amount, 0)
+                )}
+              </span>
+              <span className="text-sm text-gray-700">
+                Cheque: {formatCurrency(
+                  filteredDonations
+                    .filter(d => d.paymentMethod === "CHEQUE" && d.status === "SUCCESS")
                     .reduce((sum, d) => sum + d.amount, 0)
                 )}
               </span>

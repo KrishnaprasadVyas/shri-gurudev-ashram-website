@@ -6,6 +6,22 @@ import { formatCurrency } from "../../utils/helpers";
 import { ArrowLeft, CheckCircle, Download } from "lucide-react";
 import { API_BASE_URL, parseJsonResponse } from "../../utils/api";
 
+const PAYMENT_METHODS = [
+  { value: "CASH", label: "Cash" },
+  { value: "UPI", label: "UPI" },
+  { value: "CHEQUE", label: "Cheque" },
+];
+
+const INDIAN_STATES = [
+  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
+  "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand",
+  "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur",
+  "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab",
+  "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura",
+  "Uttar Pradesh", "Uttarakhand", "West Bengal",
+  "Delhi", "Chandigarh", "Puducherry", "Jammu and Kashmir", "Ladakh",
+];
+
 const CashDonationForm = () => {
   const navigate = useNavigate();
   const { token } = useAuth();
@@ -14,7 +30,12 @@ const CashDonationForm = () => {
     name: "",
     mobile: "",
     email: "",
-    address: "",
+    // Structured address fields
+    addressLine: "",
+    addressCity: "",
+    addressState: "",
+    addressCountry: "India",
+    addressPincode: "",
     dob: "",
     idType: "PAN",
     idNumber: "",
@@ -22,6 +43,13 @@ const CashDonationForm = () => {
     donationHeadId: "",
     amount: "",
     paymentDate: new Date().toISOString().split("T")[0],
+    // Payment method
+    paymentMethod: "CASH",
+    // Payment detail fields (conditionally required)
+    utrNumber: "",
+    chequeNumber: "",
+    bankName: "",
+    chequeDate: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -62,6 +90,24 @@ const CashDonationForm = () => {
       // Only positive numbers
       const numValue = value.replace(/[^0-9]/g, "");
       setFormData((prev) => ({ ...prev, [name]: numValue }));
+    } else if (name === "addressPincode") {
+      // Only digits, max 6
+      const digits = value.replace(/\D/g, "").slice(0, 6);
+      setFormData((prev) => ({ ...prev, [name]: digits }));
+    } else if (name === "utrNumber") {
+      // UTR: alphanumeric, max 22
+      const cleaned = value.replace(/[^A-Za-z0-9]/g, "").slice(0, 22);
+      setFormData((prev) => ({ ...prev, [name]: cleaned }));
+    } else if (name === "paymentMethod") {
+      // Reset payment-specific fields when method changes
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+        utrNumber: "",
+        chequeNumber: "",
+        bankName: "",
+        chequeDate: "",
+      }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -77,7 +123,10 @@ const CashDonationForm = () => {
 
     // Required fields
     if (!formData.name.trim()) newErrors.name = "Donor name is required";
-    if (!formData.address.trim()) newErrors.address = "Address is required";
+    // Structured address: at least addressLine OR city is required
+    if (!formData.addressLine.trim() && !formData.addressCity.trim()) {
+      newErrors.addressLine = "Address line or city is required";
+    }
     if (!formData.dob) {
       newErrors.dob = "Date of birth is required";
     } else if (!validateAge(formData.dob)) {
@@ -95,6 +144,26 @@ const CashDonationForm = () => {
     if (!formData.donationHeadId) newErrors.donationHeadId = "Please select a donation cause";
     if (!formData.amount || parseInt(formData.amount) <= 0) {
       newErrors.amount = "Please enter a valid amount";
+    }
+
+    // Pincode validation (optional but must be valid if entered)
+    if (formData.addressPincode && !/^\d{6}$/.test(formData.addressPincode)) {
+      newErrors.addressPincode = "Pincode must be 6 digits";
+    }
+
+    // Payment method-specific validation
+    if (formData.paymentMethod === "UPI") {
+      if (!formData.utrNumber.trim()) {
+        newErrors.utrNumber = "UTR number is required for UPI payments";
+      }
+    }
+    if (formData.paymentMethod === "CHEQUE") {
+      if (!formData.chequeNumber.trim()) {
+        newErrors.chequeNumber = "Cheque number is required";
+      }
+      if (!formData.bankName.trim()) {
+        newErrors.bankName = "Bank name is required for cheque payments";
+      }
     }
 
     // Optional email validation
@@ -124,7 +193,13 @@ const CashDonationForm = () => {
           name: formData.name.trim(),
           mobile: formData.mobile ? `+91${formData.mobile}` : "N/A",
           email: formData.email || undefined,
-          address: formData.address.trim(),
+          addressObj: {
+            line: formData.addressLine.trim(),
+            city: formData.addressCity.trim(),
+            state: formData.addressState.trim(),
+            country: formData.addressCountry.trim() || "India",
+            pincode: formData.addressPincode.trim(),
+          },
           dob: formData.dob,
           idType: formData.idType,
           idNumber: formData.idNumber,
@@ -136,7 +211,20 @@ const CashDonationForm = () => {
         },
         amount: parseInt(formData.amount),
         paymentDate: formData.paymentDate,
+        paymentMethod: formData.paymentMethod,
       };
+
+      // Add payment-specific details
+      if (formData.paymentMethod === "UPI") {
+        payload.paymentDetails = { utrNumber: formData.utrNumber.trim() };
+      }
+      if (formData.paymentMethod === "CHEQUE") {
+        payload.paymentDetails = {
+          chequeNumber: formData.chequeNumber.trim(),
+          bankName: formData.bankName.trim(),
+          chequeDate: formData.chequeDate || undefined,
+        };
+      }
 
       const response = await fetch(`${API_BASE_URL}/admin/system/donations/cash`, {
         method: "POST",
@@ -150,7 +238,7 @@ const CashDonationForm = () => {
       const data = await parseJsonResponse(response);
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to create cash donation");
+        throw new Error(data.message || "Failed to create donation");
       }
 
       setSuccess({
@@ -158,12 +246,13 @@ const CashDonationForm = () => {
         receiptNumber: data.receiptNumber,
         receiptUrl: data.receiptUrl,
         transactionRef: data.transactionRef,
+        paymentMethod: data.paymentMethod || formData.paymentMethod,
         amount: parseInt(formData.amount),
         donorName: formData.name,
         donationHead: selectedHead.name,
       });
     } catch (err) {
-      setSubmitError(err.message || "Failed to create cash donation. Please try again.");
+      setSubmitError(err.message || "Failed to create donation. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -181,7 +270,11 @@ const CashDonationForm = () => {
       name: "",
       mobile: "",
       email: "",
-      address: "",
+      addressLine: "",
+      addressCity: "",
+      addressState: "",
+      addressCountry: "India",
+      addressPincode: "",
       dob: "",
       idType: "PAN",
       idNumber: "",
@@ -189,6 +282,11 @@ const CashDonationForm = () => {
       donationHeadId: "",
       amount: "",
       paymentDate: new Date().toISOString().split("T")[0],
+      paymentMethod: "CASH",
+      utrNumber: "",
+      chequeNumber: "",
+      bankName: "",
+      chequeDate: "",
     });
     setSuccess(null);
     setErrors({});
@@ -204,10 +302,10 @@ const CashDonationForm = () => {
             <CheckCircle className="w-10 h-10 text-green-600" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Cash Donation Recorded!
+            Donation Recorded!
           </h2>
           <p className="text-gray-600 mb-6">
-            The donation has been successfully recorded in the system.
+            The {success.paymentMethod?.toLowerCase() || "cash"} donation has been successfully recorded in the system.
           </p>
 
           <div className="bg-gray-50 rounded-lg p-6 max-w-md mx-auto text-left space-y-3">
@@ -274,9 +372,9 @@ const CashDonationForm = () => {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Donations
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Add Cash Donation</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Add Donation</h1>
         <p className="text-gray-600 text-sm mt-1">
-          Record a cash donation received directly at the ashram
+          Record a cash, UPI, or cheque donation received at the ashram
         </p>
       </div>
 
@@ -384,26 +482,97 @@ const CashDonationForm = () => {
               )}
             </div>
 
-            {/* Address */}
+            {/* Address Line */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Address <span className="text-red-500">*</span>
+                Address Line <span className="text-red-500">*</span>
               </label>
-              <textarea
-                name="address"
-                value={formData.address}
+              <input
+                type="text"
+                name="addressLine"
+                value={formData.addressLine}
                 onChange={handleChange}
-                placeholder="Enter donor's full address"
-                rows={3}
+                placeholder="House/Flat No., Street, Area, Landmark"
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                  errors.address
+                  errors.addressLine
                     ? "border-red-300 focus:ring-red-500"
                     : "border-gray-300 focus:ring-amber-500"
                 }`}
               />
-              {errors.address && (
-                <p className="mt-1 text-xs text-red-600">{errors.address}</p>
+              {errors.addressLine && (
+                <p className="mt-1 text-xs text-red-600">{errors.addressLine}</p>
               )}
+            </div>
+
+            {/* City */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                City
+              </label>
+              <input
+                type="text"
+                name="addressCity"
+                value={formData.addressCity}
+                onChange={handleChange}
+                placeholder="e.g. Mumbai"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+
+            {/* State */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                State
+              </label>
+              <select
+                name="addressState"
+                value={formData.addressState}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+              >
+                <option value="">Select state</option>
+                {INDIAN_STATES.map((state) => (
+                  <option key={state} value={state}>{state}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Pincode */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Pincode
+              </label>
+              <input
+                type="text"
+                name="addressPincode"
+                value={formData.addressPincode}
+                onChange={handleChange}
+                placeholder="6-digit pincode"
+                maxLength={6}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                  errors.addressPincode
+                    ? "border-red-300 focus:ring-red-500"
+                    : "border-gray-300 focus:ring-amber-500"
+                }`}
+              />
+              {errors.addressPincode && (
+                <p className="mt-1 text-xs text-red-600">{errors.addressPincode}</p>
+              )}
+            </div>
+
+            {/* Country */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Country
+              </label>
+              <input
+                type="text"
+                name="addressCountry"
+                value={formData.addressCountry}
+                onChange={handleChange}
+                placeholder="India"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
             </div>
 
             {/* PAN Number */}
@@ -523,9 +692,113 @@ const CashDonationForm = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
               <p className="mt-1 text-xs text-gray-500">
-                Date when cash was received (defaults to today)
+                Date when payment was received (defaults to today)
               </p>
             </div>
+
+            {/* Payment Method */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Payment Method <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="paymentMethod"
+                value={formData.paymentMethod}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+              >
+                {PAYMENT_METHODS.map((method) => (
+                  <option key={method.value} value={method.value}>
+                    {method.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* UPI-specific: UTR Number */}
+            {formData.paymentMethod === "UPI" && (
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  UTR Number <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="utrNumber"
+                  value={formData.utrNumber}
+                  onChange={handleChange}
+                  placeholder="Enter UPI Transaction Reference Number"
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 font-mono ${
+                    errors.utrNumber
+                      ? "border-red-300 focus:ring-red-500"
+                      : "border-gray-300 focus:ring-amber-500"
+                  }`}
+                />
+                {errors.utrNumber && (
+                  <p className="mt-1 text-xs text-red-600">{errors.utrNumber}</p>
+                )}
+                <p className="mt-1 text-xs text-gray-500">
+                  UTR/Reference number from the UPI payment confirmation
+                </p>
+              </div>
+            )}
+
+            {/* Cheque-specific fields */}
+            {formData.paymentMethod === "CHEQUE" && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Cheque Number <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="chequeNumber"
+                    value={formData.chequeNumber}
+                    onChange={handleChange}
+                    placeholder="Enter cheque number"
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 font-mono ${
+                      errors.chequeNumber
+                        ? "border-red-300 focus:ring-red-500"
+                        : "border-gray-300 focus:ring-amber-500"
+                    }`}
+                  />
+                  {errors.chequeNumber && (
+                    <p className="mt-1 text-xs text-red-600">{errors.chequeNumber}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Bank Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="bankName"
+                    value={formData.bankName}
+                    onChange={handleChange}
+                    placeholder="e.g. State Bank of India"
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                      errors.bankName
+                        ? "border-red-300 focus:ring-red-500"
+                        : "border-gray-300 focus:ring-amber-500"
+                    }`}
+                  />
+                  {errors.bankName && (
+                    <p className="mt-1 text-xs text-red-600">{errors.bankName}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Cheque Date
+                  </label>
+                  <input
+                    type="date"
+                    name="chequeDate"
+                    value={formData.chequeDate}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -567,7 +840,7 @@ const CashDonationForm = () => {
                 Recording Donation...
               </>
             ) : (
-              "Record Cash Donation"
+              `Record ${formData.paymentMethod === "CASH" ? "Cash" : formData.paymentMethod === "UPI" ? "UPI" : "Cheque"} Donation`
             )}
           </button>
         </div>

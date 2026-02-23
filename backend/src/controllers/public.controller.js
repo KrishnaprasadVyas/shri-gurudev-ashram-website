@@ -52,7 +52,7 @@ exports.getRecentDonations = async (req, res) => {
     const donations = await Donation.find({ status: "SUCCESS" })
       .sort({ createdAt: -1 })
       .limit(10)
-      .select("donor.name donor.address donor.anonymousDisplay amount")
+      .select("donor.name donor.address donor.addressObj donor.anonymousDisplay amount")
       .lean();
 
     // Transform to public-safe format
@@ -62,8 +62,10 @@ exports.getRecentDonations = async (req, res) => {
         ? "Anonymous"
         : donation.donor.name;
 
-      // Extract city from address (last part before pincode, or default to "India")
-      const city = extractCity(donation.donor.address);
+      // Prefer structured city, fallback to legacy address parsing
+      const city = donation.donor?.addressObj?.city
+        ? donation.donor.addressObj.city
+        : extractCity(donation.donor.address);
 
       return {
         id: `recent-${index}-${Date.now()}`, // Unique ID for React keys
