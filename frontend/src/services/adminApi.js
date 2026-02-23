@@ -494,6 +494,20 @@ export const donationHeadsApi = {
   getActive: () => apiRequest("/public/donation-heads"),
 };
 
+// ==================== SITE CONFIG ====================
+
+export const siteConfigApi = {
+  // Get site config
+  getConfig: () => apiRequest("/admin/website/site-config"),
+
+  // Update live link
+  updateLiveLink: (data) =>
+    apiRequest("/admin/website/site-config/live-link", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+};
+
 export default {
   announcements: announcementsApi,
   activities: activitiesApi,
@@ -501,4 +515,5 @@ export default {
   testimonials: testimonialsApi,
   gallery: galleryApi,
   donationHeads: donationHeadsApi,
+  siteConfig: siteConfigApi,
 };

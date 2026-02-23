@@ -42,6 +42,14 @@ router.get("/donations/top", getTopDonors);
 // FIX 2: Rate limited to prevent brute-force guessing (30/min per IP)
 router.get("/referral/:code", publicApiLimiter, validateReferralCode);
 
+// ==================== SITE CONFIG ====================
+
+// GET /api/public/site-config/live-link - Get active live link
+router.get(
+  "/site-config/live-link",
+  require("../controllers/siteConfig.controller").getPublicLiveLink,
+);
+
 // ==================== ANNOUNCEMENTS ====================
 
 // GET /api/public/announcements - Get active announcements

@@ -36,6 +36,7 @@ import ActivitiesManager from "./pages/admin/ActivitiesManager";
 import AnnouncementBannerManager from "./pages/admin/AnnouncementBannerManager";
 import TestimonialsManager from "./pages/admin/TestimonialsManager";
 import DonationHeadsManager from "./pages/admin/DonationHeadsManager";
+import LiveLinkManager from "./pages/admin/LiveLinkManager";
 import SystemAdmin from "./pages/admin/SystemAdmin";
 import SystemAdminLayout from "./layouts/SystemAdminLayout";
 import SystemOverview from "./pages/admin/SystemOverview";
@@ -179,6 +180,10 @@ function App() {
                           <Route
                             path="donation-heads"
                             element={<DonationHeadsManager />}
+                          />
+                          <Route
+                            path="live-link"
+                            element={<LiveLinkManager />}
                           />
                         </Route>
                         <Route

@@ -11,6 +11,7 @@ const WebsiteAdminLayout = () => {
     { path: "/admin/website/announcement", label: "Announcement Banner", active: false, disabled: false },
     { path: "/admin/website/testimonials", label: "Testimonials", active: false, disabled: false },
     { path: "/admin/website/donation-heads", label: "Donation Causes", active: false, disabled: false },
+    { path: "/admin/website/live-link", label: "Live Link", active: false, disabled: false },
   ];
 
   const isActive = (path) => {

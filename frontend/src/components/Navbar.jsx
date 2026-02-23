@@ -5,6 +5,7 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import { Link, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+import { API_BASE_URL } from "../utils/api";
 
 const Navbar = ({ showAnnouncement = false }) => {
   const { t } = useTranslation();
@@ -13,6 +14,7 @@ const Navbar = ({ showAnnouncement = false }) => {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isAboutDropdownOpen, setIsAboutDropdownOpen] = useState(false);
+  const [liveLink, setLiveLink] = useState(null);
   const navRef = useRef(null);
   const profileRef = useRef(null);
   const aboutRef = useRef(null);
@@ -38,6 +40,25 @@ const Navbar = ({ showAnnouncement = false }) => {
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Fetch live link status
+  useEffect(() => {
+    const fetchLiveLink = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/public/site-config/live-link`);
+        const data = await res.json();
+        if (data.isActive) {
+          setLiveLink(data);
+        }
+      } catch {
+        // Silently fail - live button just won't show
+      }
+    };
+    fetchLiveLink();
+    // Re-check every 5 minutes
+    const interval = setInterval(fetchLiveLink, 5 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -181,6 +202,22 @@ const Navbar = ({ showAnnouncement = false }) => {
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                 </svg>
               </a>
+              {/* Live Button */}
+              {liveLink && liveLink.isActive && (
+                <a
+                  href={liveLink.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="live-btn flex items-center space-x-1.5 px-3 py-1.5 bg-red-600 text-white rounded-md text-sm font-bold hover:bg-red-700 transition-all duration-300 shadow-md hover:shadow-lg"
+                  aria-label={liveLink.label || t("nav.live")}
+                >
+                  <span className="live-dot relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
+                  </span>
+                  <span>{liveLink.label || t("nav.live")}</span>
+                </a>
+              )}
             </div>
             {/* Logo - absolutely centered */}
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -442,13 +479,31 @@ const Navbar = ({ showAnnouncement = false }) => {
               <p className="text-sm font-semibold text-amber-700 leading-tight text-center">
                 {t("nav.ashramNameHi")}
               </p>
-              <Link to="/" className="flex items-center justify-center">
-                <img
-                  src="/assets/Logo.png"
-                  alt="Gurudev Ashram Logo"
-                  className="h-12 w-auto object-contain"
-                />
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link to="/" className="flex items-center justify-center">
+                  <img
+                    src="/assets/Logo.png"
+                    alt="Gurudev Ashram Logo"
+                    className="h-12 w-auto object-contain"
+                  />
+                </Link>
+                {/* Mobile Live Button */}
+                {liveLink && liveLink.isActive && (
+                  <a
+                    href={liveLink.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="live-btn flex items-center space-x-1 px-2 py-1 bg-red-600 text-white rounded-md text-xs font-bold hover:bg-red-700 transition-all duration-300 shadow-md"
+                    aria-label={liveLink.label || t("nav.live")}
+                  >
+                    <span className="live-dot relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                    </span>
+                    <span>{liveLink.label || t("nav.live")}</span>
+                  </a>
+                )}
+              </div>
             </div>
             <div className="flex items-center pr-2">
               {/* Compact donate button for extra-small screens */}
