@@ -78,7 +78,7 @@ const Step4Payment = ({ data, updateData, nextStep, prevStep }) => {
     // Validate donationHead exists before proceeding
     if (
       !data.donationHead ||
-      !data.donationHead.id ||
+      (!data.donationHead._id && !data.donationHead.id) ||
       !data.donationHead.name
     ) {
       throw new Error(t("donation.step4.selectCauseFirst"));
@@ -86,7 +86,7 @@ const Step4Payment = ({ data, updateData, nextStep, prevStep }) => {
 
     // Build donationHead object (not just ID)
     const donationHead = {
-      id: String(data.donationHead.id),
+      id: String(data.donationHead._id || data.donationHead.id),
       name: data.donationHead.name,
     };
 

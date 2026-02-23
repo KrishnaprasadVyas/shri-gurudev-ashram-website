@@ -97,7 +97,7 @@ const Step1AmountSelection = ({ data, updateData, nextStep }) => {
     // Validate donation cause is selected
     if (
       !data.donationHead ||
-      !data.donationHead.id ||
+      (!data.donationHead._id && !data.donationHead.id) ||
       !data.donationHead.name
     ) {
       newErrors.cause = t("donation.step1.selectCauseFirst");
