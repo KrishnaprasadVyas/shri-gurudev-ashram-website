@@ -7,7 +7,7 @@ const crypto = require("crypto");
 const User = require("../models/User");
 const Otp = require("../models/Otp");
 const bcrypt = require("bcrypt");
-const { generateDonationReceipt } = require("../services/receipt.service");
+const { generateDonationReceipt, getReceiptPublicUrl } = require("../services/receipt.service");
 const { sendDonationReceiptEmail } = require("../services/email.service");
 const { sendLoginOtp } = require("../services/whatsapp.service");
 const { resolveCollector, getTopCollectors, getCollectorStats, validateReferralCode } = require("../services/collector.service");
@@ -450,7 +450,8 @@ exports.getDonationStatus = async (req, res) => {
 /**
  * Download donation receipt
  * PUBLIC endpoint - accessible via donationId (acts as access token)
- * Streams the existing PDF - does NOT regenerate
+ * ALWAYS regenerates the PDF using the current template so that
+ * both "just after payment" and "My Donations" downloads are identical.
  * Only returns receipt if donation.status === "SUCCESS"
  */
 exports.downloadReceipt = async (req, res) => {
@@ -475,55 +476,34 @@ exports.downloadReceipt = async (req, res) => {
         .json({ message: "Receipt not available for this donation" });
     }
 
-    // Determine expected receipt file path
-    const expectedFileName = `receipt_${donation._id}.pdf`;
-    const receiptPath = path.join(
-      __dirname,
-      "../../receipts",
-      donation.receiptUrl ? path.basename(donation.receiptUrl) : expectedFileName,
-    );
-
-    // If receipt file doesn't exist, regenerate it on-the-fly
-    if (!fs.existsSync(receiptPath)) {
-      try {
-        // Ensure donation has a receipt number
-        if (!donation.receiptNumber) {
-          donation.receiptNumber = `GRD-${new Date(donation.createdAt).getFullYear()}-${donation._id.toString().slice(-6).toUpperCase()}`;
-        }
-
-        const generatedPath = await generateDonationReceipt(donation);
-
-        if (generatedPath && fs.existsSync(generatedPath)) {
-          // Update donation record with new receipt URL
-          donation.receiptUrl = `/receipts/${path.basename(generatedPath)}`;
-          await donation.save();
-        } else {
-          return res.status(500).json({ message: "Failed to generate receipt" });
-        }
-
-        // Use the newly generated path
-        const filename = `receipt-${donation.receiptNumber || donation._id}.pdf`;
-        res.setHeader("Content-Type", "application/pdf");
-        res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-        const fileStream = fs.createReadStream(generatedPath);
-        fileStream.pipe(res);
-        return;
-      } catch (genErr) {
-        console.error("Receipt regeneration error:", genErr);
-        return res.status(500).json({ message: "Failed to generate receipt" });
-      }
+    // Ensure donation has a receipt number before generating
+    if (!donation.receiptNumber) {
+      donation.receiptNumber = `GRD-${new Date(donation.createdAt).getFullYear()}-${donation._id.toString().slice(-6).toUpperCase()}`;
     }
 
-    // Set headers for PDF download
+    // Always regenerate the PDF so that every download uses the current
+    // template (prevents stale cached files with outdated layout).
+    const generatedPath = await generateDonationReceipt(donation);
+
+    if (!generatedPath || !fs.existsSync(generatedPath)) {
+      return res.status(500).json({ message: "Failed to generate receipt" });
+    }
+
+    // Persist receiptUrl if it was missing or has changed
+    const publicUrl = getReceiptPublicUrl(generatedPath);
+    if (donation.receiptUrl !== publicUrl) {
+      donation.receiptUrl = publicUrl;
+      await donation.save();
+    }
+
+    // Stream the freshly-generated PDF
     const filename = `receipt-${donation.receiptNumber || donation._id}.pdf`;
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-
-    // Stream the file
-    const fileStream = fs.createReadStream(receiptPath);
+    const fileStream = fs.createReadStream(generatedPath);
     fileStream.pipe(res);
   } catch (err) {
-    console.error(err);
+    console.error("Receipt download error:", err);
     res.status(500).json({ message: "Failed to download receipt" });
   }
 };

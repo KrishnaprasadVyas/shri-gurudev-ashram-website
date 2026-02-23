@@ -2,7 +2,7 @@ const Donation = require("../models/Donation");
 const User = require("../models/User");
 const path = require("path");
 const fs = require("fs");
-const { generateDonationReceipt } = require("../services/receipt.service");
+const { generateDonationReceipt, getReceiptPublicUrl } = require("../services/receipt.service");
 const { sendDonationReceiptEmail } = require("../services/email.service");
 const { getKycDocumentPath, deleteKycDocuments } = require("../services/kyc.service");
 const { assignReferralCode } = require("../services/collector.service");
@@ -241,7 +241,7 @@ exports.createCashDonation = async (req, res) => {
     try {
       // Generate receipt PDF (function uses donation.receiptNumber)
       const receiptPath = await generateDonationReceipt(donation);
-      donation.receiptUrl = `/receipts/${path.basename(receiptPath)}`;
+      donation.receiptUrl = getReceiptPublicUrl(receiptPath);
       await donation.save();
 
       // Send email if email is provided and valid
