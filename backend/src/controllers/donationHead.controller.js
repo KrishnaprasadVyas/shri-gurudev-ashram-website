@@ -1,5 +1,6 @@
 const DonationHead = require("../models/DonationHead");
 const Donation = require("../models/Donation");
+const imageService = require("../services/image.service");
 
 /**
  * DONATION HEAD CONTROLLER
@@ -710,6 +711,44 @@ exports.deleteSubCause = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to delete sub-cause",
+    });
+  }
+};
+
+// ==================== IMAGE UPLOAD ====================
+
+/**
+ * POST /api/admin/website/donation-heads/upload
+ * Upload image for donation head
+ */
+exports.uploadImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No image file provided",
+      });
+    }
+
+    const result = await imageService.processAndSaveImage(
+      req.file.buffer,
+      req.file.originalname
+    );
+
+    res.status(201).json({
+      success: true,
+      message: "Image uploaded successfully",
+      data: {
+        url: result.url,
+        thumbnailUrl: result.thumbnailUrl,
+        originalName: result.originalName,
+      },
+    });
+  } catch (error) {
+    console.error("Error uploading donation head image:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to upload image",
     });
   }
 };

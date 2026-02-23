@@ -27,27 +27,48 @@ const DonationCard = ({ donation }) => {
   const { t } = useTranslation();
 
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow p-6 border border-amber-100">
-      <div className="flex items-start space-x-4">
-        <div className="flex-shrink-0">
-          <CauseIcon
-            iconKey={donation.icon}
-            className="w-12 h-12 text-amber-600 [&>svg]:w-full [&>svg]:h-full [&>svg]:fill-current"
+    <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden border border-amber-100">
+      {/* Image Section */}
+      {donation.imageUrl ? (
+        <div className="h-48 overflow-hidden bg-gradient-to-br from-amber-50 to-orange-50">
+          <img
+            src={donation.imageUrl}
+            alt={donation.name}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.parentElement.innerHTML = `<div class="flex items-center justify-center h-full"><div class="w-16 h-16 text-amber-600 [&>svg]:w-full [&>svg]:h-full [&>svg]:fill-current">${donationIcons[donation.iconKey || donation.icon] || ''}</div></div>`;
+            }}
           />
         </div>
-        <div className="flex-1">
-          <h3 className="text-xl font-bold text-amber-900 mb-2">
+      ) : (
+        <div className="h-48 bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
+          <CauseIcon
+            iconKey={donation.iconKey || donation.icon}
+            className="w-16 h-16 text-amber-600 [&>svg]:w-full [&>svg]:h-full [&>svg]:fill-current"
+          />
+        </div>
+      )}
+      
+      {/* Content Section */}
+      <div className="p-6">
+        <div className="flex items-center gap-2 mb-2">
+          <CauseIcon
+            iconKey={donation.iconKey || donation.icon}
+            className="w-5 h-5 text-amber-600 [&>svg]:w-full [&>svg]:h-full [&>svg]:fill-current"
+          />
+          <h3 className="text-xl font-bold text-amber-900">
             {donation.name}
           </h3>
-          <p className="text-gray-600 mb-4">{donation.description}</p>
-          <Link
-            to="/donate"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-md transition-colors text-sm font-medium"
-          >
-            <HeartIcon className="w-4 h-4" />
-            {t("donation.donateNow")}
-          </Link>
         </div>
+        <p className="text-gray-600 mb-4 text-sm">{donation.description}</p>
+        <Link
+          to="/donate"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-md transition-colors text-sm font-medium w-full justify-center"
+        >
+          <HeartIcon className="w-4 h-4" />
+          {t("donation.donateNow")}
+        </Link>
       </div>
     </div>
   );

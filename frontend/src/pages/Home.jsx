@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import HeroSection from "../components/HeroSection";
@@ -6,9 +7,9 @@ import ProgramCard from "../components/ProgramCard";
 import EventCard from "../components/EventCard";
 import DonationCard from "../components/DonationCard";
 import CTABanner from "../components/CTABanner";
-import { donationHeads } from "../data/dummyData";
 import { useEvents } from "../context/EventsContext";
 import { useActivities } from "../context/ActivitiesContext";
+import { API_BASE_URL } from "../utils/api";
 
 const Home = () => {
   const { t } = useTranslation();
@@ -18,6 +19,27 @@ const Home = () => {
   const upcomingEvents = getVisibleEvents()
     .filter((e) => e.status === "upcoming")
     .slice(0, 3);
+  
+  const [featuredCauses, setFeaturedCauses] = useState([]);
+  const [loadingCauses, setLoadingCauses] = useState(true);
+
+  useEffect(() => {
+    const fetchFeaturedCauses = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/public/donation-heads/featured?limit=3`);
+        const data = await response.json();
+        if (data.success) {
+          setFeaturedCauses(data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching featured causes:", error);
+      } finally {
+        setLoadingCauses(false);
+      }
+    };
+
+    fetchFeaturedCauses();
+  }, []);
 
   return (
     <>
@@ -224,11 +246,17 @@ const Home = () => {
             subtitle={t("home.supportSubtitle")}
             center={true}
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {donationHeads.slice(0, 3).map((head) => (
-              <DonationCard key={head.id} donation={head} />
-            ))}
-          </div>
+          {loadingCauses ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredCauses.map((head) => (
+                <DonationCard key={head._id} donation={head} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

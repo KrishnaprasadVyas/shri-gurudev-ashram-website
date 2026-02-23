@@ -199,6 +199,15 @@ router.put(
 
 // ==================== DONATION HEADS / CAUSES ====================
 
+// Donation head image upload
+router.post(
+  "/donation-heads/upload",
+  adminAuth,
+  uploadSingleImage,
+  handleUploadError,
+  donationHeadController.uploadImage,
+);
+
 router.get(
   "/donation-heads",
   adminAuth,

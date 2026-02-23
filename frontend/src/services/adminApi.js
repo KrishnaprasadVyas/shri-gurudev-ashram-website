@@ -8,20 +8,30 @@ import { API_BASE_URL, getAuthToken, parseJsonResponse } from '../utils/api';
 /**
  * Create headers with auth token
  */
-const getAuthHeaders = () => ({
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${getAuthToken()}`,
-});
+const getAuthHeaders = (isFormData = false) => {
+  const headers = {
+    Authorization: `Bearer ${getAuthToken()}`,
+  };
+  
+  // Don't set Content-Type for FormData - browser will set it automatically with boundary
+  if (!isFormData) {
+    headers["Content-Type"] = "application/json";
+  }
+  
+  return headers;
+};
 
 /**
  * Generic API request handler with proper error handling
  */
 const apiRequest = async (endpoint, options = {}) => {
+  const { isFormData, ...fetchOptions } = options;
+  
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
+    ...fetchOptions,
     headers: {
-      ...getAuthHeaders(),
-      ...options.headers,
+      ...getAuthHeaders(isFormData),
+      ...fetchOptions.headers,
     },
   });
 
@@ -468,6 +478,17 @@ export const donationHeadsApi = {
       method: "PUT",
       body: JSON.stringify({ orderedIds }),
     }),
+
+  // Upload image
+  uploadImage: (file) => {
+    const formData = new FormData();
+    formData.append("image", file);
+    return apiRequest("/admin/website/donation-heads/upload", {
+      method: "POST",
+      body: formData,
+      isFormData: true,
+    });
+  },
 
   // Get active donation heads (public)
   getActive: () => apiRequest("/public/donation-heads"),

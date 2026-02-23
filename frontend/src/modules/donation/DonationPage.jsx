@@ -4,8 +4,9 @@ import { useTranslation } from "react-i18next";
 import SectionHeading from "../../components/SectionHeading";
 import DonationFlow from "./DonationFlow";
 import DonorList from "./DonorList";
-import { donationHeads, donationIcons } from "../../data/dummyData";
+import { donationIcons } from "../../data/dummyData";
 import { validateReferralCode } from "../../services/collectorApi";
+import { API_BASE_URL } from "../../utils/api";
 
 // Heart Icon for donate button
 const HeartIcon = ({ className }) => (
@@ -35,6 +36,8 @@ const DonationPage = () => {
   const [selectedCause, setSelectedCause] = useState(null);
   const [imageErrors, setImageErrors] = useState({});
   const [searchParams] = useSearchParams();
+  const [donationHeads, setDonationHeads] = useState([]);
+  const [loadingHeads, setLoadingHeads] = useState(true);
 
   // Referral state from URL params
   const [referralData, setReferralData] = useState({
@@ -52,8 +55,29 @@ const DonationPage = () => {
   const [manualReferralInput, setManualReferralInput] = useState("");
   const [manualReferralLoading, setManualReferralLoading] = useState(false);
 
+  // Fetch donation heads from API
+  useEffect(() => {
+    const fetchDonationHeads = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/public/donation-heads`);
+        const data = await response.json();
+        if (data.success) {
+          setDonationHeads(data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching donation heads:", error);
+      } finally {
+        setLoadingHeads(false);
+      }
+    };
+
+    fetchDonationHeads();
+  }, []);
+
   // Handle URL parameters: ref, cause, amount
   useEffect(() => {
+    if (loadingHeads) return; // Wait for donation heads to load
+
     const refCode = searchParams.get("ref");
     const causeName = searchParams.get("cause");
     const amount = searchParams.get("amount");
@@ -74,7 +98,7 @@ const DonationPage = () => {
       }
     } else if (quickDonate === "true") {
       // Fallback to Quick Donate behavior
-      const generalSeva = donationHeads.find((h) => h.name === "General Seva");
+      const generalSeva = donationHeads.find((h) => h.name === "General Seva" || h.key === "general");
       if (generalSeva) {
         setSelectedCause(generalSeva);
       }
@@ -99,7 +123,7 @@ const DonationPage = () => {
         }
       }, 300);
     }
-  }, [searchParams]);
+  }, [searchParams, donationHeads, loadingHeads]);
 
   // Validate referral code via backend
   const handleValidateReferralCode = async (code) => {
@@ -222,72 +246,79 @@ const DonationPage = () => {
           />
 
           {/* Donation Heads */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            {donationHeads.map((head) => (
-              <button
-                key={head.id}
-                onClick={() => handleCauseSelect(head)}
-                className={`rounded-lg border transition-all text-left overflow-hidden ${
-                  selectedCause?.id === head.id
-                    ? "border-amber-600 border-4 bg-amber-50 shadow-lg"
-                    : "border-amber-200 bg-amber-50 hover:border-amber-400 hover:shadow-md"
-                }`}
-              >
-                <div className="w-full aspect-[4/3] overflow-hidden bg-amber-100 flex items-center justify-center">
-                  {imageErrors[head.id] ? (
-                    <div className="w-full h-full flex items-center justify-center text-amber-600 text-4xl font-bold">
-                      {head.name.charAt(0)}
-                    </div>
-                  ) : (
-                    <img
-                      src={head.image}
-                      alt={head.name}
-                      className="w-full h-full object-cover"
-                      onError={() => handleImageError(head.id)}
-                    />
-                  )}
-                </div>
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      {head.icon && (
-                        <CauseIcon
-                          iconKey={head.icon}
-                          className="w-5 h-5 text-amber-600 flex-shrink-0 [&>svg]:w-full [&>svg]:h-full"
-                        />
-                      )}
-                      <h3 className="text-lg font-bold text-amber-900">
-                        {head.name}
-                      </h3>
-                    </div>
-                    {selectedCause?.id === head.id && (
-                      <span className="text-amber-600">
-                        <svg
-                          className="w-5 h-5"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </span>
+          {loadingHeads ? (
+            <div className="flex justify-center items-center py-12 mb-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+              {donationHeads.map((head) => (
+                <button
+                  key={head._id}
+                  onClick={() => handleCauseSelect(head)}
+                  className={`rounded-lg border transition-all text-left overflow-hidden ${
+                    selectedCause?._id === head._id
+                      ? "border-amber-600 border-4 bg-amber-50 shadow-lg"
+                      : "border-amber-200 bg-amber-50 hover:border-amber-400 hover:shadow-md"
+                  }`}
+                >
+                  <div className="w-full aspect-[4/3] overflow-hidden bg-amber-100 flex items-center justify-center">
+                    {imageErrors[head._id] || !head.imageUrl ? (
+                      <CauseIcon
+                        iconKey={head.iconKey || head.icon}
+                        className="w-20 h-20 text-amber-600 flex-shrink-0 [&>svg]:w-full [&>svg]:h-full"
+                      />
+                    ) : (
+                      <img
+                        src={head.imageUrl}
+                        alt={head.name}
+                        className="w-full h-full object-cover"
+                        onError={() => handleImageError(head._id)}
+                      />
                     )}
                   </div>
-                  <p className="text-gray-600 text-sm">{head.description}</p>
-                  {head.minAmount && (
-                    <p className="text-xs text-amber-700 mt-1 font-medium">
-                      {t("donation.minDonation", {
-                        amount: head.minAmount.toLocaleString("en-IN"),
-                      })}
-                    </p>
-                  )}
-                </div>
-              </button>
-            ))}
-          </div>
+                  <div className="p-4">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        {(head.iconKey || head.icon) && (
+                          <CauseIcon
+                            iconKey={head.iconKey || head.icon}
+                            className="w-5 h-5 text-amber-600 flex-shrink-0 [&>svg]:w-full [&>svg]:h-full"
+                          />
+                        )}
+                        <h3 className="text-lg font-bold text-amber-900">
+                          {head.name}
+                        </h3>
+                      </div>
+                      {selectedCause?._id === head._id && (
+                        <span className="text-amber-600">
+                          <svg
+                            className="w-5 h-5"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-gray-600 text-sm">{head.description}</p>
+                    {head.minAmount && (
+                      <p className="text-xs text-amber-700 mt-1 font-medium">
+                        {t("donation.minDonation", {
+                          amount: head.minAmount.toLocaleString("en-IN"),
+                        })}
+                      </p>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Impact Section */}
           <div className="bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-lg p-8 mb-12">
