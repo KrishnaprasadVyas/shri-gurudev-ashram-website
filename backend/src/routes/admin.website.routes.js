@@ -23,6 +23,7 @@ const testimonialController = require("../controllers/testimonial.controller");
 const donationHeadController = require("../controllers/donationHead.controller");
 const galleryController = require("../controllers/gallery.controller");
 const productController = require("../controllers/product.controller");
+const siteConfigController = require("../controllers/siteConfig.controller");
 
 // All routes require auth and WEBSITE_ADMIN or SYSTEM_ADMIN role
 const adminAuth = [auth, authorize("WEBSITE_ADMIN", "SYSTEM_ADMIN")];
@@ -367,6 +368,18 @@ router.delete(
   "/products/categories/:id",
   adminAuthWithId,
   productController.deleteCategory,
+);
+
+// ==================== SITE CONFIG ====================
+
+// GET /api/admin/website/site-config - Get site config
+router.get("/site-config", adminAuth, siteConfigController.getSiteConfig);
+
+// PUT /api/admin/website/site-config/live-link - Update live link
+router.put(
+  "/site-config/live-link",
+  adminAuth,
+  siteConfigController.updateLiveLink,
 );
 
 module.exports = router;
