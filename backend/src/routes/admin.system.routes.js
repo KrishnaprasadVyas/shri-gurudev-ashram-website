@@ -18,6 +18,14 @@ router.post(
   adminController.createCashDonation
 );
 
+// Alias: /donations/offline -> same handler (supports CASH, UPI, CHEQUE)
+router.post(
+  "/donations/offline",
+  auth,
+  authorize("SYSTEM_ADMIN"),
+  adminController.createCashDonation
+);
+
 router.get(
   "/donors",
   auth,

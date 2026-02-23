@@ -315,7 +315,13 @@ y = 50 + imageSize + 20; // Move title up more
         },
         {
           label: "Address",
-          value: donation.donor.address || "-"
+          value: (() => {
+            const addr = donation.donor?.addressObj;
+            if (addr && (addr.line || addr.city)) {
+              return [addr.line, addr.city, addr.state, addr.country, addr.pincode].filter(Boolean).join(", ");
+            }
+            return donation.donor.address || "-";
+          })()
         },
         {
           label: "PAN",
@@ -327,7 +333,7 @@ y = 50 + imageSize + 20; // Move title up more
         },
         {
           label: "Payment Mode",
-          value: donation.paymentMode || "Cash"
+          value: donation.payment?.method || donation.paymentMethod || donation.paymentMode || "Cash"
         },
         {
           label: "Donation Amount",

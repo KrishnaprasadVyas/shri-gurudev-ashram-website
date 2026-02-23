@@ -208,17 +208,34 @@ exports.createDonation = async (req, res) => {
       emailOptIn,
       emailVerified,
       address,
+      addressObj,
       anonymousDisplay,
       dob,
       idType,
       idNumber,
     } = donor;
 
-    if (!name || !mobile || !address || !dob || !idType || !idNumber) {
+    // Address can come as legacy string OR structured addressObj
+    const hasAddress = address || (addressObj && (addressObj.line || addressObj.city));
+    if (!name || !mobile || !hasAddress || !dob || !idType || !idNumber) {
       return res
         .status(400)
         .json({ message: "Missing required donor details" });
     }
+
+    // Build structured address if provided by new frontend
+    const structuredAddress = addressObj ? {
+      line: addressObj.line || "",
+      city: addressObj.city || "",
+      state: addressObj.state || "",
+      country: addressObj.country || "India",
+      pincode: addressObj.pincode || "",
+    } : undefined;
+
+    // Build legacy address string for backward compatibility
+    const legacyAddress = address || (structuredAddress
+      ? [structuredAddress.line, structuredAddress.city, structuredAddress.state, structuredAddress.country, structuredAddress.pincode].filter(Boolean).join(", ")
+      : "");
 
     // Validate donationHead object - must have valid id and name (not empty, not "null" string)
     if (!donationHead || 
@@ -275,7 +292,8 @@ exports.createDonation = async (req, res) => {
         email: email || undefined,
         emailOptIn: emailOptIn || false,
         emailVerified: emailVerified || false,
-        address,
+        address: legacyAddress,
+        addressObj: structuredAddress || undefined,
         anonymousDisplay: anonymousDisplay || false,
         dob: new Date(dob),
         idType,
