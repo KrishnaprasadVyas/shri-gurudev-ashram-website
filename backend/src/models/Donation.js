@@ -177,6 +177,7 @@ donationSchema.statics.extractCityFromString = extractCityFromString;
 
 // Index for user donations lookup
 donationSchema.index({ user: 1, createdAt: -1 });
+donationSchema.index({ user: 1, status: 1, createdAt: -1 }); // last-profile: find latest successful donation per user
 donationSchema.index({ collectorId: 1, createdAt: -1 }); // Leaderboard & collector stats
 donationSchema.index({ hasCollectorAttribution: 1, status: 1 }); // BUG FIX: Optimized collector queries
 donationSchema.index({ "donor.mobile": 1 });

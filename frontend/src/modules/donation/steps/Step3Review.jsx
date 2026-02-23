@@ -76,7 +76,9 @@ const Step3Review = ({ data, updateData, nextStep, prevStep }) => {
                 {t("donation.step3.addressLabel")}
               </span>
               <span className="font-semibold text-gray-900 text-right max-w-xs">
-                {data.address || t("donation.step3.notProvided")}
+                {[data.addressLine, data.addressCity, data.addressState, data.addressPincode, data.addressCountry]
+                  .filter(Boolean)
+                  .join(", ") || t("donation.step3.notProvided")}
               </span>
             </div>
             {data.pan && (

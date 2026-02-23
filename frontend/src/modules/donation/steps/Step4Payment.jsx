@@ -62,13 +62,27 @@ const Step4Payment = ({ data, updateData, nextStep, prevStep }) => {
    */
   const createDonation = async () => {
     // Build donor object with all details from Step2
+    const addressObj = {
+      line: (data.addressLine || "").trim(),
+      city: (data.addressCity || "").trim(),
+      state: (data.addressState || "").trim(),
+      country: (data.addressCountry || "India").trim(),
+      pincode: (data.addressPincode || "").trim(),
+    };
+
+    // Compose legacy address string for backward compatibility
+    const legacyAddress = [addressObj.line, addressObj.city, addressObj.state, addressObj.country, addressObj.pincode]
+      .filter(Boolean)
+      .join(", ");
+
     const donor = {
       name: data.name,
       mobile: data.mobile,
       email: data.email || undefined,
       emailOptIn: data.emailOptIn || false,
       emailVerified: data.emailVerified || false,
-      address: data.address,
+      address: legacyAddress, // backward compat for older backend versions
+      addressObj, // structured address
       anonymousDisplay: data.anonymousDisplay || false,
       dob: data.dateOfBirth, // YYYY-MM-DD format
       idType: "PAN",

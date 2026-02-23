@@ -39,7 +39,13 @@ const DonationFlow = ({
     email: "",
     emailOptIn: false,
     emailVerified: false,
-    address: "",
+
+    // Structured address fields (matches admin CashDonationForm)
+    addressLine: "",
+    addressCity: "",
+    addressState: "",
+    addressCountry: "India",
+    addressPincode: "",
 
     // Government ID - PAN mandatory
     pan: "",
@@ -139,7 +145,11 @@ const DonationFlow = ({
       email: "",
       emailOptIn: false,
       emailVerified: false,
-      address: "",
+      addressLine: "",
+      addressCity: "",
+      addressState: "",
+      addressCountry: "India",
+      addressPincode: "",
       pan: "",
       dateOfBirth: "",
       anonymousDisplay: false,

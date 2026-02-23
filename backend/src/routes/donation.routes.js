@@ -12,6 +12,7 @@ const {
   verifyDonationOtp,
   getLeaderboard,
   getMyCollectorStats,
+  getLastDonorProfile,
 } = require("../controllers/donation.controller");
 
 // OTP endpoints for donation verification (rate limited by IP + mobile)
@@ -32,6 +33,9 @@ router.post("/create-order", donationCreateLimiter, optionalAuthMiddleware, crea
 // Collector/Leaderboard endpoints
 router.get("/leaderboard", getLeaderboard); // Public - top collectors
 router.get("/my-collector-stats", authMiddleware, getMyCollectorStats); // Requires auth
+
+// Donor profile auto-fill (must be above /:id routes to avoid path collision)
+router.get("/me/last-profile", authMiddleware, getLastDonorProfile);
 
 // Public endpoints - no auth required (donationId acts as access token)
 router.get("/:id/status", validateObjectId("id"), getDonationStatus);

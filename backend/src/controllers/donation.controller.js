@@ -529,6 +529,83 @@ exports.downloadReceipt = async (req, res) => {
 };
 
 /**
+ * Get last donor profile for authenticated user
+ * GET /donations/me/last-profile
+ *
+ * Returns safe donor fields from the latest successful donation
+ * so the frontend can auto-fill the donation form for returning donors.
+ *
+ * Security:
+ * - Requires authentication (JWT)
+ * - Never returns payment details, amount, referral, or internal IDs
+ * - Only returns donor snapshot fields
+ *
+ * Backward compatibility:
+ * - Supports both structured addressObj and legacy address string
+ * - Returns 404 with empty body if no past donation (frontend fails silently)
+ */
+exports.getLastDonorProfile = async (req, res) => {
+  try {
+    if (!req.user?.id) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    // Find latest successful donation by this user
+    // Uses compound index: { user: 1, status: 1, createdAt: -1 }
+    const donation = await Donation.findOne(
+      { user: req.user.id, status: "SUCCESS" },
+      {
+        // Project only the safe donor fields we need
+        "donor.name": 1,
+        "donor.mobile": 1,
+        "donor.email": 1,
+        "donor.address": 1,
+        "donor.addressObj": 1,
+        "donor.dob": 1,
+        "donor.idNumber": 1,
+        _id: 0,
+      }
+    ).sort({ createdAt: -1 }).lean();
+
+    if (!donation) {
+      return res.status(404).json({ message: "No past donation found" });
+    }
+
+    const { donor } = donation;
+
+    // Build safe response payload
+    const profile = {
+      fullName: donor.name || "",
+      mobile: donor.mobile || "",
+      email: donor.email || "",
+      panNumber: donor.idNumber || "",
+      dob: donor.dob || null,
+    };
+
+    // Include structured address if available
+    if (donor.addressObj && (donor.addressObj.line || donor.addressObj.city)) {
+      profile.addressObj = {
+        line: donor.addressObj.line || "",
+        city: donor.addressObj.city || "",
+        state: donor.addressObj.state || "",
+        country: donor.addressObj.country || "India",
+        pincode: donor.addressObj.pincode || "",
+      };
+    }
+
+    // Include legacy address string for backward compatibility
+    if (donor.address) {
+      profile.address = donor.address;
+    }
+
+    res.json(profile);
+  } catch (error) {
+    console.error("Get last donor profile error:", error);
+    res.status(500).json({ message: "Failed to fetch donor profile" });
+  }
+};
+
+/**
  * Get top collectors leaderboard
  * GET /donations/leaderboard
  * Returns top 5 collectors ranked by total donation amount
