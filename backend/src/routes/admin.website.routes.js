@@ -17,6 +17,7 @@ const {
 
 // Import controllers
 const announcementController = require("../controllers/announcement.controller");
+const bannerController = require("../controllers/banner.controller");
 const activityController = require("../controllers/activity.controller");
 const eventController = require("../controllers/event.controller");
 const testimonialController = require("../controllers/testimonial.controller");
@@ -64,13 +65,51 @@ router.patch(
   announcementController.toggleAnnouncementStatus,
 );
 
+// ==================== BANNERS (Hero Slider) ====================
+
+router.get("/banners", adminAuth, bannerController.getAllBanners);
+router.get("/banners/:id", adminAuthWithId, bannerController.getBannerById);
+router.post(
+  "/banners",
+  adminAuth,
+  uploadSingleImage,
+  handleUploadError,
+  bannerController.createBanner,
+);
+router.put(
+  "/banners/:id",
+  adminAuthWithId,
+  uploadSingleImage,
+  handleUploadError,
+  bannerController.updateBanner,
+);
+router.delete("/banners/:id", adminAuthWithId, bannerController.deleteBanner);
+router.patch(
+  "/banners/:id/toggle",
+  adminAuthWithId,
+  bannerController.toggleBannerStatus,
+);
+router.put("/banners/reorder", adminAuth, bannerController.reorderBanners);
+
 // ==================== ACTIVITIES ====================
 
 router.get("/activities", adminAuth, activityController.getAllActivities);
-router.get("/activities/:id", adminAuthWithId, activityController.getActivityById);
+router.get(
+  "/activities/:id",
+  adminAuthWithId,
+  activityController.getActivityById,
+);
 router.post("/activities", adminAuth, activityController.createActivity);
-router.put("/activities/:id", adminAuthWithId, activityController.updateActivity);
-router.delete("/activities/:id", adminAuthWithId, activityController.deleteActivity);
+router.put(
+  "/activities/:id",
+  adminAuthWithId,
+  activityController.updateActivity,
+);
+router.delete(
+  "/activities/:id",
+  adminAuthWithId,
+  activityController.deleteActivity,
+);
 router.patch(
   "/activities/:id/toggle",
   adminAuthWithId,
@@ -260,9 +299,17 @@ router.delete(
 // ==================== GALLERY ====================
 
 router.get("/gallery", adminAuth, galleryController.getAllGalleryCategories);
-router.get("/gallery/:id", adminAuthWithId, galleryController.getGalleryCategoryById);
+router.get(
+  "/gallery/:id",
+  adminAuthWithId,
+  galleryController.getGalleryCategoryById,
+);
 router.post("/gallery", adminAuth, galleryController.createGalleryCategory);
-router.put("/gallery/:id", adminAuthWithId, galleryController.updateGalleryCategory);
+router.put(
+  "/gallery/:id",
+  adminAuthWithId,
+  galleryController.updateGalleryCategory,
+);
 router.delete(
   "/gallery/:id",
   adminAuthWithId,
@@ -341,7 +388,11 @@ router.get(
 router.get("/products/:id", adminAuthWithId, productController.getProductById);
 router.post("/products", adminAuth, productController.createProduct);
 router.put("/products/:id", adminAuthWithId, productController.updateProduct);
-router.delete("/products/:id", adminAuthWithId, productController.deleteProduct);
+router.delete(
+  "/products/:id",
+  adminAuthWithId,
+  productController.deleteProduct,
+);
 router.patch(
   "/products/:id/toggle",
   adminAuthWithId,

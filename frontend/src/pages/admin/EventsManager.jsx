@@ -3,6 +3,15 @@ import { useEvents } from "../../context/EventsContext";
 import { eventsApi } from "../../services/adminApi";
 import { formatDate } from "../../utils/helpers";
 import { Loader2, Upload, Trash2 } from "lucide-react";
+import MultilingualInput from "../../components/admin/MultilingualInput";
+
+const toDisplayText = (val) => {
+  if (typeof val === "string") return val;
+  if (val && typeof val === "object") {
+    return val.en || val.hi || val.mr || "";
+  }
+  return "";
+};
 
 const EventsManager = () => {
   const {
@@ -24,13 +33,13 @@ const EventsManager = () => {
   const [toast, setToast] = useState(null);
   const imageInputRef = useRef(null);
   const [formData, setFormData] = useState({
-    title: "",
-    description: "",
+    title: { en: "", hi: "", mr: "" },
+    description: { en: "", hi: "", mr: "" },
     date: "",
     imageUrl: "",
     visible: true,
     time: "",
-    location: "",
+    location: { en: "", hi: "", mr: "" },
   });
 
   // Fetch events on mount
@@ -50,27 +59,31 @@ const EventsManager = () => {
   const handleAdd = () => {
     setEditingItem(null);
     setFormData({
-      title: "",
-      description: "",
+      title: { en: "", hi: "", mr: "" },
+      description: { en: "", hi: "", mr: "" },
       date: "",
       imageUrl: "",
       visible: true,
       time: "",
-      location: "",
+      location: { en: "", hi: "", mr: "" },
     });
     setShowAddForm(true);
   };
 
   const handleEdit = (item) => {
     setEditingItem(item);
+    const toMultilingual = (val) =>
+      typeof val === "object" && val !== null
+        ? val
+        : { en: val || "", hi: "", mr: "" };
     setFormData({
-      title: item.title,
-      description: item.description,
+      title: toMultilingual(item.title),
+      description: toMultilingual(item.description),
       date: item.date,
       imageUrl: item.imageUrl,
       visible: item.visible,
       time: item.time || "",
-      location: item.location || "",
+      location: toMultilingual(item.location),
     });
     setShowAddForm(true);
   };
@@ -89,13 +102,13 @@ const EventsManager = () => {
       setShowAddForm(false);
       setEditingItem(null);
       setFormData({
-        title: "",
-        description: "",
+        title: { en: "", hi: "", mr: "" },
+        description: { en: "", hi: "", mr: "" },
         date: "",
         imageUrl: "",
         visible: true,
         time: "",
-        location: "",
+        location: { en: "", hi: "", mr: "" },
       });
     } catch (err) {
       console.error("Error saving event:", err);
@@ -106,7 +119,7 @@ const EventsManager = () => {
   };
 
   const handleDelete = async (item) => {
-    if (window.confirm(`Delete "${item.title}"?`)) {
+    if (window.confirm(`Delete "${toDisplayText(item.title)}"?`)) {
       try {
         await deleteEvent(item.id || item._id);
         showToast("Event deleted successfully");
@@ -131,13 +144,13 @@ const EventsManager = () => {
     setShowAddForm(false);
     setEditingItem(null);
     setFormData({
-      title: "",
-      description: "",
+      title: { en: "", hi: "", mr: "" },
+      description: { en: "", hi: "", mr: "" },
       date: "",
       imageUrl: "",
       visible: true,
       time: "",
-      location: "",
+      location: { en: "", hi: "", mr: "" },
     });
   };
 
@@ -212,7 +225,7 @@ const EventsManager = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-2">
                   <h3 className="font-semibold text-gray-900 truncate">
-                    {item.title}
+                    {toDisplayText(item.title)}
                   </h3>
                   <span
                     className={`px-2 py-1 text-xs font-medium rounded-md ${
@@ -319,36 +332,23 @@ const EventsManager = () => {
               {editingItem ? "Edit Event" : "Add Event"}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-1">
-                  Title *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  placeholder="Enter event title"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-1">
-                  Description *
-                </label>
-                <textarea
-                  required
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  placeholder="Enter event description"
-                />
-              </div>
+              <MultilingualInput
+                label="Title"
+                value={formData.title}
+                onChange={(val) => setFormData({ ...formData, title: val })}
+                required
+                type="text"
+              />
+              <MultilingualInput
+                label="Description"
+                value={formData.description}
+                onChange={(val) =>
+                  setFormData({ ...formData, description: val })
+                }
+                required
+                type="textarea"
+                rows={4}
+              />
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-800 mb-1">
@@ -379,20 +379,12 @@ const EventsManager = () => {
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-1">
-                  Location
-                </label>
-                <input
-                  type="text"
-                  value={formData.location}
-                  onChange={(e) =>
-                    setFormData({ ...formData, location: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  placeholder="e.g., Main Hall"
-                />
-              </div>
+              <MultilingualInput
+                label="Location"
+                value={formData.location}
+                onChange={(val) => setFormData({ ...formData, location: val })}
+                type="text"
+              />
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-1">
                   Image <span className="text-red-500">*</span>
@@ -408,7 +400,9 @@ const EventsManager = () => {
                       />
                       <button
                         type="button"
-                        onClick={() => setFormData({ ...formData, imageUrl: "" })}
+                        onClick={() =>
+                          setFormData({ ...formData, imageUrl: "" })
+                        }
                         className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full hover:bg-red-700"
                       >
                         <Trash2 className="w-4 h-4" />

@@ -1,38 +1,41 @@
+import i18n from "../i18n";
+
 /**
  * Centralized API Configuration
- * 
+ *
  * All API calls should use this utility to ensure:
  * 1. Correct base URL (relative /api path)
  * 2. Consistent error handling
  * 3. Proper JSON parsing with HTML response detection
- * 
+ * 4. Auto-append ?lang= for public endpoints (multilingual support)
+ *
  * IMPORTANT: Uses relative paths only (/api/...) to work correctly
  * behind Nginx reverse proxy in production.
  */
 
 // Always use relative path - works with Nginx proxy
-export const API_BASE_URL = '/api';
+export const API_BASE_URL = "/api";
 
 /**
  * Get auth token from localStorage
  */
-export const getAuthToken = () => localStorage.getItem('token');
+export const getAuthToken = () => localStorage.getItem("token");
 
 /**
  * Create headers with optional auth token
  */
 export const getAuthHeaders = (includeAuth = true) => {
   const headers = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   };
-  
+
   if (includeAuth) {
     const token = getAuthToken();
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
   }
-  
+
   return headers;
 };
 
@@ -41,7 +44,7 @@ export const getAuthHeaders = (includeAuth = true) => {
  * This happens when Nginx serves index.html for 404s
  */
 const isHtmlResponse = (text) => {
-  return text.trim().startsWith('<!') || text.trim().startsWith('<html');
+  return text.trim().startsWith("<!") || text.trim().startsWith("<html");
 };
 
 /**
@@ -50,12 +53,14 @@ const isHtmlResponse = (text) => {
  */
 export const parseJsonResponse = async (response) => {
   const text = await response.text();
-  
+
   // Check if we got HTML instead of JSON
   if (isHtmlResponse(text)) {
-    throw new Error('API returned HTML instead of JSON. The endpoint may not exist or the server is misconfigured.');
+    throw new Error(
+      "API returned HTML instead of JSON. The endpoint may not exist or the server is misconfigured.",
+    );
   }
-  
+
   // Try to parse as JSON
   try {
     return JSON.parse(text);
@@ -71,7 +76,7 @@ export const parseJsonResponse = async (response) => {
 
 /**
  * Generic API request handler with proper error handling
- * 
+ *
  * @param {string} endpoint - API endpoint (e.g., '/auth/me')
  * @param {object} options - Fetch options
  * @param {boolean} options.includeAuth - Include auth token (default: true)
@@ -79,9 +84,14 @@ export const parseJsonResponse = async (response) => {
  */
 export const apiRequest = async (endpoint, options = {}) => {
   const { includeAuth = true, ...fetchOptions } = options;
-  
-  const url = `${API_BASE_URL}${endpoint}`;
-  
+
+  // Auto-append ?lang= for public endpoints (multilingual support)
+  let url = `${API_BASE_URL}${endpoint}`;
+  if (endpoint.startsWith("/public/")) {
+    const separator = endpoint.includes("?") ? "&" : "?";
+    url += `${separator}lang=${i18n.language || "en"}`;
+  }
+
   const response = await fetch(url, {
     ...fetchOptions,
     headers: {
@@ -89,17 +99,20 @@ export const apiRequest = async (endpoint, options = {}) => {
       ...fetchOptions.headers,
     },
   });
-  
+
   const data = await parseJsonResponse(response);
-  
+
   if (!response.ok) {
-    const errorMessage = data.message || data.error || `Request failed with status ${response.status}`;
+    const errorMessage =
+      data.message ||
+      data.error ||
+      `Request failed with status ${response.status}`;
     const error = new Error(errorMessage);
     error.status = response.status;
     error.data = data;
     throw error;
   }
-  
+
   return data;
 };
 
@@ -107,7 +120,7 @@ export const apiRequest = async (endpoint, options = {}) => {
  * Make a GET request
  */
 export const apiGet = (endpoint, options = {}) => {
-  return apiRequest(endpoint, { ...options, method: 'GET' });
+  return apiRequest(endpoint, { ...options, method: "GET" });
 };
 
 /**
@@ -116,7 +129,7 @@ export const apiGet = (endpoint, options = {}) => {
 export const apiPost = (endpoint, body, options = {}) => {
   return apiRequest(endpoint, {
     ...options,
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify(body),
   });
 };
@@ -127,7 +140,7 @@ export const apiPost = (endpoint, body, options = {}) => {
 export const apiPut = (endpoint, body, options = {}) => {
   return apiRequest(endpoint, {
     ...options,
-    method: 'PUT',
+    method: "PUT",
     body: JSON.stringify(body),
   });
 };
@@ -138,7 +151,7 @@ export const apiPut = (endpoint, body, options = {}) => {
 export const apiPatch = (endpoint, body = {}, options = {}) => {
   return apiRequest(endpoint, {
     ...options,
-    method: 'PATCH',
+    method: "PATCH",
     body: JSON.stringify(body),
   });
 };
@@ -147,7 +160,7 @@ export const apiPatch = (endpoint, body = {}, options = {}) => {
  * Make a DELETE request
  */
 export const apiDelete = (endpoint, options = {}) => {
-  return apiRequest(endpoint, { ...options, method: 'DELETE' });
+  return apiRequest(endpoint, { ...options, method: "DELETE" });
 };
 
 export default {

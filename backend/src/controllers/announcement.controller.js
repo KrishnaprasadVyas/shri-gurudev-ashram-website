@@ -1,4 +1,5 @@
 const Announcement = require("../models/Announcement");
+const { formatArrayWithLanguage } = require("../services/translation.service");
 
 /**
  * ANNOUNCEMENT CONTROLLER
@@ -33,7 +34,11 @@ exports.getActiveAnnouncements = async (req, res) => {
 
     res.json({
       success: true,
-      data: activeAnnouncements,
+      data: formatArrayWithLanguage(
+        activeAnnouncements,
+        "Announcement",
+        req.lang,
+      ),
     });
   } catch (error) {
     console.error("Error fetching announcements:", error);
@@ -124,11 +129,20 @@ exports.getAnnouncementById = async (req, res) => {
  */
 exports.createAnnouncement = async (req, res) => {
   try {
-    const { text, type, isActive, priority, startDate, endDate, linkUrl, linkText } =
-      req.body;
+    const {
+      text,
+      type,
+      isActive,
+      priority,
+      startDate,
+      endDate,
+      linkUrl,
+      linkText,
+    } = req.body;
 
     // Validation
-    if (!text || text.trim().length === 0) {
+    const textEn = typeof text === "object" ? text.en : text;
+    if (!textEn || (typeof textEn === "string" && textEn.trim().length === 0)) {
       return res.status(400).json({
         success: false,
         message: "Announcement text is required",
@@ -144,14 +158,14 @@ exports.createAnnouncement = async (req, res) => {
     }
 
     const announcement = new Announcement({
-      text: text.trim(),
+      text,
       type: type || "info",
       isActive: isActive !== false,
       priority: priority || 0,
       startDate: startDate || null,
       endDate: endDate || null,
       linkUrl: linkUrl || null,
-      linkText: linkText || null,
+      linkText: linkText || "",
       createdBy: req.user.id,
     });
 
@@ -190,8 +204,16 @@ exports.createAnnouncement = async (req, res) => {
  */
 exports.updateAnnouncement = async (req, res) => {
   try {
-    const { text, type, isActive, priority, startDate, endDate, linkUrl, linkText } =
-      req.body;
+    const {
+      text,
+      type,
+      isActive,
+      priority,
+      startDate,
+      endDate,
+      linkUrl,
+      linkText,
+    } = req.body;
 
     const announcement = await Announcement.findById(req.params.id);
 
@@ -203,7 +225,8 @@ exports.updateAnnouncement = async (req, res) => {
     }
 
     // Validate date range
-    const newStartDate = startDate !== undefined ? startDate : announcement.startDate;
+    const newStartDate =
+      startDate !== undefined ? startDate : announcement.startDate;
     const newEndDate = endDate !== undefined ? endDate : announcement.endDate;
 
     if (
@@ -218,7 +241,7 @@ exports.updateAnnouncement = async (req, res) => {
     }
 
     // Update fields
-    if (text !== undefined) announcement.text = text.trim();
+    if (text !== undefined) announcement.text = text;
     if (type !== undefined) announcement.type = type;
     if (isActive !== undefined) announcement.isActive = isActive;
     if (priority !== undefined) announcement.priority = priority;

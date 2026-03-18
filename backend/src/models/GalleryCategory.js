@@ -1,9 +1,13 @@
 const mongoose = require("mongoose");
+const {
+  multilingualField,
+  multilingualFieldRequired,
+} = require("../utils/multilingualField");
 
 /**
  * Gallery Image Schema (embedded)
  * Stores URL and metadata for each image in the category
- * 
+ *
  * URL STRATEGY:
  * - Old images: /assets/Brochure/** (no thumbnailUrl)
  * - New uploads: /uploads/gallery/** (with thumbnailUrl)
@@ -21,16 +25,8 @@ const galleryImageSchema = new mongoose.Schema(
       trim: true,
       default: null,
     },
-    title: {
-      type: String,
-      trim: true,
-      default: "",
-    },
-    altText: {
-      type: String,
-      trim: true,
-      default: "",
-    },
+    title: multilingualField({ default: "" }),
+    altText: multilingualField({ default: "" }),
     order: {
       type: Number,
       default: 0,
@@ -55,11 +51,7 @@ const galleryImageSchema = new mongoose.Schema(
 const galleryCategorySchema = new mongoose.Schema(
   {
     // Category/folder name
-    name: {
-      type: String,
-      required: [true, "Category name is required"],
-      trim: true,
-    },
+    name: multilingualFieldRequired(null, "Category name is required"),
     slug: {
       type: String,
       required: [true, "Category slug is required"],
@@ -67,11 +59,7 @@ const galleryCategorySchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
     },
-    description: {
-      type: String,
-      trim: true,
-      default: "",
-    },
+    description: multilingualField({ default: "" }),
     // Cover image URL (first image or custom)
     coverImageUrl: {
       type: String,
@@ -110,9 +98,11 @@ galleryCategorySchema.index({ isVisible: 1, order: 1 });
 
 // Pre-save middleware to generate slug and set cover image
 galleryCategorySchema.pre("save", function () {
-  // Generate slug if not provided
+  // Generate slug if not provided (use English name, handle both old string and new object format)
   if (!this.slug && this.name) {
-    this.slug = this.name
+    const nameStr =
+      typeof this.name === "object" ? this.name.en || "" : this.name;
+    this.slug = nameStr
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");

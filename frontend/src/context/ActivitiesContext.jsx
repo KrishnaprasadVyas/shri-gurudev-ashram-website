@@ -6,6 +6,7 @@ import {
   useCallback,
 } from "react";
 import { activitiesApi } from "../services/adminApi";
+import i18n from "../i18n";
 
 const ActivitiesContext = createContext();
 
@@ -244,10 +245,10 @@ export const ActivitiesProvider = ({ children }) => {
     return Array.from(categories).filter(Boolean);
   }, [activitiesItems]);
 
-  // Fetch visible activities on mount (for public pages)
+  // Fetch visible activities on mount and when language changes (for public pages)
   useEffect(() => {
     fetchVisibleActivities();
-  }, [fetchVisibleActivities]);
+  }, [fetchVisibleActivities, i18n.language]);
 
   const value = {
     activitiesItems,

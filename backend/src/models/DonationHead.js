@@ -1,4 +1,8 @@
 const mongoose = require("mongoose");
+const {
+  multilingualField,
+  multilingualFieldRequired,
+} = require("../utils/multilingualField");
 
 /**
  * Sub-cause Schema (embedded)
@@ -12,16 +16,8 @@ const subCauseSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
     },
-    name: {
-      type: String,
-      required: [true, "Sub-cause name is required"],
-      trim: true,
-    },
-    description: {
-      type: String,
-      trim: true,
-      default: "",
-    },
+    name: multilingualFieldRequired(null, "Sub-cause name is required"),
+    description: multilingualField({ default: "" }),
     minAmount: {
       type: Number,
       min: 0,
@@ -32,7 +28,7 @@ const subCauseSchema = new mongoose.Schema(
       default: true,
     },
   },
-  { _id: true }
+  { _id: true },
 );
 
 /**
@@ -54,23 +50,10 @@ const donationHeadSchema = new mongoose.Schema(
       lowercase: true,
     },
     // Display name (e.g., "Annadan Seva", "Education")
-    name: {
-      type: String,
-      required: [true, "Donation head name is required"],
-      trim: true,
-    },
-    description: {
-      type: String,
-      required: [true, "Description is required"],
-      trim: true,
-      maxlength: [500, "Description cannot exceed 500 characters"],
-    },
+    name: multilingualFieldRequired(null, "Donation head name is required"),
+    description: multilingualFieldRequired(500, "Description is required"),
     // Detailed description for individual cause page
-    longDescription: {
-      type: String,
-      trim: true,
-      default: "",
-    },
+    longDescription: multilingualField({ default: "" }),
     // Image URL (stored on filesystem/CDN)
     imageUrl: {
       type: String,
@@ -152,7 +135,7 @@ const donationHeadSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Indexes
@@ -163,7 +146,10 @@ donationHeadSchema.index({ isFeatured: 1 });
 // Virtual to get collected percentage
 donationHeadSchema.virtual("collectedPercentage").get(function () {
   if (!this.goalAmount || this.goalAmount === 0) return null;
-  return Math.min(100, Math.round((this.currentAmount / this.goalAmount) * 100));
+  return Math.min(
+    100,
+    Math.round((this.currentAmount / this.goalAmount) * 100),
+  );
 });
 
 // Enable virtuals in JSON

@@ -5,12 +5,17 @@ const path = require("path");
 const fs = require("fs");
 const crypto = require("crypto");
 const User = require("../models/User");
-const Otp = require("../models/Otp");
-const bcrypt = require("bcrypt");
-const { generateDonationReceipt, getReceiptPublicUrl } = require("../services/receipt.service");
+const {
+  generateDonationReceipt,
+  getReceiptPublicUrl,
+} = require("../services/receipt.service");
 const { sendDonationReceiptEmail } = require("../services/email.service");
-const { sendLoginOtp } = require("../services/whatsapp.service");
-const { resolveCollector, getTopCollectors, getCollectorStats, validateReferralCode } = require("../services/collector.service");
+const {
+  resolveCollector,
+  getTopCollectors,
+  getCollectorStats,
+  validateReferralCode,
+} = require("../services/collector.service");
 const { logDonationAttribution } = require("../services/audit.service");
 
 /**
@@ -52,127 +57,6 @@ const validateAge = (dob) => {
 };
 
 /**
- * Send OTP for donation verification
- * POST /donations/send-otp
- */
-exports.sendDonationOtp = async (req, res) => {
-  try {
-    const { mobile } = req.body;
-
-    if (!mobile) {
-      return res.status(400).json({ message: "Mobile number is required" });
-    }
-
-    // Clean mobile number - remove + and any non-digits
-    let cleanMobile = mobile.replace(/[^\d]/g, '');
-
-    // Normalize to 10-digit phone (strip country code if present)
-    const phone10 = cleanMobile.startsWith("91") && cleanMobile.length === 12
-      ? cleanMobile.slice(2)
-      : cleanMobile;
-
-    // Validate phone format (should be 10 digits)
-    if (!/^\d{10}$/.test(phone10)) {
-      return res.status(400).json({ message: "Invalid mobile number format" });
-    }
-
-    // Store the normalized 10-digit mobile for OTP record
-    const storedMobile = phone10;
-
-    // Format phone number for WhatsApp (ensure 91 prefix)
-    const phone = `91${phone10}`;
-
-    // Generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000);
-    const otpHash = await bcrypt.hash(otp.toString(), 10);
-
-    // Delete any existing OTPs for this mobile
-    await Otp.deleteMany({ mobile: storedMobile });
-
-    // Store OTP with 5 min expiry
-    await Otp.create({
-      mobile: storedMobile,
-      otpHash,
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-    });
-
-    // Send OTP via WhatsApp
-    const result = await sendLoginOtp(phone, otp.toString());
-
-    if (!result.success) {
-      // Clean up OTP record if WhatsApp send fails
-      await Otp.deleteMany({ mobile: storedMobile });
-      return res.status(500).json({ 
-        message: "Failed to send OTP. Please try again." 
-      });
-    }
-
-    console.log(`[DONATION OTP] Mobile: ${storedMobile}, OTP sent via WhatsApp`);
-
-    res.json({ message: "OTP sent successfully", mobile: storedMobile });
-  } catch (error) {
-    console.error("Send OTP error:", error);
-    res.status(500).json({ message: "Failed to send OTP" });
-  }
-};
-
-/**
- * Verify OTP for donation
- * POST /donations/verify-otp
- */
-exports.verifyDonationOtp = async (req, res) => {
-  try {
-    const { mobile, otp } = req.body;
-
-    if (!mobile || !otp) {
-      return res.status(400).json({ message: "Mobile and OTP are required" });
-    }
-
-    // Clean the mobile number - remove + and any non-digit characters
-    const cleanMobile = mobile.replace(/[^\d]/g, '');
-    
-    // Extract 10-digit phone number (remove country code 91)
-    const phone = cleanMobile.startsWith('91') && cleanMobile.length === 12
-      ? cleanMobile.slice(2)
-      : cleanMobile;
-
-    // Find the most recent OTP record for this mobile (10-digit or legacy formats)
-    const mobileCandidates = [phone, `91${phone}`];
-    const record = await Otp.findOne({ mobile: { $in: mobileCandidates } }).sort({ _id: -1 });
-
-    if (!record) {
-      return res
-        .status(400)
-        .json({ message: "OTP not found. Please request a new one." });
-    }
-
-    if (record.expiresAt < new Date()) {
-      await Otp.deleteMany({ mobile: { $in: mobileCandidates } });
-      return res
-        .status(400)
-        .json({ message: "OTP expired. Please request a new one." });
-    }
-
-    const isValid = await bcrypt.compare(otp.toString(), record.otpHash);
-
-    if (!isValid) {
-      return res.status(400).json({ message: "Invalid OTP" });
-    }
-
-    // Delete used OTP
-    await Otp.deleteMany({ mobile: { $in: mobileCandidates } });
-
-    res.json({
-      verified: true,
-      message: "OTP verified successfully",
-    });
-  } catch (error) {
-    console.error("Verify OTP error:", error);
-    res.status(500).json({ message: "OTP verification failed" });
-  }
-};
-
-/**
  * Create donation record
  * POST /donations/create
  * Accepts full donor object and stores snapshot
@@ -194,10 +78,16 @@ exports.createDonation = async (req, res) => {
     const numericAmount = Number(amount);
 
     if (!Number.isFinite(numericAmount) || numericAmount < MIN_DONATION) {
-      return res.status(400).json({ message: `Minimum donation amount is ₹${MIN_DONATION}` });
+      return res
+        .status(400)
+        .json({ message: `Minimum donation amount is ₹${MIN_DONATION}` });
     }
     if (numericAmount > MAX_DONATION) {
-      return res.status(400).json({ message: `Maximum donation amount is ₹${MAX_DONATION.toLocaleString("en-IN")}` });
+      return res
+        .status(400)
+        .json({
+          message: `Maximum donation amount is ₹${MAX_DONATION.toLocaleString("en-IN")}`,
+        });
     }
 
     // Validate donor object
@@ -216,7 +106,8 @@ exports.createDonation = async (req, res) => {
     } = donor;
 
     // Address can come as legacy string OR structured addressObj
-    const hasAddress = address || (addressObj && (addressObj.line || addressObj.city));
+    const hasAddress =
+      address || (addressObj && (addressObj.line || addressObj.city));
     if (!name || !mobile || !hasAddress || !dob || !idType || !idNumber) {
       return res
         .status(400)
@@ -224,28 +115,44 @@ exports.createDonation = async (req, res) => {
     }
 
     // Build structured address if provided by new frontend
-    const structuredAddress = addressObj ? {
-      line: addressObj.line || "",
-      city: addressObj.city || "",
-      state: addressObj.state || "",
-      country: addressObj.country || "India",
-      pincode: addressObj.pincode || "",
-    } : undefined;
+    const structuredAddress = addressObj
+      ? {
+          line: addressObj.line || "",
+          city: addressObj.city || "",
+          state: addressObj.state || "",
+          country: addressObj.country || "India",
+          pincode: addressObj.pincode || "",
+        }
+      : undefined;
 
     // Build legacy address string for backward compatibility
-    const legacyAddress = address || (structuredAddress
-      ? [structuredAddress.line, structuredAddress.city, structuredAddress.state, structuredAddress.country, structuredAddress.pincode].filter(Boolean).join(", ")
-      : "");
+    const legacyAddress =
+      address ||
+      (structuredAddress
+        ? [
+            structuredAddress.line,
+            structuredAddress.city,
+            structuredAddress.state,
+            structuredAddress.country,
+            structuredAddress.pincode,
+          ]
+            .filter(Boolean)
+            .join(", ")
+        : "");
 
     // Validate donationHead object - must have valid id and name (not empty, not "null" string)
-    if (!donationHead || 
-        !donationHead.id || 
-        !donationHead.name || 
-        donationHead.id === "null" || 
-        donationHead.name === "null" ||
-        donationHead.id.trim() === "" ||
-        donationHead.name.trim() === "") {
-      return res.status(400).json({ message: "Please select a valid donation cause" });
+    if (
+      !donationHead ||
+      !donationHead.id ||
+      !donationHead.name ||
+      donationHead.id === "null" ||
+      donationHead.name === "null" ||
+      donationHead.id.trim() === "" ||
+      donationHead.name.trim() === ""
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Please select a valid donation cause" });
     }
 
     // Validate government ID
@@ -263,12 +170,12 @@ exports.createDonation = async (req, res) => {
     // Validate referral code if provided - REJECT on invalid
     let collector = null;
     let hasCollectorAttribution = false;
-    
+
     if (referralCode && referralCode.trim()) {
       const validation = await validateReferralCode(referralCode);
       if (!validation.valid) {
-        return res.status(400).json({ 
-          message: validation.error || "Invalid referral code" 
+        return res.status(400).json({
+          message: validation.error || "Invalid referral code",
         });
       }
       collector = {
@@ -279,7 +186,7 @@ exports.createDonation = async (req, res) => {
     }
 
     // Create donation with donor snapshot
-    
+
     const donation = await Donation.create({
       user: req.user?.id || null,
       // Collector attribution (nullable - only set when valid referral code provided)
@@ -312,7 +219,12 @@ exports.createDonation = async (req, res) => {
 
     // Audit log: Donation attributed to collector
     if (hasCollectorAttribution && collector) {
-      logDonationAttribution(donation._id, collector.collectorId, collector.collectorName, amount);
+      logDonationAttribution(
+        donation._id,
+        collector.collectorId,
+        collector.collectorName,
+        amount,
+      );
     }
 
     res.status(201).json({
@@ -544,8 +456,10 @@ exports.getLastDonorProfile = async (req, res) => {
         "donor.dob": 1,
         "donor.idNumber": 1,
         _id: 0,
-      }
-    ).sort({ createdAt: -1 }).lean();
+      },
+    )
+      .sort({ createdAt: -1 })
+      .lean();
 
     if (!donation) {
       return res.status(404).json({ message: "No past donation found" });

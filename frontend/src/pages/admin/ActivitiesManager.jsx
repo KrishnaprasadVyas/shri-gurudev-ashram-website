@@ -2,6 +2,20 @@ import { useState, useEffect, useRef } from "react";
 import { useActivities } from "../../context/ActivitiesContext";
 import { activitiesApi } from "../../services/adminApi";
 import { Loader2, Upload, Trash2 } from "lucide-react";
+import MultilingualInput from "../../components/admin/MultilingualInput";
+
+const toMultilingual = (val) =>
+  typeof val === "object" && val !== null && "en" in val
+    ? val
+    : { en: val || "", hi: "", mr: "" };
+
+const toDisplayText = (val) => {
+  if (typeof val === "string") return val;
+  if (val && typeof val === "object") {
+    return val.en || val.hi || val.mr || "";
+  }
+  return "";
+};
 
 const ActivitiesManager = () => {
   const {
@@ -22,13 +36,14 @@ const ActivitiesManager = () => {
   const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState(null);
   const imageInputRef = useRef(null);
-  const [formData, setFormData] = useState({
-    title: "",
-    shortDescription: "",
+  const emptyForm = {
+    title: { en: "", hi: "", mr: "" },
+    shortDescription: { en: "", hi: "", mr: "" },
     imageUrl: "",
     visible: true,
     category: "spiritual",
-  });
+  };
+  const [formData, setFormData] = useState(emptyForm);
 
   // Fetch activities on mount
   useEffect(() => {
@@ -46,21 +61,15 @@ const ActivitiesManager = () => {
 
   const handleAdd = () => {
     setEditingItem(null);
-    setFormData({
-      title: "",
-      shortDescription: "",
-      imageUrl: "",
-      visible: true,
-      category: "spiritual",
-    });
+    setFormData(emptyForm);
     setShowAddForm(true);
   };
 
   const handleEdit = (item) => {
     setEditingItem(item);
     setFormData({
-      title: item.title,
-      shortDescription: item.shortDescription,
+      title: toMultilingual(item.title),
+      shortDescription: toMultilingual(item.shortDescription),
       imageUrl: item.imageUrl,
       visible: item.visible,
       category: item.category || "spiritual",
@@ -81,13 +90,7 @@ const ActivitiesManager = () => {
       }
       setShowAddForm(false);
       setEditingItem(null);
-      setFormData({
-        title: "",
-        shortDescription: "",
-        imageUrl: "",
-        visible: true,
-        category: "spiritual",
-      });
+      setFormData(emptyForm);
     } catch (err) {
       console.error("Error saving activity:", err);
       showToast("Failed to save activity", "error");
@@ -97,7 +100,7 @@ const ActivitiesManager = () => {
   };
 
   const handleDelete = async (item) => {
-    if (window.confirm(`Delete "${item.title}"?`)) {
+    if (window.confirm(`Delete "${toDisplayText(item.title)}"?`)) {
       try {
         await deleteActivity(item.id || item._id);
         showToast("Activity deleted successfully");
@@ -121,13 +124,7 @@ const ActivitiesManager = () => {
   const handleCancel = () => {
     setShowAddForm(false);
     setEditingItem(null);
-    setFormData({
-      title: "",
-      shortDescription: "",
-      imageUrl: "",
-      visible: true,
-      category: "spiritual",
-    });
+    setFormData(emptyForm);
   };
 
   const handleImageChange = async (e) => {
@@ -203,7 +200,7 @@ const ActivitiesManager = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-2">
                   <h3 className="font-semibold text-gray-900 truncate">
-                    {item.title}
+                    {toDisplayText(item.title)}
                   </h3>
                   <span
                     className={`px-2 py-1 text-xs font-medium rounded-md ${
@@ -221,7 +218,7 @@ const ActivitiesManager = () => {
                   )}
                 </div>
                 <p className="text-sm text-gray-600 line-clamp-1">
-                  {item.shortDescription || "No description"}
+                  {toDisplayText(item.shortDescription) || "No description"}
                 </p>
                 <p className="text-xs text-gray-500">Order: {item.order}</p>
               </div>
@@ -313,39 +310,25 @@ const ActivitiesManager = () => {
               {editingItem ? "Edit Activity" : "Add Activity"}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-1">
-                  Title *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  placeholder="Enter activity title"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-1">
-                  Short Description *
-                </label>
-                <textarea
-                  required
-                  value={formData.shortDescription}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      shortDescription: e.target.value,
-                    })
-                  }
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  placeholder="Enter short description"
-                />
-              </div>
+              <MultilingualInput
+                label="Title"
+                value={formData.title}
+                onChange={(val) => setFormData({ ...formData, title: val })}
+                required
+                type="text"
+                placeholder="Enter activity title"
+              />
+              <MultilingualInput
+                label="Short Description"
+                value={formData.shortDescription}
+                onChange={(val) =>
+                  setFormData({ ...formData, shortDescription: val })
+                }
+                required
+                type="textarea"
+                rows={4}
+                placeholder="Enter short description"
+              />
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-1">
                   Category
@@ -377,7 +360,9 @@ const ActivitiesManager = () => {
                       />
                       <button
                         type="button"
-                        onClick={() => setFormData({ ...formData, imageUrl: "" })}
+                        onClick={() =>
+                          setFormData({ ...formData, imageUrl: "" })
+                        }
                         className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full hover:bg-red-700"
                       >
                         <Trash2 className="w-4 h-4" />

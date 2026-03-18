@@ -1,4 +1,8 @@
 const mongoose = require("mongoose");
+const {
+  multilingualField,
+  multilingualFieldRequired,
+} = require("../utils/multilingualField");
 
 /**
  * Event Schema
@@ -7,18 +11,11 @@ const mongoose = require("mongoose");
  */
 const eventSchema = new mongoose.Schema(
   {
-    title: {
-      type: String,
-      required: [true, "Event title is required"],
-      trim: true,
-      maxlength: [200, "Title cannot exceed 200 characters"],
-    },
-    description: {
-      type: String,
-      required: [true, "Event description is required"],
-      trim: true,
-      maxlength: [2000, "Description cannot exceed 2000 characters"],
-    },
+    title: multilingualFieldRequired(200, "Event title is required"),
+    description: multilingualFieldRequired(
+      2000,
+      "Event description is required",
+    ),
     // Event date and time
     date: {
       type: Date,
@@ -34,11 +31,7 @@ const eventSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
-    location: {
-      type: String,
-      trim: true,
-      default: "",
-    },
+    location: multilingualField({ default: "" }),
     // Image URL (stored on filesystem/CDN, not binary)
     imageUrl: {
       type: String,
