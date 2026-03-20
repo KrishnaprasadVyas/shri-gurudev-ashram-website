@@ -10,15 +10,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { validateEmail } from "../utils/helpers";
 import { useAuth } from "../context/AuthContext";
-import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import { signInWithPhoneNumber } from "firebase/auth";
 import { auth } from "../firebase";
+import { cleanupRecaptcha, resetRecaptcha, setupRecaptcha } from "../services/recaptcha";
 import { API_BASE_URL, parseJsonResponse } from "../utils/api";
-
-const sendOTP = async (phone) => {
-  const appVerifier = window.recaptchaVerifier;
-  const confirmation = await signInWithPhoneNumber(auth, phone, appVerifier);
-  window.confirmationResult = confirmation;
-};
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -42,16 +37,26 @@ const Signup = () => {
   const fullMobile = `+91${mobile}`;
 
   useEffect(() => {
-    if (window.recaptchaVerifier) {
-      window.recaptchaVerifier.clear();
-    }
-
-    window.recaptchaVerifier = new RecaptchaVerifier(
-      auth,
-      "recaptcha-container",
-      { size: "invisible" },
-    );
+    return cleanupRecaptcha;
   }, []);
+
+  const sendOTP = async (phone) => {
+    const appVerifier = await setupRecaptcha(auth, "recaptcha-container");
+    try {
+      const confirmation = await signInWithPhoneNumber(auth, phone, appVerifier);
+      window.confirmationResult = confirmation;
+    } catch (err) {
+      resetRecaptcha();
+      throw err;
+    }
+  };
+
+  const getOtpErrorMessage = (err) => {
+    if (err?.code === "auth/invalid-app-credential") {
+      return "Phone auth is blocked for this origin. Verify Firebase Auth authorized domain and API key restrictions.";
+    }
+    return err?.message || "Failed to send OTP. Please try again.";
+  };
 
   const handleSendOTP = async (e) => {
     e.preventDefault();
@@ -68,7 +73,7 @@ const Signup = () => {
       await sendOTP(fullMobile);
       setStep("otp");
     } catch (err) {
-      setError(err.message || "Failed to send OTP. Please try again.");
+      setError(getOtpErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
@@ -203,7 +208,7 @@ const Signup = () => {
                   />
                 </div>
               </div>
-              <div id="recaptcha-container"></div>
+              <div id="recaptcha-container" />
               <button
                 type="submit"
                 disabled={isLoading || mobile.length !== 10}

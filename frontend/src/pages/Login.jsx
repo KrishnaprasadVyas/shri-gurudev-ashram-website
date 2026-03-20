@@ -7,15 +7,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import SectionHeading from "../components/SectionHeading";
 import { useAuth } from "../context/AuthContext";
-import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import { signInWithPhoneNumber } from "firebase/auth";
 import { auth } from "../firebase";
+import { cleanupRecaptcha, resetRecaptcha, setupRecaptcha } from "../services/recaptcha";
 import { API_BASE_URL, parseJsonResponse } from "../utils/api";
-
-const sendOTP = async (phone) => {
-  const appVerifier = window.recaptchaVerifier;
-  const confirmation = await signInWithPhoneNumber(auth, phone, appVerifier);
-  window.confirmationResult = confirmation;
-};
 
 const COUNTRY_OPTIONS = [
   { value: "IN", label: "India", dialCode: "+91", length: 10 },
@@ -39,15 +34,7 @@ const Login = () => {
   const { t } = useTranslation();
 
   useEffect(() => {
-    if (window.recaptchaVerifier) {
-      window.recaptchaVerifier.clear();
-    }
-
-    window.recaptchaVerifier = new RecaptchaVerifier(
-      auth,
-      "recaptcha-container",
-      { size: "invisible" },
-    );
+    return cleanupRecaptcha;
   }, []);
 
   const [country, setCountry] = useState(COUNTRY_OPTIONS[0]);
@@ -56,6 +43,28 @@ const Login = () => {
   const [error, setError] = useState("");
 
   const returnUrl = location.state?.from || null;
+
+  const sendOTP = async (fullPhone) => {
+    const appVerifier = await setupRecaptcha(auth, "recaptcha-container");
+    try {
+      const confirmation = await signInWithPhoneNumber(
+        auth,
+        fullPhone,
+        appVerifier,
+      );
+      window.confirmationResult = confirmation;
+    } catch (err) {
+      resetRecaptcha();
+      throw err;
+    }
+  };
+
+  const getOtpErrorMessage = (err) => {
+    if (err?.code === "auth/invalid-app-credential") {
+      return "Phone auth is blocked for this origin. Verify Firebase Auth authorized domain and API key restrictions.";
+    }
+    return err?.message || "Failed to send OTP. Please try again.";
+  };
 
   const handleCountryChange = (event) => {
     const selected = COUNTRY_OPTIONS.find(
@@ -126,7 +135,7 @@ const Login = () => {
       await sendOTP(fullMobile);
       setStep("otp");
     } catch (err) {
-      setError(err.message || "Failed to send OTP. Please try again.");
+      setError(getOtpErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
@@ -178,7 +187,7 @@ const Login = () => {
                   />
                 </div>
               </div>
-              <div id="recaptcha-container"></div>
+              <div id="recaptcha-container" />
 
               <button
                 type="submit"
