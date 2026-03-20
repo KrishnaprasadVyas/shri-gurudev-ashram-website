@@ -13,7 +13,15 @@ const MyDonations = () => {
   const [donations, setDonations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  const getLocalizedText = (value) => {
+    if (typeof value === "string") return value;
+    if (value && typeof value === "object") {
+      return value[i18n.language] || value.en || value.hi || value.mr || "";
+    }
+    return "";
+  };
 
   /**
    * Fetch user donations
@@ -337,7 +345,10 @@ const MyDonations = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="font-semibold text-amber-900">
-                          {donation.donationHead?.name || donation.donationHead}
+                          {getLocalizedText(
+                            donation.donationHead?.name ||
+                              donation.donationHead,
+                          )}
                         </h3>
                         <StatusBadge status={donation.status} />
                       </div>

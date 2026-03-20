@@ -15,6 +15,7 @@ const {
 } = require("../controllers/public.controller");
 
 const announcementController = require("../controllers/announcement.controller");
+const bannerController = require("../controllers/banner.controller");
 const activityController = require("../controllers/activity.controller");
 const eventController = require("../controllers/event.controller");
 const testimonialController = require("../controllers/testimonial.controller");
@@ -27,6 +28,9 @@ const optionalAuth = require("../middlewares/optionalAuth.middleware");
 
 // FIX 2: Rate limiter to prevent brute-force referral code guessing
 const { publicApiLimiter } = require("../middlewares/rateLimit");
+
+// Language middleware for multilingual content
+const langMiddleware = require("../middlewares/lang.middleware");
 
 // ==================== DONATION DATA ====================
 
@@ -53,32 +57,37 @@ router.get(
 // ==================== ANNOUNCEMENTS ====================
 
 // GET /api/public/announcements - Get active announcements
-router.get("/announcements", announcementController.getActiveAnnouncements);
+router.get("/announcements", langMiddleware, announcementController.getActiveAnnouncements);
+
+// ==================== BANNERS (Hero Slider) ====================
+
+// GET /api/public/banners - Get active hero banners
+router.get("/banners", langMiddleware, bannerController.getActiveBanners);
 
 // ==================== ACTIVITIES ====================
 
 // GET /api/public/activities - Get visible activities
-router.get("/activities", activityController.getVisibleActivities);
+router.get("/activities", langMiddleware, activityController.getVisibleActivities);
 
 // GET /api/public/activities/categories - Get activity categories
-router.get("/activities/categories", activityController.getActivityCategories);
+router.get("/activities/categories", langMiddleware, activityController.getActivityCategories);
 
 // GET /api/public/activities/:id - Get single activity
-router.get("/activities/:id", activityController.getActivityByIdPublic);
+router.get("/activities/:id", langMiddleware, activityController.getActivityByIdPublic);
 
 // ==================== EVENTS ====================
 
 // GET /api/public/events - Get published events
-router.get("/events", eventController.getPublishedEvents);
+router.get("/events", langMiddleware, eventController.getPublishedEvents);
 
 // GET /api/public/events/upcoming - Get upcoming events
-router.get("/events/upcoming", eventController.getUpcomingEvents);
+router.get("/events/upcoming", langMiddleware, eventController.getUpcomingEvents);
 
 // GET /api/public/events/featured - Get featured events
-router.get("/events/featured", eventController.getFeaturedEvents);
+router.get("/events/featured", langMiddleware, eventController.getFeaturedEvents);
 
 // GET /api/public/events/:id - Get single event
-router.get("/events/:id", eventController.getEventByIdPublic);
+router.get("/events/:id", langMiddleware, eventController.getEventByIdPublic);
 
 // ==================== TESTIMONIALS ====================
 
@@ -95,36 +104,38 @@ router.post(
 // ==================== DONATION HEADS / CAUSES ====================
 
 // GET /api/public/donation-heads - Get active donation heads
-router.get("/donation-heads", donationHeadController.getActiveDonationHeads);
+router.get("/donation-heads", langMiddleware, donationHeadController.getActiveDonationHeads);
 
 // GET /api/public/donation-heads/featured - Get featured donation heads
 router.get(
   "/donation-heads/featured",
+  langMiddleware,
   donationHeadController.getFeaturedDonationHeads,
 );
 
 // GET /api/public/donation-heads/:key - Get donation head by key
-router.get("/donation-heads/:key", donationHeadController.getDonationHeadByKey);
+router.get("/donation-heads/:key", langMiddleware, donationHeadController.getDonationHeadByKey);
 
 // GET /api/public/donation-heads/:key/stats - Get donation stats for a cause
 router.get(
   "/donation-heads/:key/stats",
+  langMiddleware,
   donationHeadController.getDonationHeadStats,
 );
 
 // ==================== GALLERY ====================
 
 // GET /api/public/gallery - Get all visible gallery categories with images
-router.get("/gallery", galleryController.getVisibleGalleryCategories);
+router.get("/gallery", langMiddleware, galleryController.getVisibleGalleryCategories);
 
 // GET /api/public/gallery/categories - Get gallery category names only
-router.get("/gallery/categories", galleryController.getGalleryCategoryNames);
+router.get("/gallery/categories", langMiddleware, galleryController.getGalleryCategoryNames);
 
 // GET /api/public/gallery/all-images - Get all gallery images flattened
-router.get("/gallery/all-images", galleryController.getAllGalleryImages);
+router.get("/gallery/all-images", langMiddleware, galleryController.getAllGalleryImages);
 
 // GET /api/public/gallery/:slug - Get single gallery category by slug
-router.get("/gallery/:slug", galleryController.getGalleryCategoryBySlug);
+router.get("/gallery/:slug", langMiddleware, galleryController.getGalleryCategoryBySlug);
 
 // ==================== PRODUCTS (Shop) ====================
 

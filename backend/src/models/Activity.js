@@ -1,4 +1,8 @@
 const mongoose = require("mongoose");
+const {
+  multilingualField,
+  multilingualFieldRequired,
+} = require("../utils/multilingualField");
 
 /**
  * Activity Subitem Schema (embedded)
@@ -12,20 +16,13 @@ const subitemSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
     },
-    title: {
-      type: String,
-      required: [true, "Subitem title is required"],
-      trim: true,
-    },
-    description: {
-      type: String,
-      trim: true,
-      default: "",
-    },
+    title: multilingualFieldRequired(null, "Subitem title is required"),
+    description: multilingualField({ default: "" }),
     points: [
       {
-        type: String,
-        trim: true,
+        en: { type: String, trim: true, default: "" },
+        hi: { type: String, trim: true, default: "" },
+        mr: { type: String, trim: true, default: "" },
       },
     ],
     order: {
@@ -37,7 +34,7 @@ const subitemSchema = new mongoose.Schema(
       default: true,
     },
   },
-  { _id: true }
+  { _id: true },
 );
 
 /**
@@ -47,16 +44,8 @@ const subitemSchema = new mongoose.Schema(
  */
 const activitySchema = new mongoose.Schema(
   {
-    title: {
-      type: String,
-      required: [true, "Activity title is required"],
-      trim: true,
-    },
-    description: {
-      type: String,
-      trim: true,
-      default: "",
-    },
+    title: multilingualFieldRequired(null, "Activity title is required"),
+    description: multilingualField({ default: "" }),
     category: {
       type: String,
       enum: {
@@ -98,7 +87,7 @@ const activitySchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Indexes

@@ -18,10 +18,18 @@ import {
  */
 
 const GalleryGrid = ({ images, categories = [] }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageLoaded, setImageLoaded] = useState({});
+
+  const getLocalizedText = (value) => {
+    if (typeof value === "string") return value;
+    if (value && typeof value === "object") {
+      return value[i18n.language] || value.en || value.hi || value.mr || "";
+    }
+    return "";
+  };
 
   const filteredImages =
     selectedCategory === "all"
@@ -92,7 +100,11 @@ const GalleryGrid = ({ images, categories = [] }) => {
                 src={thumbnailSrc}
                 srcSet={srcSet || undefined}
                 sizes={srcSet ? getImageSizes("grid") : undefined}
-                alt={image.title || image.altText || "Gallery image"}
+                alt={
+                  getLocalizedText(image.title) ||
+                  getLocalizedText(image.altText) ||
+                  "Gallery image"
+                }
                 loading="lazy" // Native lazy loading
                 decoding="async" // Non-blocking decode
                 onLoad={() => handleImageLoad(image.id)}
@@ -103,10 +115,10 @@ const GalleryGrid = ({ images, categories = [] }) => {
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors" />
 
               {/* Optional title overlay */}
-              {image.title && (
+              {getLocalizedText(image.title) && (
                 <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                   <p className="text-white text-sm font-medium truncate">
-                    {image.title}
+                    {getLocalizedText(image.title)}
                   </p>
                 </div>
               )}
@@ -157,17 +169,19 @@ const GalleryGrid = ({ images, categories = [] }) => {
             <img
               src={getImageUrl(selectedImage.src || selectedImage.url)}
               alt={
-                selectedImage.title || selectedImage.altText || "Gallery image"
+                getLocalizedText(selectedImage.title) ||
+                getLocalizedText(selectedImage.altText) ||
+                "Gallery image"
               }
               className="max-w-full max-h-[85vh] object-contain rounded-lg"
               loading="eager" // Load immediately when modal opens
             />
 
             {/* Image title in modal */}
-            {selectedImage.title && (
+            {getLocalizedText(selectedImage.title) && (
               <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent rounded-b-lg">
                 <p className="text-white text-lg font-medium">
-                  {selectedImage.title}
+                  {getLocalizedText(selectedImage.title)}
                 </p>
                 {selectedImage.category && (
                   <p className="text-gray-300 text-sm capitalize">

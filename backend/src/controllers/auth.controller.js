@@ -1,128 +1,82 @@
-const Otp = require("../models/Otp");
 const User = require("../models/User");
-const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { sendEmailVerificationEmail } = require("../services/email.service");
-const { sendLoginOtp } = require("../services/whatsapp.service");
 const { assignReferralCode } = require("../services/collector.service");
+const admin = require("../config/firebaseAdmin");
 
-exports.sendOtp = async (req, res) => {
+/**
+ * Verify Firebase ID token and login/register user
+ * POST /api/auth/verify-firebase-token
+ *
+ * Flow:
+ * 1. Validate Firebase ID token
+ * 2. Extract phone number from decoded token
+ * 3. Find or create user in MongoDB
+ * 4. Issue backend JWT session token
+ */
+exports.verifyFirebaseToken = async (req, res) => {
   try {
-    const { mobile } = req.body;
+    const { token } = req.body;
 
-    // Validate mobile number
-    if (!mobile) {
-      return res.status(400).json({ message: "Mobile number is required" });
-    }
-
-    // Clean mobile number - remove + and any non-digits
-    let cleanMobile = mobile.replace(/[^\d]/g, '');
-
-    // Normalize to 10-digit phone (strip country code if present)
-    const phone10 = cleanMobile.startsWith("91") && cleanMobile.length === 12
-      ? cleanMobile.slice(2)
-      : cleanMobile;
-
-    // Validate phone format (should be 10 digits)
-    const phoneRegex = /^\d{10}$/;
-    if (!phoneRegex.test(phone10)) {
-      return res.status(400).json({ message: "Invalid mobile number format" });
-    }
-
-    // Store the normalized 10-digit mobile for OTP record
-    const storedMobile = phone10;
-
-    // Format phone number for WhatsApp (ensure 91 prefix)
-    const phone = `91${phone10}`;
-
-    // Generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000);
-
-    // Hash OTP before storing
-    const otpHash = await bcrypt.hash(otp.toString(), 10);
-
-    // Delete any existing OTPs for this mobile
-    await Otp.deleteMany({ mobile: storedMobile });
-
-    // Save hashed OTP with 5-minute expiry
-    await Otp.create({
-      mobile: storedMobile,
-      otpHash,
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-    });
-
-    // Send OTP via WhatsApp
-    const result = await sendLoginOtp(phone, otp.toString());
-
-    if (!result.success) {
-      // Clean up OTP record if WhatsApp send fails
-      await Otp.deleteMany({ mobile: storedMobile });
-      return res.status(500).json({ 
-        message: "Failed to send OTP. Please try again." 
+    // Validate token exists
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: "Firebase ID token is required",
       });
     }
 
-    res.json({ message: "OTP sent", mobile: storedMobile });
-  } catch (error) {
-    console.error("Send OTP error:", error.message);
-    res.status(500).json({ message: "Server error. Please try again." });
-  }
-};
-
-exports.verifyOtp = async (req, res) => {
-  try {
-    const { mobile, otp } = req.body;
-
-    if (!mobile || !otp) {
-      return res.status(400).json({ message: "Mobile and OTP required" });
+    // Verify Firebase ID token
+    let decodedToken;
+    try {
+      decodedToken = await admin.auth().verifyIdToken(token);
+    } catch (firebaseError) {
+      console.error("[Auth] Firebase token verification failed:", firebaseError.code);
+      return res.status(401).json({
+        success: false,
+        message: "Invalid or expired Firebase token",
+      });
     }
 
-    // Clean the mobile number - remove + and any non-digit characters
-    const cleanMobile = mobile.replace(/[^\d]/g, '');
-    
-    // Extract 10-digit phone number (remove country code 91)
-    const phone = cleanMobile.startsWith('91') && cleanMobile.length === 12
-      ? cleanMobile.slice(2)
-      : cleanMobile;
-
-    // Find the most recent OTP record for this mobile (10-digit or legacy 91-prefixed)
-    const mobileCandidates = [phone, `91${phone}`];
-    const record = await Otp.findOne({ mobile: { $in: mobileCandidates } }).sort({ _id: -1 });
-    if (!record) {
-      return res.status(400).json({ message: "Invalid OTP" });
+    // Extract phone number from decoded token
+    const phoneNumber = decodedToken.phone_number;
+    if (!phoneNumber) {
+      console.error("[Auth] Firebase token missing phone_number claim");
+      return res.status(400).json({
+        success: false,
+        message: "Phone number not found in token",
+      });
     }
 
-    // Check if OTP has expired
-    if (record.expiresAt < new Date()) {
-      await Otp.deleteMany({ mobile: { $in: mobileCandidates } });
-      return res.status(400).json({ message: "OTP expired" });
+    // Normalize phone number: extract 10-digit number for storage
+    // Firebase returns format like "+919876543210"
+    let mobile = phoneNumber.replace(/[^\d]/g, "");
+    if (mobile.startsWith("91") && mobile.length === 12) {
+      mobile = mobile.slice(2); // Store as 10-digit
     }
 
-    // Validate OTP
-    const isValid = await bcrypt.compare(otp.toString(), record.otpHash);
-    if (!isValid) {
-      return res.status(400).json({ message: "Invalid OTP" });
-    }
-
-    // Find or create user (store 10-digit mobile)
-    let user = await User.findOne({ mobile: phone });
+    // Find or create user
+    let user = await User.findOne({ mobile });
     let isNewUser = false;
+
     if (!user) {
-      user = await User.create({ mobile: phone });
+      user = await User.create({ mobile });
       isNewUser = true;
+      console.log(`[Auth] New user created: ${mobile}`);
+    } else {
+      console.log(`[Auth] Existing user logged in: ${mobile}`);
     }
 
     // Assign referral code for new users (async, non-blocking)
-    // Also handles existing users who don't have a code yet
     if (isNewUser || !user.referralCode) {
       assignReferralCode(user._id).catch((err) => {
         console.error("[Auth] Failed to assign referral code:", err);
       });
     }
 
-    // Generate JWT token
-    const token = jwt.sign(
+    // Generate backend JWT session token
+    const jwtToken = jwt.sign(
       {
         userId: user._id,
         role: user.role,
@@ -131,21 +85,33 @@ exports.verifyOtp = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    // Clear all OTP records for this mobile
-    await Otp.deleteMany({ mobile: { $in: mobileCandidates } });
-
-    // Store session cookie for all users
-    res.cookie("authToken", token, {
+    // Set HTTP-only cookie for additional security
+    res.cookie("authToken", jwtToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
-    res.json({ token });
+    // Return success response
+    res.json({
+      success: true,
+      token: jwtToken,
+      user: {
+        id: user._id,
+        mobile: user.mobile,
+        fullName: user.fullName || null,
+        email: user.email || null,
+        role: user.role,
+        referralCode: user.referralCode || null,
+      },
+    });
   } catch (error) {
-    console.error("Verify OTP error:", error.message);
-    res.status(500).json({ message: "Server error. Please try again." });
+    console.error("[Auth] verifyFirebaseToken error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error during authentication",
+    });
   }
 };
 

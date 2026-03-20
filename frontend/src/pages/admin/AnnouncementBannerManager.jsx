@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAnnouncement } from "../../context/AnnouncementContext";
 import { Loader2, Plus, Trash2, Edit2, X, Check } from "lucide-react";
+import MultilingualInput from "../../components/admin/MultilingualInput";
 
 const AnnouncementBannerManager = () => {
   const {
@@ -14,12 +15,28 @@ const AnnouncementBannerManager = () => {
     toggleAnnouncement,
   } = useAnnouncement();
 
+  const toMultilingual = (val) =>
+    typeof val === "object" && val !== null && "en" in val
+      ? val
+      : { en: val || "", hi: "", mr: "" };
+
+  const toDisplayText = (val) => {
+    if (typeof val === "string") return val;
+    if (val && typeof val === "object") {
+      return val.en || val.hi || val.mr || "";
+    }
+    return "";
+  };
+
+  const emptyMultilingual = { en: "", hi: "", mr: "" };
+
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
   const [formData, setFormData] = useState({
-    text: "",
+    text: { en: "", hi: "", mr: "" },
+    linkText: { en: "", hi: "", mr: "" },
     priority: 1,
     isActive: true,
   });
@@ -36,14 +53,20 @@ const AnnouncementBannerManager = () => {
 
   const handleAdd = () => {
     setEditingItem(null);
-    setFormData({ text: "", priority: 1, isActive: true });
+    setFormData({
+      text: { ...emptyMultilingual },
+      linkText: { ...emptyMultilingual },
+      priority: 1,
+      isActive: true,
+    });
     setShowForm(true);
   };
 
   const handleEdit = (item) => {
     setEditingItem(item);
     setFormData({
-      text: item.text || "",
+      text: toMultilingual(item.text),
+      linkText: toMultilingual(item.linkText),
       priority: item.priority || 1,
       isActive: item.isActive !== false,
     });
@@ -52,8 +75,8 @@ const AnnouncementBannerManager = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.text.trim()) {
-      showToast("Announcement message is required", "error");
+    if (!formData.text.en.trim()) {
+      showToast("Announcement message (English) is required", "error");
       return;
     }
 
@@ -68,7 +91,12 @@ const AnnouncementBannerManager = () => {
       }
       setShowForm(false);
       setEditingItem(null);
-      setFormData({ text: "", priority: 1, isActive: true });
+      setFormData({
+        text: { ...emptyMultilingual },
+        linkText: { ...emptyMultilingual },
+        priority: 1,
+        isActive: true,
+      });
     } catch (err) {
       console.error("Error saving announcement:", err);
       showToast("Failed to save announcement", "error");
@@ -102,7 +130,12 @@ const AnnouncementBannerManager = () => {
   const handleCancel = () => {
     setShowForm(false);
     setEditingItem(null);
-    setFormData({ text: "", priority: 1, isActive: true });
+    setFormData({
+      text: { ...emptyMultilingual },
+      linkText: { ...emptyMultilingual },
+      priority: 1,
+      isActive: true,
+    });
   };
 
   // Get the active announcement for preview
@@ -168,7 +201,7 @@ const AnnouncementBannerManager = () => {
                       Priority: {item.priority || 1}
                     </span>
                   </div>
-                  <p className="text-gray-900">{item.text}</p>
+                  <p className="text-gray-900">{toDisplayText(item.text)}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -219,7 +252,7 @@ const AnnouncementBannerManager = () => {
                 <div className="flex items-center gap-4 w-full min-h-6">
                   <div className="flex-1 text-center">
                     <p className="text-sm md:text-base font-medium leading-relaxed">
-                      {activeAnnouncement.text}
+                      {toDisplayText(activeAnnouncement.text)}
                     </p>
                   </div>
                 </div>
@@ -250,20 +283,20 @@ const AnnouncementBannerManager = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-1">
-                  Message <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={formData.text}
-                  onChange={(e) =>
-                    setFormData({ ...formData, text: e.target.value })
-                  }
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
-                  placeholder="Enter announcement message..."
-                />
-              </div>
+              <MultilingualInput
+                label="Announcement Text"
+                value={formData.text}
+                onChange={(val) => setFormData({ ...formData, text: val })}
+                required
+                type="text"
+              />
+
+              <MultilingualInput
+                label="Link Text"
+                value={formData.linkText}
+                onChange={(val) => setFormData({ ...formData, linkText: val })}
+                type="text"
+              />
 
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-1">

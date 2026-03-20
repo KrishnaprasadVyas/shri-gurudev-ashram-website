@@ -1,4 +1,8 @@
 const mongoose = require("mongoose");
+const {
+  multilingualField,
+  multilingualFieldRequired,
+} = require("../utils/multilingualField");
 
 /**
  * Announcement Schema
@@ -7,12 +11,7 @@ const mongoose = require("mongoose");
  */
 const announcementSchema = new mongoose.Schema(
   {
-    text: {
-      type: String,
-      required: [true, "Announcement text is required"],
-      trim: true,
-      maxlength: [500, "Announcement text cannot exceed 500 characters"],
-    },
+    text: multilingualFieldRequired(500, "Announcement text is required"),
     type: {
       type: String,
       enum: {
@@ -45,11 +44,7 @@ const announcementSchema = new mongoose.Schema(
       trim: true,
       default: null,
     },
-    linkText: {
-      type: String,
-      trim: true,
-      default: null,
-    },
+    linkText: multilingualField({ default: "" }),
     // Audit trail
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -62,7 +57,7 @@ const announcementSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Index for efficient querying of active announcements

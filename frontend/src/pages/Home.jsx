@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import HeroSection from "../components/HeroSection";
+import HeroSlider from "../components/HeroSlider";
 import SectionHeading from "../components/SectionHeading";
 import ProgramCard from "../components/ProgramCard";
 import EventCard from "../components/EventCard";
@@ -12,21 +12,23 @@ import { useActivities } from "../context/ActivitiesContext";
 import { API_BASE_URL } from "../utils/api";
 
 const Home = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { getVisibleEvents } = useEvents();
   const { getVisibleActivities } = useActivities();
   const featuredActivities = getVisibleActivities().slice(0, 6);
   const upcomingEvents = getVisibleEvents()
     .filter((e) => e.status === "upcoming")
     .slice(0, 3);
-  
+
   const [featuredCauses, setFeaturedCauses] = useState([]);
   const [loadingCauses, setLoadingCauses] = useState(true);
 
   useEffect(() => {
     const fetchFeaturedCauses = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/public/donation-heads/featured?limit=3`);
+        const response = await fetch(
+          `${API_BASE_URL}/public/donation-heads/featured?limit=3&lang=${i18n.language || 'en'}`,
+        );
         const data = await response.json();
         if (data.success) {
           setFeaturedCauses(data.data);
@@ -39,16 +41,11 @@ const Home = () => {
     };
 
     fetchFeaturedCauses();
-  }, []);
+  }, [i18n.language]);
 
   return (
     <>
-      <HeroSection
-        title={t("home.title")}
-        subtitle={t("home.subtitle")}
-        image="/assets/Home_Page.JPG"
-        showCTA={true}
-      />
+      <HeroSlider />
 
       {/* About Our Ashram Section - Two Column Layout */}
       <section className="py-16 px-4 bg-gradient-to-b from-amber-50/50 to-white">

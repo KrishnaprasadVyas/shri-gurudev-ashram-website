@@ -6,6 +6,7 @@ import {
   useCallback,
 } from "react";
 import { galleryApi } from "../services/adminApi";
+import i18n from "../i18n";
 
 const GalleryContext = createContext();
 
@@ -14,6 +15,14 @@ export const GalleryProvider = ({ children }) => {
   const [galleryItems, setGalleryItems] = useState([]); // Flattened images for backward compatibility
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const getLocalizedText = (value) => {
+    if (typeof value === "string") return value;
+    if (value && typeof value === "object") {
+      return value[i18n.language] || value.en || value.hi || value.mr || "";
+    }
+    return "";
+  };
 
   /**
    * Fetch all gallery categories from API (for admin)
@@ -39,14 +48,14 @@ export const GalleryProvider = ({ children }) => {
           flattenedImages.push({
             id: img._id || `${cat._id}-${imgIndex}`,
             categoryId: cat._id,
-            category: cat.slug || cat.name,
-            categoryName: cat.name,
+            category: cat.slug || getLocalizedText(cat.name),
+            categoryName: getLocalizedText(cat.name),
             imageUrl: img.url,
             url: img.url, // Alias for compatibility
             src: img.url, // Alias for GalleryGrid
             thumbnailUrl: img.thumbnailUrl || null, // For new uploads
-            title: img.title || cat.name,
-            altText: img.altText || '',
+            title: getLocalizedText(img.title) || getLocalizedText(cat.name),
+            altText: getLocalizedText(img.altText) || "",
             order: flattenedImages.length + 1,
             visible: img.isVisible !== false && cat.isVisible !== false,
           });
@@ -59,7 +68,7 @@ export const GalleryProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [i18n.language]);
 
   /**
    * Fetch visible gallery from API (for public)
@@ -84,14 +93,14 @@ export const GalleryProvider = ({ children }) => {
           flattenedImages.push({
             id: img._id || `${cat._id}-${imgIndex}`,
             categoryId: cat._id,
-            category: cat.slug || cat.name,
-            categoryName: cat.name,
+            category: cat.slug || getLocalizedText(cat.name),
+            categoryName: getLocalizedText(cat.name),
             imageUrl: img.url,
             url: img.url, // Alias for compatibility
             src: img.url, // Alias for GalleryGrid
             thumbnailUrl: img.thumbnailUrl || null, // For new uploads
-            title: img.title || cat.name,
-            altText: img.altText || '',
+            title: getLocalizedText(img.title) || getLocalizedText(cat.name),
+            altText: getLocalizedText(img.altText) || "",
             order: flattenedImages.length + 1,
             visible: true,
           });
@@ -105,7 +114,7 @@ export const GalleryProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [i18n.language]);
 
   /**
    * Create a new gallery category
@@ -335,13 +344,24 @@ export const GalleryProvider = ({ children }) => {
   const getCategories = useCallback(() => {
     return galleryCategories
       .filter((cat) => cat.visible)
-      .map((cat) => cat.slug || cat.name?.toLowerCase());
-  }, [galleryCategories]);
+      .map((cat) => {
+        const localizedName =
+          typeof cat.name === "string"
+            ? cat.name
+            : cat.name?.[i18n.language] ||
+              cat.name?.en ||
+              cat.name?.hi ||
+              cat.name?.mr ||
+              "";
+        return cat.slug || localizedName.toLowerCase();
+      })
+      .filter(Boolean);
+  }, [galleryCategories, i18n.language]);
 
-  // Fetch visible gallery on mount (for public pages)
+  // Fetch visible gallery on mount and when language changes (for public pages)
   useEffect(() => {
     fetchVisibleGallery();
-  }, [fetchVisibleGallery]);
+  }, [fetchVisibleGallery, i18n.language]);
 
   const value = {
     // State

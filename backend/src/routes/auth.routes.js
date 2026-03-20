@@ -1,22 +1,16 @@
 const router = require("express").Router();
 const {
-  sendOtp,
-  verifyOtp,
+  verifyFirebaseToken,
   getMe,
   requestEmailVerification,
   verifyEmail,
   getEmailStatus,
 } = require("../controllers/auth.controller");
-const {
-  otpLimiter,
-  mobileOtpLimiter,
-  emailVerificationLimiter,
-} = require("../middlewares/rateLimit");
+const { emailVerificationLimiter } = require("../middlewares/rateLimit");
 const authMiddleware = require("../middlewares/auth.middleware");
 
-// Mobile OTP auth (rate limited by IP + mobile number)
-router.post("/send-otp", otpLimiter, mobileOtpLimiter, sendOtp);
-router.post("/verify-otp", verifyOtp);
+// Firebase Phone Authentication
+router.post("/verify-firebase-token", verifyFirebaseToken);
 router.get("/me", authMiddleware, getMe);
 
 // Email verification

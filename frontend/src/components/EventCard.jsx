@@ -3,13 +3,22 @@ import { useTranslation } from "react-i18next";
 import { formatDate, formatDateTime } from "../utils/helpers";
 
 const EventCard = ({ event }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  const getLocalizedText = (value) => {
+    if (typeof value === "string") return value;
+    if (value && typeof value === "object") {
+      return value[i18n.language] || value.en || value.hi || value.mr || "";
+    }
+    return "";
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden border border-amber-100">
       <div className="relative h-48 overflow-hidden">
         <img
           src={event.image}
-          alt={event.title}
+          alt={getLocalizedText(event.title)}
           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
         />
         {event.status === "upcoming" && (
@@ -19,14 +28,20 @@ const EventCard = ({ event }) => {
         )}
       </div>
       <div className="p-6">
-        <h3 className="text-xl font-bold text-amber-900 mb-2">{event.title}</h3>
+        <h3 className="text-xl font-bold text-amber-900 mb-2">
+          {getLocalizedText(event.title)}
+        </h3>
         <div className="space-y-2 text-sm text-gray-600 mb-4">
           <p className="flex itemscenter">
             {formatDateTime(event.date, event.time)}
           </p>
-          <p className="flex items-center">{event.location}</p>
+          <p className="flex items-center">
+            {getLocalizedText(event.location)}
+          </p>
         </div>
-        <p className="text-gray-700 mb-4 line-clamp-2">{event.description}</p>
+        <p className="text-gray-700 mb-4 line-clamp-2">
+          {getLocalizedText(event.description)}
+        </p>
         <Link
           to={`/events/${event.id}`}
           className="inline-block px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 transition-colors text-sm font-medium"

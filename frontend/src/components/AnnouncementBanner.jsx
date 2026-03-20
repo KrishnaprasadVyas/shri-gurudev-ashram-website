@@ -1,11 +1,21 @@
 import { useState, useEffect } from "react";
 import { useAnnouncement } from "../context/AnnouncementContext";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const AnnouncementBanner = () => {
+  const { i18n } = useTranslation();
   const { announcements } = useAnnouncement();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+
+  const getLocalizedText = (value) => {
+    if (typeof value === "string") return value;
+    if (value && typeof value === "object") {
+      return value[i18n.language] || value.en || value.hi || value.mr || "";
+    }
+    return "";
+  };
 
   // Filter only active announcements
   const activeAnnouncements = announcements.filter((a) => a.isActive);
@@ -68,7 +78,8 @@ const AnnouncementBanner = () => {
               key={currentIndex}
               className="text-sm md:text-base font-medium leading-relaxed animate-fade-in"
             >
-              {currentAnnouncement?.text || currentAnnouncement?.message}
+              {getLocalizedText(currentAnnouncement?.text) ||
+                getLocalizedText(currentAnnouncement?.message)}
             </p>
           </div>
 

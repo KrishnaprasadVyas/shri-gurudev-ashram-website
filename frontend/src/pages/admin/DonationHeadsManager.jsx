@@ -15,6 +15,20 @@ import {
   Star,
   Upload,
 } from "lucide-react";
+import MultilingualInput from "../../components/admin/MultilingualInput";
+
+const toMultilingual = (val) =>
+  typeof val === "object" && val !== null && "en" in val
+    ? val
+    : { en: val || "", hi: "", mr: "" };
+
+const toDisplayText = (val) => {
+  if (typeof val === "string") return val;
+  if (val && typeof val === "object") {
+    return val.en || val.hi || val.mr || "";
+  }
+  return "";
+};
 
 const DonationHeadsManager = () => {
   const [donationHeads, setDonationHeads] = useState([]);
@@ -29,9 +43,9 @@ const DonationHeadsManager = () => {
 
   const [formData, setFormData] = useState({
     key: "",
-    name: "",
-    description: "",
-    longDescription: "",
+    name: { en: "", hi: "", mr: "" },
+    description: { en: "", hi: "", mr: "" },
+    longDescription: { en: "", hi: "", mr: "" },
     imageUrl: "",
     imageFile: null,
     iconKey: "general",
@@ -83,9 +97,9 @@ const DonationHeadsManager = () => {
     setEditingHead(null);
     setFormData({
       key: "",
-      name: "",
-      description: "",
-      longDescription: "",
+      name: { en: "", hi: "", mr: "" },
+      description: { en: "", hi: "", mr: "" },
+      longDescription: { en: "", hi: "", mr: "" },
       imageUrl: "",
       imageFile: null,
       iconKey: "general",
@@ -104,14 +118,15 @@ const DonationHeadsManager = () => {
     setEditingHead(head);
     setFormData({
       key: head.key,
-      name: head.name,
-      description: head.description,
-      longDescription: head.longDescription || "",
+      name: toMultilingual(head.name),
+      description: toMultilingual(head.description),
+      longDescription: toMultilingual(head.longDescription),
       imageUrl: head.imageUrl || "",
       imageFile: null,
       iconKey: head.iconKey || "general",
       minAmount: head.minAmount || "",
-      presetAmounts: head.presetAmounts?.join(",") || "100,500,1000,2500,5000,10000",
+      presetAmounts:
+        head.presetAmounts?.join(",") || "100,500,1000,2500,5000,10000",
       goalAmount: head.goalAmount || "",
       order: head.order || 0,
       isActive: head.isActive !== false,
@@ -159,8 +174,11 @@ const DonationHeadsManager = () => {
     e.preventDefault();
 
     // Validation
-    if (!formData.name.trim() || !formData.description.trim()) {
-      showToast("Name and description are required", "error");
+    if (!formData.name?.en?.trim() || !formData.description?.en?.trim()) {
+      showToast(
+        "Name and description are required (at least English)",
+        "error",
+      );
       return;
     }
 
@@ -175,9 +193,14 @@ const DonationHeadsManager = () => {
         ...formData,
         key: formData.key.toLowerCase().trim(),
         minAmount: formData.minAmount ? parseFloat(formData.minAmount) : null,
-        goalAmount: formData.goalAmount ? parseFloat(formData.goalAmount) : null,
+        goalAmount: formData.goalAmount
+          ? parseFloat(formData.goalAmount)
+          : null,
         presetAmounts: formData.presetAmounts
-          ? formData.presetAmounts.split(",").map((a) => parseFloat(a.trim())).filter((a) => !isNaN(a))
+          ? formData.presetAmounts
+              .split(",")
+              .map((a) => parseFloat(a.trim()))
+              .filter((a) => !isNaN(a))
           : [100, 500, 1000, 2500, 5000, 10000],
         order: parseInt(formData.order) || 0,
       };
@@ -195,10 +218,7 @@ const DonationHeadsManager = () => {
       fetchDonationHeads();
     } catch (error) {
       console.error("Error saving donation head:", error);
-      showToast(
-        error.message || "Failed to save donation cause",
-        "error"
-      );
+      showToast(error.message || "Failed to save donation cause", "error");
     } finally {
       setSubmitting(false);
     }
@@ -207,7 +227,7 @@ const DonationHeadsManager = () => {
   const handleDelete = async (head) => {
     if (
       !window.confirm(
-        `Delete "${head.name}"? This action cannot be undone and may affect existing donations.`
+        `Delete "${toDisplayText(head.name)}"? This action cannot be undone and may affect existing donations.`,
       )
     ) {
       return;
@@ -226,7 +246,9 @@ const DonationHeadsManager = () => {
   const handleToggleVisibility = async (head) => {
     try {
       await donationHeadsApi.toggle(head._id);
-      showToast(`Donation cause ${head.isActive ? "deactivated" : "activated"}`);
+      showToast(
+        `Donation cause ${head.isActive ? "deactivated" : "activated"}`,
+      );
       fetchDonationHeads();
     } catch (error) {
       console.error("Error toggling visibility:", error);
@@ -234,7 +256,9 @@ const DonationHeadsManager = () => {
     }
   };
 
-  const sortedHeads = [...donationHeads].sort((a, b) => (a.order || 0) - (b.order || 0));
+  const sortedHeads = [...donationHeads].sort(
+    (a, b) => (a.order || 0) - (b.order || 0),
+  );
 
   if (loading) {
     return (
@@ -289,7 +313,9 @@ const DonationHeadsManager = () => {
               {/* Form Header */}
               <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex justify-between items-center">
                 <h3 className="text-xl font-bold text-gray-900">
-                  {editingHead ? "Edit Donation Cause" : "Add New Donation Cause"}
+                  {editingHead
+                    ? "Edit Donation Cause"
+                    : "Add New Donation Cause"}
                 </h3>
                 <button
                   type="button"
@@ -320,63 +346,44 @@ const DonationHeadsManager = () => {
                       required
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Unique identifier (lowercase, no spaces). Cannot be changed after creation.
+                      Unique identifier (lowercase, no spaces). Cannot be
+                      changed after creation.
                     </p>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Display Name *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
-                      }
-                      placeholder="Annadan Seva, Education Support"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                      required
-                    />
-                  </div>
+                  <MultilingualInput
+                    label="Display Name"
+                    value={formData.name}
+                    onChange={(val) => setFormData({ ...formData, name: val })}
+                    placeholder="Annadan Seva, Education Support"
+                    required
+                  />
                 </div>
 
                 {/* Description */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Short Description *
-                  </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    placeholder="Brief description for donation form (max 500 chars)"
-                    rows="3"
-                    maxLength="500"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    required
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    {formData.description.length}/500 characters
-                  </p>
-                </div>
+                <MultilingualInput
+                  label="Short Description"
+                  value={formData.description}
+                  onChange={(val) =>
+                    setFormData({ ...formData, description: val })
+                  }
+                  type="textarea"
+                  rows={3}
+                  placeholder="Brief description for donation form"
+                  required
+                />
 
                 {/* Long Description */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Long Description (Optional)
-                  </label>
-                  <textarea
-                    value={formData.longDescription}
-                    onChange={(e) =>
-                      setFormData({ ...formData, longDescription: e.target.value })
-                    }
-                    placeholder="Detailed description for cause page"
-                    rows="4"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  />
-                </div>
+                <MultilingualInput
+                  label="Long Description (Optional)"
+                  value={formData.longDescription}
+                  onChange={(val) =>
+                    setFormData({ ...formData, longDescription: val })
+                  }
+                  type="textarea"
+                  rows={4}
+                  placeholder="Detailed description for cause page"
+                />
 
                 {/* Image and Icon */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -419,7 +426,11 @@ const DonationHeadsManager = () => {
                         <button
                           type="button"
                           onClick={() =>
-                            setFormData({ ...formData, imageUrl: "", imageFile: null })
+                            setFormData({
+                              ...formData,
+                              imageUrl: "",
+                              imageFile: null,
+                            })
                           }
                           className="mt-2 text-xs text-red-600 hover:text-red-700"
                         >
@@ -512,7 +523,10 @@ const DonationHeadsManager = () => {
                     type="text"
                     value={formData.presetAmounts}
                     onChange={(e) =>
-                      setFormData({ ...formData, presetAmounts: e.target.value })
+                      setFormData({
+                        ...formData,
+                        presetAmounts: e.target.value,
+                      })
                     }
                     placeholder="100,500,1000,2500,5000,10000"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -543,7 +557,10 @@ const DonationHeadsManager = () => {
                       type="checkbox"
                       checked={formData.isFeatured}
                       onChange={(e) =>
-                        setFormData({ ...formData, isFeatured: e.target.checked })
+                        setFormData({
+                          ...formData,
+                          isFeatured: e.target.checked,
+                        })
                       }
                       className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
                     />
@@ -557,7 +574,10 @@ const DonationHeadsManager = () => {
                       type="checkbox"
                       checked={formData.is80GEligible}
                       onChange={(e) =>
-                        setFormData({ ...formData, is80GEligible: e.target.checked })
+                        setFormData({
+                          ...formData,
+                          is80GEligible: e.target.checked,
+                        })
                       }
                       className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
                     />
@@ -635,7 +655,7 @@ const DonationHeadsManager = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="text-lg font-semibold text-gray-900">
-                          {head.name}
+                          {toDisplayText(head.name)}
                         </h3>
                         <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">
                           {head.key}
@@ -650,7 +670,7 @@ const DonationHeadsManager = () => {
                         )}
                       </div>
                       <p className="text-sm text-gray-600 mb-2">
-                        {head.description}
+                        {toDisplayText(head.description)}
                       </p>
                       <div className="flex items-center gap-4 text-xs text-gray-500">
                         <span>Order: {head.order || 0}</span>
@@ -673,7 +693,7 @@ const DonationHeadsManager = () => {
                       <button
                         onClick={() =>
                           setExpandedHead(
-                            expandedHead === head._id ? null : head._id
+                            expandedHead === head._id ? null : head._id,
                           )
                         }
                         className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
@@ -716,13 +736,13 @@ const DonationHeadsManager = () => {
                   {/* Expanded Details */}
                   {expandedHead === head._id && (
                     <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
-                      {head.longDescription && (
+                      {toDisplayText(head.longDescription) && (
                         <div>
                           <p className="text-xs font-medium text-gray-700 mb-1">
                             Long Description:
                           </p>
                           <p className="text-sm text-gray-600">
-                            {head.longDescription}
+                            {toDisplayText(head.longDescription)}
                           </p>
                         </div>
                       )}
@@ -733,7 +753,7 @@ const DonationHeadsManager = () => {
                           </p>
                           <img
                             src={head.imageUrl}
-                            alt={head.name}
+                            alt={toDisplayText(head.name)}
                             className="w-48 h-32 object-cover rounded-lg"
                           />
                         </div>

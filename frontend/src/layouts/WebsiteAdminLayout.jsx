@@ -6,18 +6,56 @@ const WebsiteAdminLayout = () => {
 
   const navItems = [
     { path: "/admin/website/gallery", label: "Gallery", active: false },
-    { path: "/admin/website/events", label: "Events", active: false, disabled: false },
-    { path: "/admin/website/activities", label: "Activities", active: false, disabled: false },
-    { path: "/admin/website/announcement", label: "Announcement Banner", active: false, disabled: false },
-    { path: "/admin/website/testimonials", label: "Testimonials", active: false, disabled: false },
-    { path: "/admin/website/donation-heads", label: "Donation Causes", active: false, disabled: false },
-    { path: "/admin/website/live-link", label: "Live Link", active: false, disabled: false },
+    {
+      path: "/admin/website/events",
+      label: "Events",
+      active: false,
+      disabled: false,
+    },
+    {
+      path: "/admin/website/activities",
+      label: "Activities",
+      active: false,
+      disabled: false,
+    },
+    {
+      path: "/admin/website/banners",
+      label: "Hero Banners",
+      active: false,
+      disabled: false,
+    },
+    {
+      path: "/admin/website/announcement",
+      label: "Announcement Banner",
+      active: false,
+      disabled: false,
+    },
+    {
+      path: "/admin/website/testimonials",
+      label: "Testimonials",
+      active: false,
+      disabled: false,
+    },
+    {
+      path: "/admin/website/donation-heads",
+      label: "Donation Causes",
+      active: false,
+      disabled: false,
+    },
+    {
+      path: "/admin/website/live-link",
+      label: "Live Link",
+      active: false,
+      disabled: false,
+    },
   ];
 
   const isActive = (path) => {
     // Also highlight gallery when on index route
     if (path === "/admin/website/gallery") {
-      return location.pathname === path || location.pathname === "/admin/website";
+      return (
+        location.pathname === path || location.pathname === "/admin/website"
+      );
     }
     return location.pathname === path;
   };
@@ -42,7 +80,9 @@ const WebsiteAdminLayout = () => {
           {/* Left Navigation */}
           <aside className="w-64 flex-shrink-0">
             <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">Website Admin</h2>
+              <h2 className="text-lg font-bold text-gray-900 mb-4">
+                Website Admin
+              </h2>
               <nav className="space-y-2">
                 {navItems.map((item) => (
                   <button
@@ -53,8 +93,8 @@ const WebsiteAdminLayout = () => {
                       isActive(item.path)
                         ? "bg-amber-600 text-white"
                         : item.disabled
-                        ? "text-gray-400 cursor-not-allowed"
-                        : "text-gray-700 hover:bg-amber-50"
+                          ? "text-gray-400 cursor-not-allowed"
+                          : "text-gray-700 hover:bg-amber-50"
                     }`}
                   >
                     {item.label}

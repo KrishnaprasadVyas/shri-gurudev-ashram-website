@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useGallery } from "../../context/GalleryContext";
 import { galleryApi } from "../../services/adminApi";
+import MultilingualInput from "../../components/admin/MultilingualInput";
 import {
   Loader2,
   Plus,
@@ -13,6 +14,19 @@ import {
   Image,
   Upload,
 } from "lucide-react";
+
+const toMultilingual = (val) =>
+  typeof val === "object" && val !== null && "en" in val
+    ? val
+    : { en: val || "", hi: "", mr: "" };
+
+const toDisplayText = (val) => {
+  if (typeof val === "string") return val;
+  if (val && typeof val === "object") {
+    return val.en || val.hi || val.mr || "";
+  }
+  return "";
+};
 
 const GalleryManager = () => {
   const {
@@ -40,8 +54,8 @@ const GalleryManager = () => {
   const imageInputRef = useRef(null);
 
   const [categoryForm, setCategoryForm] = useState({
-    name: "",
-    description: "",
+    name: { en: "", hi: "", mr: "" },
+    description: { en: "", hi: "", mr: "" },
     coverImageUrl: "",
     coverImageFile: null,
     isVisible: true,
@@ -49,8 +63,8 @@ const GalleryManager = () => {
 
   const [imageForm, setImageForm] = useState({
     files: [],
-    title: "",
-    altText: "",
+    title: { en: "", hi: "", mr: "" },
+    altText: { en: "", hi: "", mr: "" },
   });
 
   // Fetch gallery categories on mount
@@ -70,8 +84,8 @@ const GalleryManager = () => {
   const handleAddCategory = () => {
     setEditingCategory(null);
     setCategoryForm({
-      name: "",
-      description: "",
+      name: { en: "", hi: "", mr: "" },
+      description: { en: "", hi: "", mr: "" },
       coverImageUrl: "",
       coverImageFile: null,
       isVisible: true,
@@ -82,8 +96,8 @@ const GalleryManager = () => {
   const handleEditCategory = (category) => {
     setEditingCategory(category);
     setCategoryForm({
-      name: category.name,
-      description: category.description || "",
+      name: toMultilingual(category.name),
+      description: toMultilingual(category.description),
       coverImageUrl: category.coverImageUrl || "",
       coverImageFile: null,
       isVisible: category.visible !== false,
@@ -127,8 +141,8 @@ const GalleryManager = () => {
 
   const handleCategorySubmit = async (e) => {
     e.preventDefault();
-    if (!categoryForm.name.trim()) {
-      showToast("Category name is required", "error");
+    if (!categoryForm.name.en.trim()) {
+      showToast("Category name (English) is required", "error");
       return;
     }
 
@@ -147,8 +161,8 @@ const GalleryManager = () => {
       setShowCategoryForm(false);
       setEditingCategory(null);
       setCategoryForm({
-        name: "",
-        description: "",
+        name: { en: "", hi: "", mr: "" },
+        description: { en: "", hi: "", mr: "" },
         coverImageUrl: "",
         coverImageFile: null,
         isVisible: true,
@@ -163,7 +177,9 @@ const GalleryManager = () => {
 
   const handleDeleteCategory = async (category) => {
     if (
-      window.confirm(`Delete category "${category.name}" and all its images?`)
+      window.confirm(
+        `Delete category "${toDisplayText(category.name)}" and all its images?`,
+      )
     ) {
       try {
         await deleteCategory(category.id || category._id);
@@ -187,12 +203,16 @@ const GalleryManager = () => {
 
   const handleAddImage = (categoryId) => {
     setShowImageForm(categoryId);
-    setImageForm({ files: [], title: "", altText: "" });
+    setImageForm({
+      files: [],
+      title: { en: "", hi: "", mr: "" },
+      altText: { en: "", hi: "", mr: "" },
+    });
   };
 
   const handleImageFilesChange = (e) => {
     const files = Array.from(e.target.files);
-    
+
     // Validate files
     const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
     const validFiles = files.filter((file) => {
@@ -223,7 +243,11 @@ const GalleryManager = () => {
       await galleryApi.uploadToCategory(showImageForm, imageForm.files);
       showToast(`${imageForm.files.length} image(s) uploaded successfully`);
       setShowImageForm(null);
-      setImageForm({ files: [], title: "", altText: "" });
+      setImageForm({
+        files: [],
+        title: { en: "", hi: "", mr: "" },
+        altText: { en: "", hi: "", mr: "" },
+      });
       // Refresh gallery
       fetchGalleryCategories();
     } catch (err) {
@@ -303,7 +327,7 @@ const GalleryManager = () => {
                   {category.coverImageUrl ? (
                     <img
                       src={category.coverImageUrl}
-                      alt={category.name}
+                      alt={toDisplayText(category.name)}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.target.src =
@@ -321,7 +345,7 @@ const GalleryManager = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <h3 className="font-semibold text-gray-900">
-                      {category.name}
+                      {toDisplayText(category.name)}
                     </h3>
                     {category.visible === false && (
                       <span className="px-2 py-0.5 text-xs bg-gray-200 text-gray-600 rounded">
@@ -329,9 +353,9 @@ const GalleryManager = () => {
                       </span>
                     )}
                   </div>
-                  {category.description && (
+                  {toDisplayText(category.description) && (
                     <p className="text-sm text-gray-600 truncate">
-                      {category.description}
+                      {toDisplayText(category.description)}
                     </p>
                   )}
                   <p className="text-xs text-gray-500">
@@ -419,8 +443,8 @@ const GalleryManager = () => {
                           <img
                             src={img.url}
                             alt={
-                              img.title ||
-                              img.altText ||
+                              toDisplayText(img.title) ||
+                              toDisplayText(img.altText) ||
                               `Image ${imgIndex + 1}`
                             }
                             className="w-full h-24 object-cover"
@@ -443,9 +467,9 @@ const GalleryManager = () => {
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
-                          {img.title && (
+                          {toDisplayText(img.title) && (
                             <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1 truncate">
-                              {img.title}
+                              {toDisplayText(img.title)}
                             </div>
                           )}
                         </div>
@@ -467,37 +491,25 @@ const GalleryManager = () => {
               {editingCategory ? "Edit Category" : "Add Category"}
             </h2>
             <form onSubmit={handleCategorySubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-1">
-                  Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={categoryForm.name}
-                  onChange={(e) =>
-                    setCategoryForm({ ...categoryForm, name: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  placeholder="e.g., Goushala"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-1">
-                  Description
-                </label>
-                <textarea
-                  value={categoryForm.description}
-                  onChange={(e) =>
-                    setCategoryForm({
-                      ...categoryForm,
-                      description: e.target.value,
-                    })
-                  }
-                  rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
-                  placeholder="Brief description of this category"
-                />
-              </div>
+              <MultilingualInput
+                label="Name"
+                value={categoryForm.name}
+                onChange={(val) =>
+                  setCategoryForm({ ...categoryForm, name: val })
+                }
+                required
+                placeholder="e.g., Goushala"
+              />
+              <MultilingualInput
+                label="Description"
+                value={categoryForm.description}
+                onChange={(val) =>
+                  setCategoryForm({ ...categoryForm, description: val })
+                }
+                type="textarea"
+                rows={2}
+                placeholder="Brief description of this category"
+              />
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-1">
                   Cover Image
@@ -513,7 +525,13 @@ const GalleryManager = () => {
                       />
                       <button
                         type="button"
-                        onClick={() => setCategoryForm({ ...categoryForm, coverImageUrl: "", coverImageFile: null })}
+                        onClick={() =>
+                          setCategoryForm({
+                            ...categoryForm,
+                            coverImageUrl: "",
+                            coverImageFile: null,
+                          })
+                        }
                         className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full hover:bg-red-700"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -542,7 +560,9 @@ const GalleryManager = () => {
                     ) : (
                       <>
                         <Upload className="w-5 h-5 mr-2" />
-                        {categoryForm.coverImageUrl ? "Change Cover Image" : "Upload Cover Image"}
+                        {categoryForm.coverImageUrl
+                          ? "Change Cover Image"
+                          : "Upload Cover Image"}
                       </>
                     )}
                   </button>
@@ -597,7 +617,9 @@ const GalleryManager = () => {
       {showImageForm && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Upload Images</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
+              Upload Images
+            </h2>
             <form onSubmit={handleImageSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-1">
@@ -627,7 +649,10 @@ const GalleryManager = () => {
                     </p>
                     <div className="grid grid-cols-4 gap-2">
                       {imageForm.files.slice(0, 8).map((file, idx) => (
-                        <div key={idx} className="relative aspect-square rounded overflow-hidden bg-gray-100">
+                        <div
+                          key={idx}
+                          className="relative aspect-square rounded overflow-hidden bg-gray-100"
+                        >
                           <img
                             src={URL.createObjectURL(file)}
                             alt={file.name}
@@ -661,7 +686,10 @@ const GalleryManager = () => {
                   {submitting && (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   )}
-                  Upload {imageForm.files.length > 0 ? `(${imageForm.files.length})` : ""}
+                  Upload{" "}
+                  {imageForm.files.length > 0
+                    ? `(${imageForm.files.length})`
+                    : ""}
                 </button>
               </div>
             </form>

@@ -4,7 +4,7 @@ const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const path = require("path");
 const connectDB = require("./config/db");
-
+const authRoutes = require("./routes/auth.routes");
 const app = express();
 
 connectDB();
@@ -25,7 +25,10 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 app.use(cookieParser());
-app.use("/api/webhooks/razorpay", express.raw({ type: "application/json", limit: "1mb" }));
+app.use(
+  "/api/webhooks/razorpay",
+  express.raw({ type: "application/json", limit: "1mb" }),
+);
 app.use(express.json({ limit: "1mb" }));
 
 // Serve receipts as static files
@@ -33,10 +36,13 @@ app.use("/receipts", express.static(path.join(__dirname, "../receipts")));
 
 // Serve uploaded gallery images as static files
 // Images stored in backend/uploads/gallery/ and backend/uploads/gallery/thumbnails/
-app.use("/uploads", express.static(path.join(__dirname, "../uploads"), {
-  maxAge: "7d", // Cache for 7 days (images rarely change)
-  immutable: true, // Files won't change (UUID names)
-}));
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "../uploads"), {
+    maxAge: "7d", // Cache for 7 days (images rarely change)
+    immutable: true, // Files won't change (UUID names)
+  }),
+);
 
 app.use("/api/auth", require("./routes/auth.routes"));
 app.use("/api/test", require("./routes/test.routes"));
@@ -50,6 +56,7 @@ app.use("/api/referral", require("./routes/referral.routes")); // Referral code 
 app.use("/api/leaderboard", require("./routes/leaderboard.routes")); // Public leaderboard
 app.use("/api/admin/website", require("./routes/admin.website.routes"));
 app.use("/api/admin/system", require("./routes/admin.system.routes"));
+app.use("/api/auth", authRoutes);
 // app.use("/api/products", require("./routes/product.routes"));
 // app.use("/api/orders", require("./routes/order.routes"));
 module.exports = app;

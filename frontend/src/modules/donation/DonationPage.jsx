@@ -31,7 +31,7 @@ const CauseIcon = ({ iconKey, className }) => {
 };
 
 const DonationPage = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const donationFlowRef = useRef(null);
   const [selectedCause, setSelectedCause] = useState(null);
   const [imageErrors, setImageErrors] = useState({});
@@ -59,7 +59,9 @@ const DonationPage = () => {
   useEffect(() => {
     const fetchDonationHeads = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/public/donation-heads`);
+        const response = await fetch(
+          `${API_BASE_URL}/public/donation-heads?lang=${i18n.language || "en"}`,
+        );
         const data = await response.json();
         if (data.success) {
           setDonationHeads(data.data);
@@ -72,7 +74,7 @@ const DonationPage = () => {
     };
 
     fetchDonationHeads();
-  }, []);
+  }, [i18n.language]);
 
   // Handle URL parameters: ref, cause, amount
   useEffect(() => {
@@ -98,7 +100,9 @@ const DonationPage = () => {
       }
     } else if (quickDonate === "true") {
       // Fallback to Quick Donate behavior
-      const generalSeva = donationHeads.find((h) => h.name === "General Seva" || h.key === "general");
+      const generalSeva = donationHeads.find(
+        (h) => h.name === "General Seva" || h.key === "general",
+      );
       if (generalSeva) {
         setSelectedCause(generalSeva);
       }

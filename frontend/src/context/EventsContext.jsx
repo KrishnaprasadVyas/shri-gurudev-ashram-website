@@ -6,6 +6,7 @@ import {
   useCallback,
 } from "react";
 import { eventsApi } from "../services/adminApi";
+import i18n from "../i18n";
 
 const EventsContext = createContext();
 
@@ -229,10 +230,10 @@ export const EventsProvider = ({ children }) => {
       });
   }, [eventsItems]);
 
-  // Fetch published events on mount (for public pages)
+  // Fetch published events on mount and when language changes (for public pages)
   useEffect(() => {
     fetchPublishedEvents();
-  }, [fetchPublishedEvents]);
+  }, [fetchPublishedEvents, i18n.language]);
 
   const value = {
     eventsItems,

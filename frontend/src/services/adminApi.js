@@ -3,7 +3,8 @@
  * Handles all API calls for admin panel operations
  */
 
-import { API_BASE_URL, getAuthToken, parseJsonResponse } from '../utils/api';
+import { API_BASE_URL, getAuthToken, parseJsonResponse } from "../utils/api";
+import i18n from "../i18n";
 
 /**
  * Create headers with auth token
@@ -12,12 +13,12 @@ const getAuthHeaders = (isFormData = false) => {
   const headers = {
     Authorization: `Bearer ${getAuthToken()}`,
   };
-  
+
   // Don't set Content-Type for FormData - browser will set it automatically with boundary
   if (!isFormData) {
     headers["Content-Type"] = "application/json";
   }
-  
+
   return headers;
 };
 
@@ -26,8 +27,15 @@ const getAuthHeaders = (isFormData = false) => {
  */
 const apiRequest = async (endpoint, options = {}) => {
   const { isFormData, ...fetchOptions } = options;
-  
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+
+  // Auto-append ?lang= for public endpoints (multilingual support)
+  let url = `${API_BASE_URL}${endpoint}`;
+  if (endpoint.startsWith("/public/")) {
+    const separator = endpoint.includes("?") ? "&" : "?";
+    url += `${separator}lang=${i18n.language || "en"}`;
+  }
+
+  const response = await fetch(url, {
     ...fetchOptions,
     headers: {
       ...getAuthHeaders(isFormData),
@@ -130,13 +138,16 @@ export const activitiesApi = {
     const formData = new FormData();
     formData.append("image", file);
 
-    const response = await fetch(`${API_BASE_URL}/admin/website/activities/upload`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${getAuthToken()}`,
+    const response = await fetch(
+      `${API_BASE_URL}/admin/website/activities/upload`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+        body: formData,
       },
-      body: formData,
-    });
+    );
 
     const data = await parseJsonResponse(response);
     if (!response.ok) {
@@ -195,13 +206,16 @@ export const eventsApi = {
     const formData = new FormData();
     formData.append("image", file);
 
-    const response = await fetch(`${API_BASE_URL}/admin/website/events/upload`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${getAuthToken()}`,
+    const response = await fetch(
+      `${API_BASE_URL}/admin/website/events/upload`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+        body: formData,
       },
-      body: formData,
-    });
+    );
 
     const data = await parseJsonResponse(response);
     if (!response.ok) {
@@ -333,14 +347,17 @@ export const galleryApi = {
     const formData = new FormData();
     formData.append("image", file);
 
-    const response = await fetch(`${API_BASE_URL}/admin/website/gallery/upload`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${getAuthToken()}`,
-        // Note: Don't set Content-Type for FormData - browser sets it with boundary
+    const response = await fetch(
+      `${API_BASE_URL}/admin/website/gallery/upload`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+          // Note: Don't set Content-Type for FormData - browser sets it with boundary
+        },
+        body: formData,
       },
-      body: formData,
-    });
+    );
 
     const data = await parseJsonResponse(response);
     if (!response.ok) {
@@ -357,13 +374,16 @@ export const galleryApi = {
     const formData = new FormData();
     files.forEach((file) => formData.append("images", file));
 
-    const response = await fetch(`${API_BASE_URL}/admin/website/gallery/upload/multiple`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${getAuthToken()}`,
+    const response = await fetch(
+      `${API_BASE_URL}/admin/website/gallery/upload/multiple`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+        body: formData,
       },
-      body: formData,
-    });
+    );
 
     const data = await parseJsonResponse(response);
     if (!response.ok) {
@@ -380,13 +400,16 @@ export const galleryApi = {
     const formData = new FormData();
     files.forEach((file) => formData.append("images", file));
 
-    const response = await fetch(`${API_BASE_URL}/admin/website/gallery/${categoryId}/upload`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${getAuthToken()}`,
+    const response = await fetch(
+      `${API_BASE_URL}/admin/website/gallery/${categoryId}/upload`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+        body: formData,
       },
-      body: formData,
-    });
+    );
 
     const data = await parseJsonResponse(response);
     if (!response.ok) {

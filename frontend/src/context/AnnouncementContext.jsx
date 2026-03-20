@@ -6,6 +6,7 @@ import {
   useCallback,
 } from "react";
 import { announcementsApi } from "../services/adminApi";
+import i18n from "../i18n";
 
 const AnnouncementContext = createContext();
 
@@ -145,10 +146,10 @@ export const AnnouncementProvider = ({ children }) => {
     );
   }, []);
 
-  // Fetch active announcements on mount (for public pages)
+  // Fetch active announcements on mount and when language changes (for public pages)
   useEffect(() => {
     fetchActiveAnnouncements();
-  }, [fetchActiveAnnouncements]);
+  }, [fetchActiveAnnouncements, i18n.language]);
 
   const value = {
     // State
