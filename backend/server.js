@@ -3,6 +3,7 @@ require("dotenv").config();
 // Validate required environment variables at startup
 const requiredEnvVars = [
   "MONGO_URI",
+  "MONGO_URI_SHARED",
   "JWT_SECRET",
   "RAZORPAY_KEY_ID",
   "RAZORPAY_KEY_SECRET",
@@ -32,7 +33,7 @@ if (process.env.JWT_SECRET && process.env.JWT_SECRET.length < 32) {
 
 const app = require("./src/app");
 const { startCleanupScheduler } = require("./src/utils/cleanup");
-const mongoose = require("mongoose");
+const { mainDb, sharedDb } = require("./src/config/db");
 
 const PORT = process.env.PORT || 5000;
 
@@ -51,8 +52,11 @@ const gracefulShutdown = async (signal) => {
     console.log("✅ HTTP server closed");
 
     try {
-      await mongoose.connection.close();
-      console.log("✅ MongoDB connection closed");
+      await Promise.all([
+        mainDb.readyState ? mainDb.close() : Promise.resolve(),
+        sharedDb.readyState ? sharedDb.close() : Promise.resolve(),
+      ]);
+      console.log("✅ MongoDB connections closed");
       process.exit(0);
     } catch (err) {
       console.error("❌ Error during MongoDB disconnect:", err);

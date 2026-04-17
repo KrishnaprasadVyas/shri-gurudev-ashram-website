@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { sharedDb } = require("../config/db");
 const {
   multilingualField,
   multilingualFieldRequired,
@@ -126,4 +127,5 @@ galleryCategorySchema.virtual("imageCount").get(function () {
 galleryCategorySchema.set("toJSON", { virtuals: true });
 galleryCategorySchema.set("toObject", { virtuals: true });
 
-module.exports = mongoose.model("GalleryCategory", galleryCategorySchema);
+module.exports =
+  sharedDb.models.GalleryCategory || sharedDb.model("GalleryCategory", galleryCategorySchema);

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { sharedDb } = require("../config/db");
 const {
   multilingualField,
   multilingualFieldRequired,
@@ -94,4 +95,5 @@ const activitySchema = new mongoose.Schema(
 activitySchema.index({ isVisible: 1, order: 1 });
 activitySchema.index({ category: 1 });
 
-module.exports = mongoose.model("Activity", activitySchema);
+module.exports =
+  sharedDb.models.Activity || sharedDb.model("Activity", activitySchema);

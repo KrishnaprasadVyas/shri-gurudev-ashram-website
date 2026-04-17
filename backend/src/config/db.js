@@ -1,28 +1,51 @@
 const mongoose = require("mongoose");
 
-const connectDB = async () => {
+const mainDb = mongoose.createConnection();
+const sharedDb = mongoose.createConnection();
+
+const connectWithRetry = async (connection, uri, label) => {
   const maxRetries = 5;
   const retryDelay = 5000; // 5 seconds
 
+  if (!uri) {
+    throw new Error(`${label} URI is not configured`);
+  }
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      await mongoose.connect(process.env.MONGO_URI, {
+      await connection.openUri(uri, {
         serverSelectionTimeoutMS: 5000,
       });
-      console.log("✅ MongoDB connected");
+      console.log(`✅ ${label} connected`);
       return;
     } catch (error) {
-      console.error(`❌ MongoDB connection attempt ${attempt}/${maxRetries} failed:`, error.message);
-      
+      console.error(
+        `❌ ${label} connection attempt ${attempt}/${maxRetries} failed:`,
+        error.message,
+      );
+
       if (attempt < maxRetries) {
-        console.log(`⏳ Retrying in ${retryDelay / 1000} seconds...`);
+        console.log(`⏳ Retrying ${label} in ${retryDelay / 1000} seconds...`);
         await new Promise((resolve) => setTimeout(resolve, retryDelay));
       }
     }
   }
-  
-  console.error("❌ Could not connect to MongoDB after", maxRetries, "attempts");
-  process.exit(1);
+
+  throw new Error(`Could not connect ${label} after ${maxRetries} attempts`);
+};
+
+const connectDB = async () => {
+  try {
+    await Promise.all([
+      connectWithRetry(mainDb, process.env.MONGO_URI, "mainDb"),
+      connectWithRetry(sharedDb, process.env.MONGO_URI_SHARED, "sharedDb"),
+    ]);
+  } catch (error) {
+    console.error("❌ Could not establish MongoDB connections:", error.message);
+    process.exit(1);
+  }
 };
 
 module.exports = connectDB;
+module.exports.mainDb = mainDb;
+module.exports.sharedDb = sharedDb;

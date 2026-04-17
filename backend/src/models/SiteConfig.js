@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { sharedDb } = require("../config/db");
 
 /**
  * SiteConfig Model
@@ -30,4 +31,5 @@ siteConfigSchema.statics.getConfig = async function () {
   return config;
 };
 
-module.exports = mongoose.model("SiteConfig", siteConfigSchema);
+module.exports =
+  sharedDb.models.SiteConfig || sharedDb.model("SiteConfig", siteConfigSchema);

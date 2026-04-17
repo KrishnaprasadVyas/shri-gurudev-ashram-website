@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { sharedDb } = require("../config/db");
 
 /**
  * Testimonial Schema
@@ -83,4 +84,5 @@ testimonialSchema.index({ isApproved: 1, order: 1 });
 testimonialSchema.index({ isFeatured: 1 });
 testimonialSchema.index({ createdAt: -1 });
 
-module.exports = mongoose.model("Testimonial", testimonialSchema);
+module.exports =
+  sharedDb.models.Testimonial || sharedDb.model("Testimonial", testimonialSchema);

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { sharedDb } = require("../config/db");
 const {
   multilingualField,
   multilingualFieldRequired,
@@ -156,4 +157,5 @@ donationHeadSchema.virtual("collectedPercentage").get(function () {
 donationHeadSchema.set("toJSON", { virtuals: true });
 donationHeadSchema.set("toObject", { virtuals: true });
 
-module.exports = mongoose.model("DonationHead", donationHeadSchema);
+module.exports =
+  sharedDb.models.DonationHead || sharedDb.model("DonationHead", donationHeadSchema);

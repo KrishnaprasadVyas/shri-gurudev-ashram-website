@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { sharedDb } = require("../config/db");
 
 /**
  * Product Schema
@@ -191,4 +192,4 @@ productSchema.pre("save", function () {
 productSchema.set("toJSON", { virtuals: true });
 productSchema.set("toObject", { virtuals: true });
 
-module.exports = mongoose.model("Product", productSchema);
+module.exports = sharedDb.models.Product || sharedDb.model("Product", productSchema);

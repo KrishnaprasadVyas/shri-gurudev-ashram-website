@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { sharedDb } = require("../config/db");
 const {
   multilingualField,
   multilingualFieldRequired,
@@ -124,4 +125,4 @@ eventSchema.pre("save", function () {
   }
 });
 
-module.exports = mongoose.model("Event", eventSchema);
+module.exports = sharedDb.models.Event || sharedDb.model("Event", eventSchema);

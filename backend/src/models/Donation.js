@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { mainDb } = require("../config/db");
 
 /**
  * Donation Schema
@@ -185,4 +186,5 @@ donationSchema.index({ status: 1 });
 donationSchema.index({ paymentMethod: 1 });
 donationSchema.index({ createdAt: -1 });
 
-module.exports = mongoose.model("Donation", donationSchema);
+module.exports =
+  mainDb.models.Donation || mainDb.model("Donation", donationSchema);
