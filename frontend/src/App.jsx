@@ -50,6 +50,15 @@ import CollectorsView from "./pages/admin/CollectorsView";
 import CollectorDetailView from "./pages/admin/CollectorDetailView";
 import CollectorApplicationsView from "./pages/admin/CollectorApplicationsView";
 
+// Nitya Annadan Admin Module
+import NityaAnnadanAdminLayout from "./layouts/NityaAnnadanAdminLayout";
+import NityaAnnadanOverview from "./pages/admin/nitya-annadan/NityaAnnadanOverview";
+import NityaAnnadanCalendarView from "./pages/admin/nitya-annadan/NityaAnnadanCalendarView";
+import NityaAnnadanBookingsView from "./pages/admin/nitya-annadan/NityaAnnadanBookingsView";
+import NityaAnnadanAddOffline from "./pages/admin/nitya-annadan/NityaAnnadanAddOffline";
+import NityaAnnadanReportsView from "./pages/admin/nitya-annadan/NityaAnnadanReportsView";
+import NityaAnnadanPrintSheet from "./pages/admin/nitya-annadan/NityaAnnadanPrintSheet";
+
 // Donation Module
 import DonationPage from "./modules/donation/DonationPage";
 import MyDonations from "./pages/MyDonations";
@@ -241,6 +250,36 @@ function App() {
                             <Route
                               path="cash-donation"
                               element={<CashDonationForm />}
+                            />
+                          </Route>
+                          <Route
+                            path="nitya-annadan"
+                            element={<NityaAnnadanAdminLayout />}
+                          >
+                            <Route index element={<NityaAnnadanOverview />} />
+                            <Route
+                              path="overview"
+                              element={<NityaAnnadanOverview />}
+                            />
+                            <Route
+                              path="calendar"
+                              element={<NityaAnnadanCalendarView />}
+                            />
+                            <Route
+                              path="bookings"
+                              element={<NityaAnnadanBookingsView />}
+                            />
+                            <Route
+                              path="add-offline"
+                              element={<NityaAnnadanAddOffline />}
+                            />
+                            <Route
+                              path="reports"
+                              element={<NityaAnnadanReportsView />}
+                            />
+                            <Route
+                              path="print-sheet"
+                              element={<NityaAnnadanPrintSheet />}
                             />
                           </Route>
                         </Route>
