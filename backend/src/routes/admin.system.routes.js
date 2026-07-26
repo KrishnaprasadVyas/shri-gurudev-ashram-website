@@ -2,12 +2,14 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middlewares/auth.middleware");
 const { authorize } = require("../middlewares/authorize");
+const { financialApiLimiter } = require("../middlewares/rateLimit");
 const adminController = require("../controllers/admin.controller");
 
 router.get(
   "/donations",
   auth,
   authorize("SYSTEM_ADMIN", "TRUSTEE"),
+  financialApiLimiter,
   adminController.getAllDonations
 );
 
@@ -15,14 +17,16 @@ router.post(
   "/donations/cash",
   auth,
   authorize("SYSTEM_ADMIN", "TRUSTEE"),
+  financialApiLimiter,
   adminController.createCashDonation
 );
 
-// Alias: /donations/offline -> same handler (supports CASH, UPI, CHEQUE)
+// Alias: /donations/offline -> same handler (supports CASH, UPI, CHEQUE, RTGS, NEFT)
 router.post(
   "/donations/offline",
   auth,
   authorize("SYSTEM_ADMIN", "TRUSTEE"),
+  financialApiLimiter,
   adminController.createCashDonation
 );
 

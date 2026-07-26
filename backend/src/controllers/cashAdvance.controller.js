@@ -444,14 +444,25 @@ exports.listAdvances = async (req, res) => {
       ];
     }
 
-    const advances = await CashAdvance.find(filter)
-      .sort({ createdAt: -1 })
-      .limit(200)
-      .populate("addedBy", "name email phone");
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 200;
+    const skip = (page - 1) * limit;
+
+    const [advances, total] = await Promise.all([
+      CashAdvance.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("addedBy", "name email phone"),
+      CashAdvance.countDocuments(filter)
+    ]);
 
     return res.status(200).json({
       success: true,
       count: advances.length,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
       data: advances,
     });
   } catch (err) {

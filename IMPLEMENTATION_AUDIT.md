@@ -450,3 +450,32 @@ Add RTGS and NEFT as supported payment methods in the offline donation form, dat
 
 **Breaking Changes**: None
 **Migration Required**: No
+
+---
+
+### PHASE 10 — Production Hardening + Annual Export
+
+**Date**: 2026-07-26  
+**Status**: COMPLETED
+
+#### Objective
+Production hardening for all ERP financial features, ensuring database indexes, API rate limiting, robust security checks, and optimized aggregation queries.
+
+#### Files Modified
+- `backend/src/controllers/finance.reports.controller.js` - Refactored `getDashboardStats` from in-memory arrays to MongoDB `aggregate()` pipelines.
+- `backend/src/controllers/cashAdvance.controller.js` - Added server-side pagination to `listAdvances`.
+- `backend/src/controllers/voucher.controller.js` - Added server-side pagination to `listVouchers`.
+- `backend/src/services/voucher.service.js` - Enhanced PDF generator to handle RTGS/NEFT specific references instead of standard generic strings.
+- `backend/src/routes/admin.system.routes.js` - Added `financialApiLimiter` to offline donation creation and fetch routes.
+
+#### Verification Results
+- [x] Verified `CashAdvance`, `Voucher`, and `AuditLog` models define required indexes and do not duplicate them.
+- [x] Ensured `financialApiLimiter` rate limiter is bound to offline donation routes (`/donations`, `/donations/cash`, `/donations/offline`).
+- [x] Voucher PDF rendering seamlessly transitions "PAYMENT REF" label to "RTGS REF" and "NEFT REF".
+- [x] Replaced performance-heavy `find().lean()` list operations with `aggregate()` pipelines in `getDashboardStats`.
+- [x] Added `skip()` and `limit()` to large array financial lists.
+- [x] Full `npm test` suite passed, validating that modifications did not break APIs or reconciliation totals.
+- [x] Full `npm run build` completed successfully.
+
+**Breaking Changes**: None
+**Migration Required**: No

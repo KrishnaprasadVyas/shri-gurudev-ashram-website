@@ -236,10 +236,17 @@ exports.generateVoucherPdf = (voucher) => {
       // Payment Details Box
       doc.rect(50, y, doc.page.width - 100, 50).fillAndStroke("#ffffff", "#e5e7eb");
       y += 10;
+      const pMode = voucher.paymentMode || "CASH";
       doc.fontSize(9).font("Helvetica").fillColor(grayColor).text("PAYMENT MODE:", 60, y);
-      doc.font("Helvetica-Bold").fillColor(darkColor).text(voucher.paymentMode || "CASH", 150, y);
+      doc.font("Helvetica-Bold").fillColor(darkColor).text(pMode, 150, y);
 
-      doc.font("Helvetica").fillColor(grayColor).text("PAYMENT REF:", 300, y);
+      let refLabel = "PAYMENT REF:";
+      if (pMode === "CHEQUE") refLabel = "CHEQUE NO:";
+      else if (pMode === "UPI") refLabel = "UTR NO:";
+      else if (pMode === "RTGS") refLabel = "RTGS REF:";
+      else if (pMode === "NEFT") refLabel = "NEFT REF:";
+
+      doc.font("Helvetica").fillColor(grayColor).text(refLabel, 300, y);
       doc.font("Helvetica-Bold").fillColor(darkColor).text(voucher.paymentRef || "N/A", 390, y);
       y += 18;
 

@@ -587,33 +587,43 @@ exports.getDashboardStats = async (req, res) => {
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
 
-    const [openAdvances, todayDonations, monthDonations, monthVouchers] = await Promise.all([
-      CashAdvance.find({ status: "OPEN" }).lean(),
-      Donation.find({
-        $or: [{ status: "SUCCESS" }, { "payment.status": "SUCCESS" }],
-        createdAt: { $gte: startOfToday }
-      }).lean(),
-      Donation.find({
-        $or: [{ status: "SUCCESS" }, { "payment.status": "SUCCESS" }],
-        createdAt: { $gte: startOfMonth }
-      }).lean(),
-      Voucher.find({ createdAt: { $gte: startOfMonth } }).lean(),
+    const [openAdvancesResult, todayDonationsResult, monthDonationsResult, monthVouchersResult] = await Promise.all([
+      CashAdvance.aggregate([
+        { $match: { status: "OPEN" } },
+        { $group: { _id: null, count: { $sum: 1 }, total: { $sum: "$advanceAmount" } } }
+      ]),
+      Donation.aggregate([
+        { $match: {
+            $or: [{ status: "SUCCESS" }, { "payment.status": "SUCCESS" }],
+            createdAt: { $gte: startOfToday }
+        } },
+        { $group: { _id: null, count: { $sum: 1 }, total: { $sum: "$amount" } } }
+      ]),
+      Donation.aggregate([
+        { $match: {
+            $or: [{ status: "SUCCESS" }, { "payment.status": "SUCCESS" }],
+            createdAt: { $gte: startOfMonth }
+        } },
+        { $group: { _id: null, count: { $sum: 1 }, total: { $sum: "$amount" } } }
+      ]),
+      Voucher.aggregate([
+        { $match: { createdAt: { $gte: startOfMonth } } },
+        { $group: {
+            _id: null,
+            count: { $sum: 1 },
+            total: { $sum: { $ifNull: ["$actualAmount", "$amount"] } }
+        } }
+      ])
     ]);
 
-    const openAdvancesCount = openAdvances.length;
-    const openAdvancesTotal = openAdvances.reduce((acc, a) => acc + (a.advanceAmount || 0), 0);
-
-    const todayDonationsCount = todayDonations.length;
-    const todayDonationsTotal = todayDonations.reduce((acc, d) => acc + (d.amount || 0), 0);
-
-    const monthDonationsCount = monthDonations.length;
-    const monthDonationsTotal = monthDonations.reduce((acc, d) => acc + (d.amount || 0), 0);
-
-    const monthVouchersCount = monthVouchers.length;
-    const monthVouchersTotal = monthVouchers.reduce((acc, v) => {
-      const amt = v.actualAmount !== undefined && v.actualAmount !== null ? v.actualAmount : (v.amount || 0);
-      return acc + amt;
-    }, 0);
+    const openAdvancesCount = openAdvancesResult[0]?.count || 0;
+    const openAdvancesTotal = openAdvancesResult[0]?.total || 0;
+    const todayDonationsCount = todayDonationsResult[0]?.count || 0;
+    const todayDonationsTotal = todayDonationsResult[0]?.total || 0;
+    const monthDonationsCount = monthDonationsResult[0]?.count || 0;
+    const monthDonationsTotal = monthDonationsResult[0]?.total || 0;
+    const monthVouchersCount = monthVouchersResult[0]?.count || 0;
+    const monthVouchersTotal = monthVouchersResult[0]?.total || 0;
 
     return res.status(200).json({
       success: true,

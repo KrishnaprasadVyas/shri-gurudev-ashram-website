@@ -21,14 +21,25 @@ exports.listVouchers = async (req, res) => {
       ];
     }
 
-    const vouchers = await Voucher.find(filter)
-      .sort({ date: -1 })
-      .limit(200)
-      .populate("preparedBy", "name email phone");
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 200;
+    const skip = (page - 1) * limit;
+
+    const [vouchers, total] = await Promise.all([
+      Voucher.find(filter)
+        .sort({ date: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("preparedBy", "name email phone"),
+      Voucher.countDocuments(filter)
+    ]);
 
     return res.status(200).json({
       success: true,
       count: vouchers.length,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
       data: vouchers,
     });
   } catch (err) {

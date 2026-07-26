@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Production Hardening & Performance (Phase 10)**: Optimized system architecture with MongoDB `aggregate()` pipelines replacing in-memory computations for dashboard statistics. Introduced server-side pagination for Cash Advances and Vouchers to handle unbounded list growth. Reinforced API security by extending the `financialApiLimiter` to offline donation routes. Improved PDF generation logic to correctly label `RTGS REF:` and `NEFT REF:` natively. Verified robust index coverage across all ERP collections.
 - **Payment Method Extension (Phase 9)**: Added `RTGS` and `NEFT` as supported offline donation payment methods. Expanded the `Donation` schema and `OfflineDonationForm.jsx` UI to capture reference numbers and bank names for these methods. RTGS and NEFT receipts render correctly with these references.
 - **Payment-specific Donation Receipt Details (Phase 8)**: Newly generated donation PDFs now show UPI UTRs; cheque number, bank, and date; RTGS/NEFT references with bank; and Razorpay payment IDs for online donations. Cash receipts intentionally retain no payment-reference row. No endpoint, schema, payment-entry, or receipt-numbering change was made.
 
