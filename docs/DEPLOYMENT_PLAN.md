@@ -53,3 +53,33 @@ In the unlikely event of an unexpected runtime issue following Phase 1 deploymen
    - Reload backend server process (`pm2 reload ashram-backend`).
 3. **Database Cleanups (Optional)**:
    - Since Phase 1 made no data modifications or migrations, existing user documents remain untouched. Any test documents created in `auditlogs` or `counters` during verification can be left in place or dropped without affecting existing system behavior.
+
+---
+
+## 3. Phase 2 Deployment Protocol (Receipt Number Upgrade)
+
+### 3.1 Deployment Sequence
+Phase 2 modifies internal receipt generation logic across `admin.controller.js`, `webhook.controller.js`, and `donation.controller.js` to output atomic prefixes (`CA-`, `CH-`, `UPI-`, `OL-`).
+
+1. **Code Deployment**:
+   - Pull latest `master` branch onto the staging/production server.
+   - Verify zero package dependency changes (`npm ci` or standard pull).
+2. **Backend Restart**:
+   - Perform graceful restart of the backend Node.js process:
+     ```bash
+     pm2 reload ashram-backend
+     ```
+3. **Post-Deployment Verification**:
+   - Make a test cash donation in the Admin Portal (`/admin/system/donations/cash`) and verify the returned `receiptNumber` begins with `CA-000001` (or next sequence).
+   - Verify that downloading a receipt PDF for a pre-existing donation returns the legacy receipt number without error or alteration.
+
+---
+
+### 3.2 Rollback Procedure — Phase 2
+In the event of an issue with receipt number sequence generation or webhook capture in production:
+1. **Code Rollback**:
+   - Revert git checkout to the Phase 1 completion tag (`feat(finance): Phase 1` commit hash).
+2. **Restart Backend**:
+   - Reload server process (`pm2 reload ashram-backend`).
+3. **Database State & Cleanup**:
+   - During Phase 2, MongoDB will have seeded counter documents in `counters` (`CA`, `CH`, `UPI`, `OL`). These do NOT need to be dropped upon rollback; if Phase 2 is re-deployed later, numbering will resume safely from the highest sequence recorded without risk of duplicate IDs.

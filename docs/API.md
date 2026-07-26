@@ -23,9 +23,9 @@ Authorization: Bearer <jwt_token>
 
 ---
 
-## 2. Phase 1 API Implementations & Modifications
+## 2. Phase 1 & Phase 2 API Implementations & Modifications
 
-### 2.1 Route Guarding & Authorization
+### 2.1 Route Guarding & Authorization (Phase 1)
 In Phase 1, no new public REST endpoints were introduced. Instead, the authentication and authorization middleware layer was upgraded to recognize the new `TRUSTEE` role.
 
 #### Existing Endpoints Modified for Trustee Access
@@ -33,14 +33,18 @@ In Phase 1, no new public REST endpoints were introduced. Instead, the authentic
   - **Returns**: Current authenticated user profile including `role: "TRUSTEE"`.
   - **Behavior Change**: None to payload structure; enum value `TRUSTEE` is now returned for assigned users.
 
+### 2.2 Receipt Numbering System (Phase 2)
+In Phase 2, internal receipt generation logic was upgraded to output official atomic reference prefixes without altering external HTTP route signatures.
+- **Affected Endpoints**:
+  - `POST /api/admin/system/donations/cash` — Assigns `CA-`, `CH-`, or `UPI-` prefix based on effective payment method.
+  - Razorpay Webhook Confirmation (`POST /api/webhooks/razorpay`) — Assigns `OL-` prefix upon successful `payment.captured` event.
+  - `GET /api/donations/:id/receipt` — Returns PDF stream; fallback generation for legacy records missing a number assigns appropriate atomic prefix.
+
 ---
 
 ## 3. Planned ERP API Endpoints (Future Phases)
 
-### 3.1 Receipt Number Upgrade (Phase 2)
-- Internal service upgrade; no new external HTTP endpoints. Existing donation endpoints (`POST /api/donations/initiate`, `POST /api/admin/system/donations/cash`) will begin outputting prefixed receipt numbers (`CA-`, `CH-`, `UPI-`, `OL-`).
-
-### 3.2 Cash Advances & Vouchers (`/api/finance/*` — Phase 3)
+### 3.1 Cash Advances & Vouchers (`/api/finance/*` — Phase 3)
 All endpoints below will be protected by `auth`, `authorize("TRUSTEE", "SYSTEM_ADMIN")`, and `financialApiLimiter`:
 - `POST /api/finance/advances` — Request/create a Type A cash advance
 - `POST /api/finance/advances/direct` — Record a Type B direct vendor payment (auto-generates voucher)

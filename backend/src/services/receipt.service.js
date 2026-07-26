@@ -1,6 +1,7 @@
 const PDFDocument = require("pdfkit");
 const fs = require("fs");
 const path = require("path");
+const { getNextNumber } = require("./counter.service");
 
 /**
  * Convert filesystem path to public URL path
@@ -472,5 +473,41 @@ y = 50 + imageSize + 20; // Move title up more
     }
   });
 };
-
 exports.getReceiptPublicUrl = getReceiptPublicUrl;
+
+/**
+ * ERP Phase 2 — Receipt Number Generator
+ *
+ * Generates atomic, collision-proof receipt reference numbers using the
+ * counter service. Maps standard payment methods to official prefixes:
+ * - CASH -> CA-000001
+ * - CHEQUE -> CH-000001
+ * - UPI -> UPI-000001
+ * - ONLINE (Razorpay) -> OL-000001
+ *
+ * @param {string} paymentMethod - The effective payment method string
+ * @param {import("mongoose").ClientSession|null} session - Optional MongoDB session for transactions
+ * @returns {Promise<string>} Formatted receipt number string
+ */
+exports.generateReceiptNumber = async (paymentMethod, session = null) => {
+  const method = String(paymentMethod || "").toUpperCase().trim();
+  let prefix = "CA"; // default fallback for cash if unspecified
+
+  if (method === "CHEQUE" || method === "CH" || method === "CHQ") {
+    prefix = "CH";
+  } else if (method === "UPI") {
+    prefix = "UPI";
+  } else if (
+    method === "ONLINE" ||
+    method === "OL" ||
+    method === "RAZORPAY" ||
+    method === "CARD" ||
+    method === "NETBANKING"
+  ) {
+    prefix = "OL";
+  } else if (method === "CASH" || method === "CA") {
+    prefix = "CA";
+  }
+
+  return await getNextNumber(prefix, session);
+};

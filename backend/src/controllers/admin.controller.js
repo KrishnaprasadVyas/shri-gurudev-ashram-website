@@ -2,7 +2,7 @@ const Donation = require("../models/Donation");
 const User = require("../models/User");
 const path = require("path");
 const fs = require("fs");
-const { generateDonationReceipt, getReceiptPublicUrl } = require("../services/receipt.service");
+const { generateDonationReceipt, getReceiptPublicUrl, generateReceiptNumber } = require("../services/receipt.service");
 const { sendDonationReceiptEmail } = require("../services/email.service");
 const { getKycDocumentPath, deleteKycDocuments } = require("../services/kyc.service");
 const { assignReferralCode } = require("../services/collector.service");
@@ -233,8 +233,8 @@ exports.createCashDonation = async (req, res) => {
       createdAt: paymentDate ? new Date(paymentDate) : new Date(),
     });
 
-    // Generate receipt number first
-    const receiptNumber = `GDA-${Date.now()}-${donation._id.toString().slice(-6).toUpperCase()}`;
+    // Generate receipt number first using ERP counter service (CA, CH, UPI)
+    const receiptNumber = await generateReceiptNumber(effectiveMethod);
     donation.receiptNumber = receiptNumber;
     await donation.save();
 

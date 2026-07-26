@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Receipt Number Generation Service (Phase 2)**: Added `generateReceiptNumber(paymentMethod, session)` export in `backend/src/services/receipt.service.js` to generate atomic sequential receipt references (`CA-`, `CH-`, `UPI-`, `OL-`) using the ERP counter service.
 - **TRUSTEE Role**: Added `TRUSTEE` to the user role enum in `backend/src/models/User.js` for ashram financial operations.
 - **Audit Log Model**: Created `backend/src/models/AuditLog.js` with append-only schema and compound indexes for tracking all financial operations.
 - **Counter Model & Service**: Created `backend/src/models/Counter.js` and `backend/src/services/counter.service.js` for atomic, collision-proof sequence generation (`ADV-`, `VCH-`, `CA-`, `CH-`, `UPI-`, `OL-`).
@@ -17,6 +18,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Finance Portal Card**: Added conditional Finance Portal navigation card on `AdminHome.jsx` (visible only to SYSTEM_ADMIN and TRUSTEE users).
 
 ### Changed
+- **Offline Cash/Cheque/UPI Donation Receipt Numbering (Phase 2)**: Updated `createCashDonation` in `backend/src/controllers/admin.controller.js` to assign atomic prefixed receipt numbers (`CA-XXXXXX`, `CH-XXXXXX`, `UPI-XXXXXX`) instead of ad-hoc timestamp strings.
+- **Online Razorpay Webhook Receipt Numbering (Phase 2)**: Updated `handleRazorpayWebhook` in `backend/src/controllers/webhook.controller.js` to assign atomic `OL-XXXXXX` receipt numbers upon payment capture.
+- **Donation Receipt Fallback Numbering (Phase 2)**: Updated `downloadReceipt` in `backend/src/controllers/donation.controller.js` to assign atomic prefix-based receipt numbers when generating fallback numbers for donations missing a reference.
 - **Auth Context**: Updated `getRedirectPath()` in `AuthContext.jsx` to route `TRUSTEE` users to `/admin/trustee`.
 - **Admin Route Guard**: Extended `AdminRoute.jsx` to recognize `TRUSTEE` as an administrative role while enforcing strict path-based isolation (preventing TRUSTEE access to `/admin/system` or `/admin/website`).
 - **Admin Layout Badge**: Updated `AdminLayout.jsx` header badge to display "Finance Portal" in emerald styling for TRUSTEE users.
@@ -36,7 +40,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - No new public or admin API endpoints added in Phase 1 (pure infrastructure and auth foundation).
 
 ### Planned (Remaining ERP Phases)
-- Receipt Number Upgrade — `CA-`, `CH-`, `UPI-`, `OL-` prefixes (Phase 2)
 - Cash Advance + Settlement + Auto-Voucher workflow (Phase 3)
 - Trustee Offline Donation Entry & Receipt printing (Phase 4)
 - Financial Reports & Dashboard (Phase 5)

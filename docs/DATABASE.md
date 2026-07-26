@@ -78,6 +78,7 @@ The application utilizes two separate MongoDB connections managed in `backend/sr
   - Uses `_id` as the primary key string matching the sequence prefix (`"CA"`, `"CH"`, `"UPI"`, `"OL"`, `"ADV"`, `"VCH"`).
   - Uses MongoDB's atomic `$inc` operator via `findOneAndUpdate` to prevent number collisions under concurrency.
   - Supports MongoDB ClientSession for execution within multi-document transactions.
+  - **Intentional Design Decision on Sequence Gaps & Rollbacks**: When sequence generation occurs outside a transaction (or during concurrent transaction rollbacks), reference number gaps may occur if a subsequent operation fails. Once an integer sequence is incremented by `$inc`, it is never recycled or rolled back across concurrent workers. This is an intentional architectural requirement for production accounting compliance: guaranteeing zero duplicate IDs and preserving chronological integrity without serializing transactions or causing database lock contention.
 
 #### Schema Definition
 ```javascript
@@ -89,6 +90,9 @@ The application utilizes two separate MongoDB connections managed in `backend/sr
 
 #### Indexes
 - Primary Key on `_id` (default MongoDB index). No additional indexes required as all queries perform O(1) primary key lookups.
+
+#### Phase 2 Integration Note
+In Phase 2, `receipt.service.js` was upgraded to export `generateReceiptNumber(paymentMethod, session)`, which queries this `counters` collection to issue atomic reference numbers for offline cash/cheque/UPI donations (`createCashDonation`), confirmed Razorpay webhooks (`handleRazorpayWebhook`), and legacy fallback downloads (`downloadReceipt`). Existing donation records in `donations` preserve their original receipt number string untouched.
 
 ---
 

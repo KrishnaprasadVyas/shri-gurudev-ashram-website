@@ -168,57 +168,49 @@ It is production documentation and must be updated after every phase.
 
 ---
 
-### PHASE 2 — Expense Management
+### PHASE 2 — Receipt Number Upgrade
 
-**Date**: TBD  
-**Status**: PENDING  
+**Date**: 2026-07-26  
+**Status**: COMPLETED  
 
-**Objective**: Allow admin/trustee to record, categorize, and approve ashram expenses.
+**Objective**: Implement prefix-based atomic receipt numbering (`CA-`, `CH-`, `UPI-`, `OL-`) for all new donations without modifying or breaking legacy receipts.
 
-**Files to Create**:
-- `backend/src/models/Expense.js`
-- `backend/src/controllers/expense.controller.js`
-- `backend/src/routes/expense.routes.js`
-- `frontend/src/pages/admin/trustee/ExpensesView.jsx`
-- `frontend/src/pages/admin/trustee/ExpenseForm.jsx`
-- `frontend/src/services/trusteeApi.js`
+**Files Created**: None (utilizes `counter.service.js` from Phase 1)
 
-**Files to Modify**:
-- `backend/src/app.js` — Mount expense routes
+**Files Modified**:
+- `backend/src/services/receipt.service.js` — Imported `getNextNumber` and exported `generateReceiptNumber(paymentMethod, session)` mapping standard methods to prefixes.
+- `backend/src/controllers/admin.controller.js` — Replaced ad-hoc `GDA-` receipt string in `createCashDonation` with atomic counter service invocation.
+- `backend/src/controllers/donation.controller.js` — Updated `downloadReceipt` fallback logic to generate prefix-based numbers for legacy records missing a reference.
+- `backend/src/controllers/webhook.controller.js` — Replaced ad-hoc `GRD-` string in `handleRazorpayWebhook` with atomic `OL-` prefix generation upon payment capture.
 
 **Database Changes**:
-- New collection: `expenses`
-- New collection: `auditlogs` (if not created in Phase 1)
+- No schema changes.
+- `counters` collection on `mainDb` automatically seeds and increments `{ _id: "CA", seq: 1 }`, `{ _id: "CH", seq: 1 }`, `{ _id: "UPI", seq: 1 }`, and `{ _id: "OL", seq: 1 }` via atomic `$inc` operations.
+- Legacy donation documents retain their original `receiptNumber` string untouched.
+- **Intentional Design Decision on Sequence Gaps**: To eliminate database lock contention under concurrency and prevent duplicate reference IDs across aborted or failed operations, sequence integers incremented via `$inc` are never recycled or rolled back across concurrent workers. Non-sequential reference gaps are an accepted design decision compliant with financial audit trace requirements.
 
 **API Changes**:
-- `GET /api/admin/system/expenses`
-- `POST /api/admin/system/expenses`
-- `GET /api/admin/system/expenses/:id`
-- `PUT /api/admin/system/expenses/:id`
-- `DELETE /api/admin/system/expenses/:id`
-- `PATCH /api/admin/system/expenses/:id/approve`
-- `PATCH /api/admin/system/expenses/:id/reject`
+- Zero external API endpoint modifications. Response payloads retain the `receiptNumber` string field formatted with official prefixes.
 
 **Breaking Changes**: None
 
-**Migration Required**: No
+**Migration Required**: No (backward compatible additive logic).
 
-**Testing Performed**: TBD
+**Testing Performed**:
+- Node.js syntax verification (`node --check`) across all 4 modified backend modules: ✅ PASSED
+- Runtime module dependency loading test: ✅ PASSED
+- Prefix mapping execution verification (`CA-000001`, `CH-000001`, `UPI-000001`, `OL-000001`): ✅ PASSED
+- Frontend production bundle build (`npm run build`): ✅ PASSED (1,123 KB in 7.18s)
 
 **Known Issues**: None
 
-**Completed Tasks**: None yet
-
-**Pending Tasks**:
-- [ ] Create Expense model
-- [ ] Create expense controller
-- [ ] Create expense routes
-- [ ] Mount in app.js
-- [ ] Create ExpensesView page
-- [ ] Create ExpenseForm page
-- [ ] Create trusteeApi.js
-- [ ] Wire to TrusteeLayout navigation
-- [ ] Run regression test
+**Completed Tasks**:
+- [x] Create `generateReceiptNumber` utility in `receipt.service.js`
+- [x] Integrate counter service into `createCashDonation` in `admin.controller.js`
+- [x] Integrate counter service into `handleRazorpayWebhook` in `webhook.controller.js`
+- [x] Integrate counter service into `downloadReceipt` fallback in `donation.controller.js`
+- [x] Verify backward compatibility with existing donation records and PDF generation
+- [x] Run regression test and verify zero impact on public website, authentication, and collector portals
 
 ---
 

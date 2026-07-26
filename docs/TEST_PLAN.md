@@ -58,11 +58,29 @@ This document outlines the systematic testing protocol applied to the Shri Gurud
 
 ---
 
-## 3. Test Results Summary — Phase 1
+## 3. Phase 2 Verification Checklist — Receipt Number Upgrade
+
+### 3.1 Backend Receipt Number Generation Checks
+- [x] **Prefix Mapping Verification**:
+  - Test `generateReceiptNumber("CASH")` returns `CA-XXXXXX`.
+  - Test `generateReceiptNumber("CHEQUE")` returns `CH-XXXXXX`.
+  - Test `generateReceiptNumber("UPI")` returns `UPI-XXXXXX`.
+  - Test `generateReceiptNumber("ONLINE")` returns `OL-XXXXXX`.
+- [x] **Controller Integration Checks**:
+  - Verify `createCashDonation` in `admin.controller.js` invokes `generateReceiptNumber(effectiveMethod)` and sets `donation.receiptNumber`.
+  - Verify `handleRazorpayWebhook` in `webhook.controller.js` invokes `generateReceiptNumber("ONLINE")` prior to atomic update.
+  - Verify `downloadReceipt` in `donation.controller.js` invokes `generateReceiptNumber` only when `!donation.receiptNumber` (legacy fallback).
+- [x] **Backward Compatibility Verification**:
+  - Confirm existing donation records with old formats (e.g., `GDA-`, `GRD-`) bypass fallback generation and retain immutable reference strings.
+
+---
+
+## 4. Test Results Summary — Phase 1 & Phase 2
 
 | Verification Item | Command / Method | Status | Notes |
 |---|---|:---:|---|
-| Backend Module Integrity | `node -e "require(...)"` | ✅ PASSED | All 5 Phase 1 backend modules loaded cleanly |
-| Frontend Production Build | `npm run build` | ✅ PASSED | 1,123 KB JS bundle generated in 7.32s |
-| Frontend Lint Verification | `npx eslint ...` | ✅ PASSED | Zero new errors introduced; 65 pre-existing issues confirmed unchanged |
-| Route Isolation Logic | Code review & path tree audit | ✅ PASSED | Strict role boundaries enforced in `AdminRoute.jsx` & `TrusteeRoute.jsx` |
+| Phase 1 Backend Integrity | `node -e "require(...)"` | ✅ PASSED | All 5 Phase 1 backend modules loaded cleanly |
+| Phase 2 Backend Integrity | `node -e "require(...)"` | ✅ PASSED | All 4 Phase 2 modified modules loaded cleanly without syntax/runtime errors |
+| Prefix Mapping Logic | Code execution mock test | ✅ PASSED | Confirmed `CA-`, `CH-`, `UPI-`, `OL-` generation |
+| Frontend Production Build | `npm run build` | ✅ PASSED | 1,123 KB JS bundle generated cleanly in 7.18s |
+| Frontend Lint Verification | `npx eslint ...` | ✅ PASSED | Zero new errors introduced; pre-existing codebase baseline unchanged |

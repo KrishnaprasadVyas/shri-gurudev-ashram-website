@@ -8,6 +8,7 @@ const User = require("../models/User");
 const {
   generateDonationReceipt,
   getReceiptPublicUrl,
+  generateReceiptNumber,
 } = require("../services/receipt.service");
 const { sendDonationReceiptEmail } = require("../services/email.service");
 const {
@@ -388,9 +389,11 @@ exports.downloadReceipt = async (req, res) => {
         .json({ message: "Receipt not available for this donation" });
     }
 
-    // Ensure donation has a receipt number before generating
+    // Ensure donation has a receipt number before generating (ERP Phase 2)
     if (!donation.receiptNumber) {
-      donation.receiptNumber = `GRD-${new Date(donation.createdAt).getFullYear()}-${donation._id.toString().slice(-6).toUpperCase()}`;
+      const method = typeof donation.getPaymentMethod === "function" ? donation.getPaymentMethod() : donation.paymentMethod;
+      donation.receiptNumber = await generateReceiptNumber(method);
+      await donation.save();
     }
 
     // Always regenerate the PDF so that every download uses the current

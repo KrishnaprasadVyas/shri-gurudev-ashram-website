@@ -4,6 +4,7 @@ const Donation = require("../models/Donation");
 const {
   generateDonationReceipt,
   getReceiptPublicUrl,
+  generateReceiptNumber,
 } = require("../services/receipt.service");
 const { sendDonationReceiptEmail } = require("../services/email.service");
 
@@ -36,8 +37,8 @@ exports.handleRazorpayWebhook = async (req, res) => {
       const orderId = payment.order_id;
       const paymentId = payment.id;
 
-      // Atomic update to prevent race condition on duplicate webhooks
-      const receiptNumber = `GRD-${new Date().getFullYear()}-${Date.now().toString(36).toUpperCase()}`;
+      // Atomic update to prevent race condition on duplicate webhooks (ERP Phase 2 OL prefix)
+      const receiptNumber = await generateReceiptNumber("ONLINE");
       
       const donation = await Donation.findOneAndUpdate(
         { razorpayOrderId: orderId, status: "PENDING" },
