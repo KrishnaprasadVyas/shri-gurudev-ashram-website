@@ -11,6 +11,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import ProtectedRoute from "./components/ProtectedRoute";
 import CollectorRoute from "./components/CollectorRoute";
 import AdminRoute from "./components/AdminRoute";
+import TrusteeRoute from "./components/TrusteeRoute"; // ERP Phase 1
 import ErrorBoundary from "./components/ErrorBoundary";
 
 // Pages
@@ -58,6 +59,10 @@ import NityaAnnadanBookingsView from "./pages/admin/nitya-annadan/NityaAnnadanBo
 import NityaAnnadanAddOffline from "./pages/admin/nitya-annadan/NityaAnnadanAddOffline";
 import NityaAnnadanReportsView from "./pages/admin/nitya-annadan/NityaAnnadanReportsView";
 import NityaAnnadanPrintSheet from "./pages/admin/nitya-annadan/NityaAnnadanPrintSheet";
+
+// Finance (Trustee) Portal — ERP Phase 1
+import TrusteeLayout from "./layouts/TrusteeLayout";
+import TrusteeHome from "./pages/admin/trustee/TrusteeHome";
 
 // Donation Module
 import DonationPage from "./modules/donation/DonationPage";
@@ -281,6 +286,27 @@ function App() {
                               path="print-sheet"
                               element={<NityaAnnadanPrintSheet />}
                             />
+                          </Route>
+
+                          {/* Finance (Trustee) Portal — ERP Phase 1 */}
+                          <Route
+                            path="trustee"
+                            element={
+                              <TrusteeRoute>
+                                <TrusteeLayout />
+                              </TrusteeRoute>
+                            }
+                          >
+                            {/* Phase 1: Overview placeholder */}
+                            <Route index element={<TrusteeHome />} />
+                            <Route
+                              path="overview"
+                              element={<TrusteeHome />}
+                            />
+                            {/* Phase 3 routes (Advances, Vouchers) will be added here */}
+                            {/* Phase 4 routes (Donations) will be added here */}
+                            {/* Phase 5 routes (Reports) will be added here */}
+                            {/* Phase 6 routes (Audit Log) will be added here */}
                           </Route>
                         </Route>
                       </Routes>

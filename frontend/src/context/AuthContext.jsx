@@ -129,6 +129,10 @@ export const AuthProvider = ({ children }) => {
         return "/admin/system";
       case "WEBSITE_ADMIN":
         return "/admin/website";
+      case "NITYA_ANNADAN_ADMIN":
+        return "/admin/nitya-annadan";
+      case "TRUSTEE": // ERP Phase 1
+        return "/admin/trustee";
       default:
         return "/";
     }

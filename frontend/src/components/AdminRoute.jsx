@@ -33,7 +33,10 @@ const AdminRoute = ({ children, requiredRole = null }) => {
   const userRole = user?.role;
   const isSystemAdmin = userRole === "SYSTEM_ADMIN";
   const isWebsiteAdmin = userRole === "WEBSITE_ADMIN";
-  const isAdmin = isSystemAdmin || isWebsiteAdmin;
+  const isNityaAnnadanAdmin = userRole === "NITYA_ANNADAN_ADMIN";
+  const isTrustee = userRole === "TRUSTEE"; // ERP Phase 1
+  const isAdmin =
+    isSystemAdmin || isWebsiteAdmin || isNityaAnnadanAdmin || isTrustee;
 
   // Check if user has any admin role
   if (!isAdmin) {
@@ -62,13 +65,43 @@ const AdminRoute = ({ children, requiredRole = null }) => {
   // Path-based access control
   const path = location.pathname;
 
-  // WEBSITE_ADMIN trying to access system routes
+  // WEBSITE_ADMIN cannot access system or trustee routes
   if (isWebsiteAdmin && !isSystemAdmin) {
-    if (path.startsWith("/admin/system")) {
+    if (path.startsWith("/admin/system") || path.startsWith("/admin/trustee")) {
       return (
         <Navigate
           to="/admin/website"
-          state={{ error: "You don't have permission to access System Admin." }}
+          state={{ error: "You don't have permission to access this area." }}
+          replace
+        />
+      );
+    }
+  }
+
+  // TRUSTEE cannot access system admin routes
+  if (isTrustee && !isSystemAdmin) {
+    if (path.startsWith("/admin/system") || path.startsWith("/admin/website")) {
+      return (
+        <Navigate
+          to="/admin/trustee"
+          state={{ error: "You don't have permission to access this area." }}
+          replace
+        />
+      );
+    }
+  }
+
+  // NITYA_ANNADAN_ADMIN can only access nitya-annadan routes (+ admin home)
+  if (isNityaAnnadanAdmin && !isSystemAdmin) {
+    if (
+      path.startsWith("/admin/system") ||
+      path.startsWith("/admin/website") ||
+      path.startsWith("/admin/trustee")
+    ) {
+      return (
+        <Navigate
+          to="/admin/nitya-annadan"
+          state={{ error: "You don't have permission to access this area." }}
           replace
         />
       );

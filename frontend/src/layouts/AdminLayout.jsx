@@ -32,11 +32,17 @@ const AdminLayout = () => {
                 </span>
               </Link>
               {user?.role && (
-                <span className="hidden md:inline-block px-2 py-1 bg-amber-600 rounded text-xs font-medium">
+                <span className={`hidden md:inline-block px-2 py-1 rounded text-xs font-medium ${
+                  user.role === "TRUSTEE"
+                    ? "bg-emerald-600"
+                    : "bg-amber-600"
+                }`}>
                   {user.role === "SYSTEM_ADMIN"
                     ? "System Admin"
                     : user.role === "NITYA_ANNADAN_ADMIN"
                     ? "Nitya Annadan Admin"
+                    : user.role === "TRUSTEE"
+                    ? "Finance Portal"
                     : "Website Admin"}
                 </span>
               )}

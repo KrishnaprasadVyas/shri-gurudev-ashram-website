@@ -27,6 +27,7 @@ const userSchema = new mongoose.Schema(
         "WEBSITE_ADMIN",
         "SYSTEM_ADMIN",
         "NITYA_ANNADAN_ADMIN",
+        "TRUSTEE", // ERP Phase 1: Ashram financial operations role
       ],
       default: "USER",
     },

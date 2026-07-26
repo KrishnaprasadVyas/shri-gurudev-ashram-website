@@ -50,3 +50,22 @@ exports.collectorApplyLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+/**
+ * Financial API rate limiter (ERP Phase 1)
+ * 60 requests per minute per IP
+ * Purpose: Protect financial endpoints (advances, vouchers, reports) from
+ * abuse while allowing normal operational usage.
+ * An ashram with multiple admin users simultaneously is unlikely to exceed
+ * 60 requests/minute in normal operation.
+ */
+exports.financialApiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 60,
+  message: {
+    message: "Too many requests to financial API. Please slow down.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
