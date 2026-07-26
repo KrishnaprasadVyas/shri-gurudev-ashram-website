@@ -328,7 +328,7 @@ Implement real-time financial reporting statements and CSV export capabilities f
 
 ---
 
-### PHASE 6 — Audit Reports + Financial Dashboard
+### PHASE 6 — Audit Log Viewer
 
 **Date**: TBD  
 **Status**: PENDING  
@@ -337,7 +337,7 @@ Implement real-time financial reporting statements and CSV export capabilities f
 
 ---
 
-### PHASE 7 — Settlement Workflow
+### PHASE 7 — Role Management UI (System Admin)
 
 **Date**: TBD  
 **Status**: PENDING  
@@ -346,7 +346,7 @@ Implement real-time financial reporting statements and CSV export capabilities f
 
 ---
 
-### PHASE 8 — Role Management UI
+### PHASE 8 — Receipt PDF Improvements
 
 **Date**: TBD  
 **Status**: PENDING  
