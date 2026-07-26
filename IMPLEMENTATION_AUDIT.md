@@ -7,7 +7,7 @@ It is production documentation and must be updated after every phase.
 
 ## System Baseline (Pre-ERP)
 
-**Date**: 2026-07-26  
+**Date**: 2026-07-26
 **Status**: Stable, production-live  
 **Version**: Pre-ERP (v1.x)
 
@@ -383,7 +383,39 @@ Implemented a dedicated System Admin UI and secure API for assigning user roles,
 
 ### PHASE 8 — Receipt PDF Improvements
 
-**Date**: TBD  
-**Status**: PENDING  
+**Date**: 2026-07-26  
+**Status**: COMPLETED
 
-*(Details to be filled upon phase start)*
+#### Objective
+Improve only newly generated donation-receipt rendering with payment-method-specific references. The existing `generateDonationReceipt(donation)` signature, receipt numbering, routes, data model, and payment-entry behavior remain unchanged.
+
+#### Files Created
+- `backend/tests/receipt_pdf.test.js` - Focused Phase 8 verification for CASH, UPI, CHEQUE, RTGS, NEFT, and ONLINE receipts, including an unchanged existing-PDF hash check.
+
+#### Files Modified
+- `backend/src/services/receipt.service.js` - Adds a conditional payment-reference row using unified payment fields with legacy fallbacks.
+- `backend/package.json` - Runs the Phase 8 receipt-PDF suite under `npm test`.
+- `CHANGELOG.md` and `IMPLEMENTATION_AUDIT.md` - Record Phase 8 behavior and verification.
+
+#### Rendered Receipt Behavior
+- CASH: no reference row.
+- UPI: stored UTR number.
+- CHEQUE: cheque number, bank name, and cheque date.
+- RTGS / NEFT: reference and bank when compatible source data exists. Donation entry/schema support remains Phase 9.
+- ONLINE: persisted Razorpay payment ID.
+
+#### Compatibility and Financial Controls
+- No database schema, API route, authorization, rate-limit, receipt-number, transaction, or audit-log behavior changed.
+- Existing stored PDF files are not migrated or altered. The pre-existing download workflow may regenerate a receipt only when that workflow is explicitly used, as before Phase 8.
+- The resolver reads unified `payment.*` and available legacy top-level fields to retain historical donation compatibility.
+
+#### Verification Results
+- [x] Focused receipt-PDF suite passed 13/13 checks: expected values for all six methods, valid-PDF generation, and unchanged pre-existing-file hash verification.
+- [x] Extracted a generated cheque receipt with `pypdf`; verified the rendered Payment Reference label, cheque number, bank, and formatted date.
+- [x] Full backend `npm test` suite passed after Phase 8 changes.
+- [x] Frontend production `npm run build` passed after Phase 8 changes.
+- [x] Finance, permission, report-reconciliation, audit-viewer, and role-management regression suites remained passing.
+
+**Breaking Changes**: None
+**Migration Required**: No
+**Known Limitations**: RTGS and NEFT are display-compatible only until Phase 9 adds their donation-entry and schema values.

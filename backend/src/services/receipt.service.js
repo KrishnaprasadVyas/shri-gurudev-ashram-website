@@ -88,6 +88,66 @@ const numberToWords = (num) => {
   return result.trim();
 };
 
+/**
+ * Returns the payment-method-specific reference shown on newly generated
+ * donation receipts. This reads both unified-payment and legacy fields so
+ * historical donation documents continue to render without migration.
+ *
+ * RTGS and NEFT rendering is intentionally data-tolerant in this phase. The
+ * payment methods themselves remain a Phase 9 entry/schema change.
+ */
+const getPaymentReference = (donation) => {
+  const payment = donation.payment || {};
+  const method = String(
+    payment.method || donation.paymentMethod || donation.paymentMode || "CASH",
+  ).toUpperCase();
+  const formatDate = (value) => {
+    if (!value) return null;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
+  };
+
+  if (method === "UPI") {
+    const utr = payment.utrNumber || donation.utrNumber;
+    return utr ? `UPI UTR: ${utr}` : null;
+  }
+
+  if (method === "CHEQUE") {
+    const chequeNumber = payment.chequeNumber || donation.chequeNumber;
+    const bankName = payment.bankName || donation.bankName;
+    const chequeDate = formatDate(payment.chequeDate || donation.chequeDate);
+    const details = [
+      chequeNumber && `Cheque No: ${chequeNumber}`,
+      bankName && `Bank: ${bankName}`,
+      chequeDate && `Date: ${chequeDate}`,
+    ].filter(Boolean);
+    return details.length ? details.join(" | ") : null;
+  }
+
+  if (method === "RTGS" || method === "NEFT") {
+    const reference =
+      payment.referenceNumber ||
+      payment.paymentRef ||
+      payment.utrNumber ||
+      donation.referenceNumber ||
+      donation.paymentRef ||
+      donation.transactionRef;
+    const bankName = payment.bankName || donation.bankName;
+    if (!reference && !bankName) return null;
+    return [`${method} Ref: ${reference || "-"}`, bankName && `Bank: ${bankName}`]
+      .filter(Boolean)
+      .join(" | ");
+  }
+
+  if (method === "ONLINE" || method === "RAZORPAY") {
+    const paymentId = payment.razorpayPaymentId || donation.paymentId;
+    return paymentId ? `Razorpay Payment ID: ${paymentId}` : null;
+  }
+
+  return null;
+};
+
 exports.generateDonationReceipt = (donation) => {
   return new Promise((resolve, reject) => {
     try {
@@ -304,6 +364,7 @@ y = 50 + imageSize + 20; // Move title up more
       const rowHeight = 45; // Taller rows for vertical spacing
       const cellPadding = 12; // More padding
 
+      const paymentReference = getPaymentReference(donation);
       const tableData = [
         {
           label: "Donor Name",
@@ -336,6 +397,7 @@ y = 50 + imageSize + 20; // Move title up more
           label: "Payment Mode",
           value: donation.payment?.method || donation.paymentMethod || donation.paymentMode || "Cash"
         },
+        ...(paymentReference ? [{ label: "Payment Reference", value: paymentReference }] : []),
         {
           label: "Donation Amount",
           value: `Rs ${donation.amount} (${numberToWords(donation.amount)})`
@@ -474,9 +536,10 @@ y = 50 + imageSize + 20; // Move title up more
   });
 };
 exports.getReceiptPublicUrl = getReceiptPublicUrl;
+exports.getPaymentReference = getPaymentReference;
 
 /**
- * ERP Phase 2 — Receipt Number Generator
+ * ERP Phase 2 - Receipt Number Generator
  *
  * Generates atomic, collision-proof receipt reference numbers using the
  * counter service. Maps standard payment methods to official prefixes:
@@ -510,4 +573,4 @@ exports.generateReceiptNumber = async (paymentMethod, session = null) => {
   }
 
   return await getNextNumber(prefix, session);
-};
+};
