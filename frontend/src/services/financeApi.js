@@ -100,4 +100,49 @@ export const financeApi = {
     document.body.removeChild(link);
     window.URL.revokeObjectURL(downloadUrl);
   },
+
+  // Donations (Trustee offline entry & management)
+  listDonations: (params = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v !== undefined && v !== "")
+    ).toString();
+    return apiRequest(`/admin/system/donations${query ? `?${query}` : ""}`, {
+      method: "GET",
+    });
+  },
+
+  createOfflineDonation: (data) =>
+    apiRequest("/admin/system/donations/offline", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  getPublicDonationHeads: () =>
+    apiRequest("/public/donation-heads", {
+      method: "GET",
+    }),
+
+  downloadDonationReceipt: async (id, receiptNumber) => {
+    const url = `${API_BASE_URL}/donations/${id}/receipt`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to download donation receipt PDF");
+    }
+
+    const blob = await response.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = `Receipt_${receiptNumber || id}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(downloadUrl);
+  },
 };

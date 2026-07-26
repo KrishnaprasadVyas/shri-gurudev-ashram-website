@@ -275,9 +275,28 @@ It is production documentation and must be updated after every phase.
 
 ### PHASE 4 — Trustee Offline Donation Entry
 
+**Date**: 2026-07-26  
+**Status**: COMPLETED  
+
+#### Objectives
+Allow TRUSTEE users to enter offline counter donations (`CASH`, `UPI`, `CHEQUE`) and view the complete ashram donations register with automatic prefixed receipt numbering, matching SYSTEM_ADMIN capabilities without exposing system administration routes.
+
+#### Scope Completed
+- **Backend Route Authorizations**: Modified `backend/src/routes/admin.system.routes.js` to authorize `TRUSTEE` (alongside `SYSTEM_ADMIN`) on `/donations`, `/donations/cash`, and `/donations/offline`.
+- **API Client Extensions**: Updated `frontend/src/services/financeApi.js` with `listDonations()`, `createOfflineDonation()`, `getPublicDonationHeads()`, and `downloadDonationReceipt()`.
+- **Trustee Donations Register UI**: Created `frontend/src/pages/admin/trustee/DonationsView.jsx` featuring real-time client-side search, filtering by payment method and status, summary metrics, and direct PDF receipt downloads.
+- **Offline Counter Seva Entry Form**: Created `frontend/src/pages/admin/trustee/OfflineDonationForm.jsx` supporting `CASH` (`CA-`), `UPI` (`UPI-`), and `CHEQUE` (`CH-`) modes. Replaced legacy static frontend dummy data (`dummyData.js`) with dynamic live server API queries (`/api/public/donation-heads`).
+- **Portal & Router Integration**: Updated `TrusteeLayout.jsx` to enable the Donations sidebar navigation tab and registered `/admin/trustee/donations` and `/admin/trustee/donations/new` routes in `App.jsx`.
+
+#### Verification Results
+- [x] Confirmed `npm test` regression suite passes (`6 PASSED, 0 FAILED`).
+- [x] Confirmed `npm run build` compiles production bundles cleanly (`0 errors`).
+- [x] Confirmed `npx eslint` passes cleanly across all Phase 4 files.
+- [x] Confirmed legacy static `dummyData.js` is replaced with live server API queries for donation causes.
+
 ---
 
-### PHASE 5 — Offline Donation Integration + Receipt Improvements
+### PHASE 5 — Financial Reports + Dashboard
 
 **Date**: TBD  
 **Status**: PENDING  

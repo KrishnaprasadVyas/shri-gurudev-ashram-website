@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Trustee Offline Donation Entry UI & Views (Phase 4)**: Created `frontend/src/pages/admin/trustee/DonationsView.jsx` and `OfflineDonationForm.jsx` allowing TRUSTEE users to view all ashram donations and record counter seva deposits (`CASH`, `UPI`, `CHEQUE`) with automatic prefixed receipt numbering (`CA-`, `CH-`, `UPI-`), while replacing legacy static frontend dummy data with live server API queries (`/api/public/donation-heads`).
+
 - **Cash Advance & Voucher Accounting Models (Phase 3)**: Created `backend/src/models/CashAdvance.js` and `backend/src/models/Voucher.js` on `mainDb` supporting Type A cash advances (with return expectation) and Type B direct vendor payments with strict immutability and variance accounting rules.
 - **Voucher PDF Generation Service (Phase 3)**: Created `backend/src/services/voucher.service.js` using PDFKit to lazily generate printable official expense vouchers with itemized breakdowns and ashram branding.
 - **Finance Controllers & Routes (Phase 3)**: Created `backend/src/controllers/cashAdvance.controller.js`, `backend/src/controllers/voucher.controller.js`, and `backend/src/routes/finance.routes.js` with multi-document transaction settlement (`/api/finance/advances/:id/settle`), rate limiting (`financialApiLimiter`), and role authorization.
@@ -22,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Finance Portal Card**: Added conditional Finance Portal navigation card on `AdminHome.jsx` (visible only to SYSTEM_ADMIN and TRUSTEE users).
 
 ### Changed
+- **Donation Route Authorization & Trustee Layout (Phase 4)**: Updated `backend/src/routes/admin.system.routes.js` to authorize `TRUSTEE` (alongside `SYSTEM_ADMIN`) on `/donations`, `/donations/cash`, and `/donations/offline`. Enabled the Donations navigation item in `TrusteeLayout.jsx` and registered Phase 4 routes in `App.jsx`.
 - **App Router Integration (Phase 3)**: Mounted `/api/finance` router in `backend/src/app.js` and wired Phase 3 navigation links and routes in `TrusteeLayout.jsx` and `App.jsx`.
 - **Offline Cash/Cheque/UPI Donation Receipt Numbering (Phase 2)**: Updated `createCashDonation` in `backend/src/controllers/admin.controller.js` to assign atomic prefixed receipt numbers (`CA-XXXXXX`, `CH-XXXXXX`, `UPI-XXXXXX`) instead of ad-hoc timestamp strings.
 - **Online Razorpay Webhook Receipt Numbering (Phase 2)**: Updated `handleRazorpayWebhook` in `backend/src/controllers/webhook.controller.js` to assign atomic `OL-XXXXXX` receipt numbers upon payment capture.

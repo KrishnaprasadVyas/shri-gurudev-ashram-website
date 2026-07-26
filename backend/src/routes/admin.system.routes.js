@@ -7,14 +7,14 @@ const adminController = require("../controllers/admin.controller");
 router.get(
   "/donations",
   auth,
-  authorize("SYSTEM_ADMIN"),
+  authorize("SYSTEM_ADMIN", "TRUSTEE"),
   adminController.getAllDonations
 );
 
 router.post(
   "/donations/cash",
   auth,
-  authorize("SYSTEM_ADMIN"),
+  authorize("SYSTEM_ADMIN", "TRUSTEE"),
   adminController.createCashDonation
 );
 
@@ -22,7 +22,7 @@ router.post(
 router.post(
   "/donations/offline",
   auth,
-  authorize("SYSTEM_ADMIN"),
+  authorize("SYSTEM_ADMIN", "TRUSTEE"),
   adminController.createCashDonation
 );
 
