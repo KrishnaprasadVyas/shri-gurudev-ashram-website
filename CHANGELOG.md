@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Payment Method Extension (Phase 9)**: Added `RTGS` and `NEFT` as supported offline donation payment methods. Expanded the `Donation` schema and `OfflineDonationForm.jsx` UI to capture reference numbers and bank names for these methods. RTGS and NEFT receipts render correctly with these references.
 - **Payment-specific Donation Receipt Details (Phase 8)**: Newly generated donation PDFs now show UPI UTRs; cheque number, bank, and date; RTGS/NEFT references with bank; and Razorpay payment IDs for online donations. Cash receipts intentionally retain no payment-reference row. No endpoint, schema, payment-entry, or receipt-numbering change was made.
 
 - **Role Management API (Phase 7)**: Secure endpoints (`GET /api/admin/system/users`, `PATCH /api/admin/system/users/:id/role`) in `userManagement.controller.js` for System Admins to manage ERP roles. Implemented strict safety rules preventing `SYSTEM_ADMIN` assignment via UI, self-demotion, or modification of peer `SYSTEM_ADMIN` accounts.

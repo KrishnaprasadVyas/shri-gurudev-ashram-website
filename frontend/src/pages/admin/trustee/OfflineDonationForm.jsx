@@ -7,6 +7,8 @@ const PAYMENT_METHODS = [
   { value: "CASH", label: "Cash (Counter Deposit)" },
   { value: "UPI", label: "UPI Transfer" },
   { value: "CHEQUE", label: "Bank Cheque" },
+  { value: "RTGS", label: "RTGS Transfer" },
+  { value: "NEFT", label: "NEFT Transfer" },
 ];
 
 const INDIAN_STATES = [
@@ -42,6 +44,7 @@ const OfflineDonationForm = () => {
     paymentDate: new Date().toISOString().split("T")[0],
     paymentMethod: "CASH",
     utrNumber: "",
+    referenceNumber: "",
     chequeNumber: "",
     bankName: "",
     chequeDate: "",
@@ -114,7 +117,7 @@ const OfflineDonationForm = () => {
     } else if (name === "addressPincode") {
       const digits = value.replace(/\D/g, "").slice(0, 6);
       setFormData((prev) => ({ ...prev, [name]: digits }));
-    } else if (name === "utrNumber") {
+    } else if (name === "utrNumber" || name === "referenceNumber") {
       const cleaned = value.replace(/[^A-Za-z0-9]/g, "").slice(0, 22);
       setFormData((prev) => ({ ...prev, [name]: cleaned }));
     } else {
@@ -166,6 +169,10 @@ const OfflineDonationForm = () => {
     if (formData.paymentMethod === "CHEQUE") {
       if (!formData.chequeNumber.trim()) newErrors.chequeNumber = "Cheque number is required";
       if (!formData.bankName.trim()) newErrors.bankName = "Bank name is required";
+    }
+    if (["RTGS", "NEFT"].includes(formData.paymentMethod)) {
+      if (!formData.referenceNumber.trim()) newErrors.referenceNumber = `${formData.paymentMethod} reference number is required`;
+      if (!formData.bankName.trim()) newErrors.bankName = "Bank name is required for bank transfer payments";
     }
 
     setErrors(newErrors);
@@ -220,6 +227,9 @@ const OfflineDonationForm = () => {
           chequeDate: formData.chequeDate || undefined,
         };
       }
+      if (["RTGS", "NEFT"].includes(formData.paymentMethod)) {
+        payload.paymentDetails = { referenceNumber: formData.referenceNumber.trim(), bankName: formData.bankName.trim() };
+      }
 
       const data = await financeApi.createOfflineDonation(payload);
 
@@ -271,6 +281,7 @@ const OfflineDonationForm = () => {
       paymentDate: new Date().toISOString().split("T")[0],
       paymentMethod: "CASH",
       utrNumber: "",
+      referenceNumber: "",
       chequeNumber: "",
       bankName: "",
       chequeDate: "",
@@ -631,6 +642,7 @@ const OfflineDonationForm = () => {
                   {formData.paymentMethod === "CASH" && "Generates receipt with CA- prefix."}
                   {formData.paymentMethod === "UPI" && "Generates receipt with UPI- prefix."}
                   {formData.paymentMethod === "CHEQUE" && "Generates receipt with CH- prefix."}
+                  {["RTGS", "NEFT"].includes(formData.paymentMethod) && "Uses the established receipt-numbering sequence."}
                 </p>
               </div>
 
@@ -716,6 +728,21 @@ const OfflineDonationForm = () => {
                       onChange={handleChange}
                       className="w-full px-3 py-1.5 text-sm border border-orange-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
+                  </div>
+                </div>
+              )}
+
+              {["RTGS", "NEFT"].includes(formData.paymentMethod) && (
+                <div className="md:col-span-2 bg-blue-50/50 p-4 rounded-xl border border-blue-100 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-blue-900 uppercase tracking-wider mb-1">{formData.paymentMethod} Reference Number <span className="text-red-500">*</span></label>
+                    <input type="text" name="referenceNumber" value={formData.referenceNumber} onChange={handleChange} placeholder={`Enter ${formData.paymentMethod} reference`} className={`w-full px-3 py-1.5 text-sm font-mono border rounded-lg bg-white focus:outline-none focus:ring-2 ${errors.referenceNumber ? "border-red-300 focus:ring-red-500" : "border-blue-200 focus:ring-blue-500"}`} />
+                    {errors.referenceNumber && <p className="mt-1 text-xs text-red-600">{errors.referenceNumber}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-blue-900 uppercase tracking-wider mb-1">Bank Name <span className="text-red-500">*</span></label>
+                    <input type="text" name="bankName" value={formData.bankName} onChange={handleChange} placeholder="e.g. State Bank of India" className={`w-full px-3 py-1.5 text-sm border rounded-lg bg-white focus:outline-none focus:ring-2 ${errors.bankName ? "border-red-300 focus:ring-red-500" : "border-blue-200 focus:ring-blue-500"}`} />
+                    {errors.bankName && <p className="mt-1 text-xs text-red-600">{errors.bankName}</p>}
                   </div>
                 </div>
               )}

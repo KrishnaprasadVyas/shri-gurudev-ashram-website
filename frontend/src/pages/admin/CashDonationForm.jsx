@@ -10,6 +10,8 @@ const PAYMENT_METHODS = [
   { value: "CASH", label: "Cash" },
   { value: "UPI", label: "UPI" },
   { value: "CHEQUE", label: "Cheque" },
+  { value: "RTGS", label: "RTGS" },
+  { value: "NEFT", label: "NEFT" },
 ];
 
 const INDIAN_STATES = [
@@ -47,6 +49,7 @@ const CashDonationForm = () => {
     paymentMethod: "CASH",
     // Payment detail fields (conditionally required)
     utrNumber: "",
+    referenceNumber: "",
     chequeNumber: "",
     bankName: "",
     chequeDate: "",
@@ -94,8 +97,8 @@ const CashDonationForm = () => {
       // Only digits, max 6
       const digits = value.replace(/\D/g, "").slice(0, 6);
       setFormData((prev) => ({ ...prev, [name]: digits }));
-    } else if (name === "utrNumber") {
-      // UTR: alphanumeric, max 22
+    } else if (name === "utrNumber" || name === "referenceNumber") {
+      // Bank references: alphanumeric, max 22
       const cleaned = value.replace(/[^A-Za-z0-9]/g, "").slice(0, 22);
       setFormData((prev) => ({ ...prev, [name]: cleaned }));
     } else if (name === "paymentMethod") {
@@ -104,6 +107,7 @@ const CashDonationForm = () => {
         ...prev,
         [name]: value,
         utrNumber: "",
+        referenceNumber: "",
         chequeNumber: "",
         bankName: "",
         chequeDate: "",
@@ -165,6 +169,10 @@ const CashDonationForm = () => {
         newErrors.bankName = "Bank name is required for cheque payments";
       }
     }
+    if (["RTGS", "NEFT"].includes(formData.paymentMethod)) {
+      if (!formData.referenceNumber.trim()) newErrors.referenceNumber = `${formData.paymentMethod} reference number is required`;
+      if (!formData.bankName.trim()) newErrors.bankName = "Bank name is required for bank transfer payments";
+    }
 
     // Optional email validation
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -223,6 +231,12 @@ const CashDonationForm = () => {
           chequeNumber: formData.chequeNumber.trim(),
           bankName: formData.bankName.trim(),
           chequeDate: formData.chequeDate || undefined,
+        };
+      }
+      if (["RTGS", "NEFT"].includes(formData.paymentMethod)) {
+        payload.paymentDetails = {
+          referenceNumber: formData.referenceNumber.trim(),
+          bankName: formData.bankName.trim(),
         };
       }
 
@@ -284,6 +298,7 @@ const CashDonationForm = () => {
       paymentDate: new Date().toISOString().split("T")[0],
       paymentMethod: "CASH",
       utrNumber: "",
+      referenceNumber: "",
       chequeNumber: "",
       bankName: "",
       chequeDate: "",
@@ -796,6 +811,23 @@ const CashDonationForm = () => {
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
                   />
+                </div>
+              </>
+            )}
+
+            {["RTGS", "NEFT"].includes(formData.paymentMethod) && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {formData.paymentMethod} Reference Number <span className="text-red-500">*</span>
+                  </label>
+                  <input type="text" name="referenceNumber" value={formData.referenceNumber} onChange={handleChange} placeholder={`Enter ${formData.paymentMethod} reference`} className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 font-mono ${errors.referenceNumber ? "border-red-300 focus:ring-red-500" : "border-gray-300 focus:ring-amber-500"}`} />
+                  {errors.referenceNumber && <p className="mt-1 text-xs text-red-600">{errors.referenceNumber}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Bank Name <span className="text-red-500">*</span></label>
+                  <input type="text" name="bankName" value={formData.bankName} onChange={handleChange} placeholder="e.g. State Bank of India" className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${errors.bankName ? "border-red-300 focus:ring-red-500" : "border-gray-300 focus:ring-amber-500"}`} />
+                  {errors.bankName && <p className="mt-1 text-xs text-red-600">{errors.bankName}</p>}
                 </div>
               </>
             )}

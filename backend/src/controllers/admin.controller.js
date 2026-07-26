@@ -88,7 +88,7 @@ exports.getAllDonations = async (req, res) => {
 };
 
 /**
- * Create offline donation (Admin only) - supports CASH, UPI, CHEQUE
+ * Create offline donation (Admin only) - supports CASH, UPI, CHEQUE, RTGS, NEFT
  * POST /api/admin/system/donations/cash  (backward-compatible route)
  * POST /api/admin/system/donations/offline (new route alias)
  * Admin can add donations with donor details and payment method
@@ -104,7 +104,7 @@ exports.createCashDonation = async (req, res) => {
 
     // Determine effective payment method (backward compat: default to CASH)
     const effectiveMethod = paymentMethod || "CASH";
-    const validMethods = ["CASH", "UPI", "CHEQUE"];
+    const validMethods = ["CASH", "UPI", "CHEQUE", "RTGS", "NEFT"];
     if (!validMethods.includes(effectiveMethod)) {
       return res.status(400).json({ message: `Invalid payment method. Must be one of: ${validMethods.join(", ")}` });
     }
@@ -121,6 +121,14 @@ exports.createCashDonation = async (req, res) => {
       }
       if (!paymentDetails?.bankName || !paymentDetails.bankName.trim()) {
         return res.status(400).json({ message: "Bank name is required for cheque payments" });
+      }
+    }
+    if (effectiveMethod === "RTGS" || effectiveMethod === "NEFT") {
+      if (!paymentDetails?.referenceNumber || !paymentDetails.referenceNumber.trim()) {
+        return res.status(400).json({ message: `${effectiveMethod} reference number is required` });
+      }
+      if (!paymentDetails?.bankName || !paymentDetails.bankName.trim()) {
+        return res.status(400).json({ message: "Bank name is required for bank transfer payments" });
       }
     }
 
@@ -186,7 +194,7 @@ exports.createCashDonation = async (req, res) => {
       : "");
 
     // Generate unique transaction reference
-    const methodPrefix = effectiveMethod === "UPI" ? "UPI" : effectiveMethod === "CHEQUE" ? "CHQ" : "CASH";
+    const methodPrefix = effectiveMethod === "UPI" ? "UPI" : effectiveMethod === "CHEQUE" ? "CHQ" : effectiveMethod;
     const transactionRef = `${methodPrefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
     // Build payment sub-document
@@ -201,6 +209,10 @@ exports.createCashDonation = async (req, res) => {
       if (paymentDetails?.chequeNumber) paymentDoc.chequeNumber = paymentDetails.chequeNumber.trim();
       if (paymentDetails?.bankName) paymentDoc.bankName = paymentDetails.bankName.trim();
       if (paymentDetails?.chequeDate) paymentDoc.chequeDate = new Date(paymentDetails.chequeDate);
+    }
+    if (effectiveMethod === "RTGS" || effectiveMethod === "NEFT") {
+      paymentDoc.referenceNumber = paymentDetails.referenceNumber.trim();
+      paymentDoc.bankName = paymentDetails.bankName.trim();
     }
 
     // Create donation with donor snapshot - directly as SUCCESS

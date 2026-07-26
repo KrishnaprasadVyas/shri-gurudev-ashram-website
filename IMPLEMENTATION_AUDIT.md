@@ -419,3 +419,34 @@ Improve only newly generated donation-receipt rendering with payment-method-spec
 **Breaking Changes**: None
 **Migration Required**: No
 **Known Limitations**: RTGS and NEFT are display-compatible only until Phase 9 adds their donation-entry and schema values.
+
+---
+
+### PHASE 9 — Payment Method Extension (RTGS + NEFT)
+
+**Date**: 2026-07-26  
+**Status**: COMPLETED
+
+#### Objective
+Add RTGS and NEFT as supported payment methods in the offline donation form, data model, and receipt generation, without modifying existing payment functionality.
+
+#### Files Created
+- `backend/tests/phase9_payment_methods.test.js` - Tests RTGS and NEFT API creation and receipt rendering.
+
+#### Files Modified
+- `backend/src/models/Donation.js` - Added RTGS and NEFT to payment method enum.
+- `frontend/src/pages/admin/trustee/OfflineDonationForm.jsx` - Added UI support for RTGS/NEFT with reference/bank fields.
+- `frontend/src/pages/admin/trustee/DonationsView.jsx` - Added tabs and display rendering for RTGS and NEFT.
+- `backend/package.json` - Added Phase 9 tests to test suite.
+- `CHANGELOG.md` and `DATABASE.md` and `IMPLEMENTATION_AUDIT.md`
+
+#### Verification Results
+- [x] RTGS donation can be entered and saved.
+- [x] NEFT donation can be entered and saved.
+- [x] Receipt generated with correct prefix and RTGS/NEFT details.
+- [x] Existing CASH/UPI/CHEQUE/ONLINE unaffected.
+- [x] Full backend `npm test` suite passed.
+- [x] Frontend production `npm run build` passed.
+
+**Breaking Changes**: None
+**Migration Required**: No

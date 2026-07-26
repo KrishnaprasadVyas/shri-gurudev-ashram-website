@@ -74,7 +74,7 @@ const donationSchema = new mongoose.Schema(
     // === PAYMENT INFO (LEGACY - kept for backward compatibility) ===
     paymentMethod: {
       type: String,
-      enum: ["ONLINE", "CASH", "UPI", "CHEQUE"],
+      enum: ["ONLINE", "CASH", "UPI", "CHEQUE", "RTGS", "NEFT"],
       default: "ONLINE",
     },
     razorpayOrderId: String,
@@ -91,13 +91,14 @@ const donationSchema = new mongoose.Schema(
     payment: {
       method: {
         type: String,
-        enum: ["ONLINE", "CASH", "UPI", "CHEQUE"],
+        enum: ["ONLINE", "CASH", "UPI", "CHEQUE", "RTGS", "NEFT"],
       },
       status: {
         type: String,
         enum: ["PENDING", "SUCCESS", "FAILED"],
       },
       utrNumber: { type: String },       // For UPI payments
+      referenceNumber: { type: String }, // For RTGS/NEFT payments
       chequeNumber: { type: String },     // For cheque payments
       bankName: { type: String },         // For cheque payments
       chequeDate: { type: Date },         // For cheque payments
