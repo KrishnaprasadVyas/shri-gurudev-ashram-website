@@ -56,6 +56,7 @@ app.use("/api/referral", require("./routes/referral.routes")); // Referral code 
 app.use("/api/leaderboard", require("./routes/leaderboard.routes")); // Public leaderboard
 app.use("/api/admin/website", require("./routes/admin.website.routes"));
 app.use("/api/admin/system", require("./routes/admin.system.routes"));
+app.use("/api/finance", require("./routes/finance.routes")); // ERP Phase 3: Trustee Cash Advances & Vouchers
 app.use("/api/nitya-annadan", require("./routes/nityaAnnadan.public.routes"));
 app.use("/api/admin/nitya-annadan", require("./routes/admin.nityaAnnadan.routes"));
 app.use("/api/auth", authRoutes);

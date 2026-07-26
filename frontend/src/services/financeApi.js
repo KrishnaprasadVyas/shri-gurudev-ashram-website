@@ -1,0 +1,103 @@
+import { API_BASE_URL, getAuthToken, parseJsonResponse } from "../utils/api";
+
+const getAuthHeaders = () => ({
+  Authorization: `Bearer ${getAuthToken()}`,
+  "Content-Type": "application/json",
+});
+
+const apiRequest = async (endpoint, options = {}) => {
+  const url = `${API_BASE_URL}${endpoint}`;
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...getAuthHeaders(),
+      ...options.headers,
+    },
+  });
+
+  const data = await parseJsonResponse(response);
+  if (!response.ok) {
+    throw new Error(data.message || "Finance API request failed");
+  }
+  return data;
+};
+
+export const financeApi = {
+  // Cash Advances (Type A) & Direct Payments (Type B)
+  createAdvance: (data) =>
+    apiRequest("/finance/advances", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  createDirectPayment: (data) =>
+    apiRequest("/finance/advances/direct", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  listAdvances: (params = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v !== undefined && v !== "")
+    ).toString();
+    return apiRequest(`/finance/advances${query ? `?${query}` : ""}`, {
+      method: "GET",
+    });
+  },
+
+  getAdvanceById: (id) =>
+    apiRequest(`/finance/advances/${id}`, {
+      method: "GET",
+    }),
+
+  settleAdvance: (id, data) =>
+    apiRequest(`/finance/advances/${id}/settle`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  cancelAdvance: (id, reason) =>
+    apiRequest(`/finance/advances/${id}/cancel`, {
+      method: "PATCH",
+      body: JSON.stringify({ reason }),
+    }),
+
+  // Vouchers
+  listVouchers: (params = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v !== undefined && v !== "")
+    ).toString();
+    return apiRequest(`/finance/vouchers${query ? `?${query}` : ""}`, {
+      method: "GET",
+    });
+  },
+
+  getVoucherById: (id) =>
+    apiRequest(`/finance/vouchers/${id}`, {
+      method: "GET",
+    }),
+
+  downloadVoucherPdf: async (id, voucherNumber) => {
+    const url = `${API_BASE_URL}/finance/vouchers/${id}/pdf`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to download voucher PDF");
+    }
+
+    const blob = await response.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = `Voucher_${voucherNumber || id}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(downloadUrl);
+  },
+};

@@ -60,9 +60,13 @@ import NityaAnnadanAddOffline from "./pages/admin/nitya-annadan/NityaAnnadanAddO
 import NityaAnnadanReportsView from "./pages/admin/nitya-annadan/NityaAnnadanReportsView";
 import NityaAnnadanPrintSheet from "./pages/admin/nitya-annadan/NityaAnnadanPrintSheet";
 
-// Finance (Trustee) Portal — ERP Phase 1
 import TrusteeLayout from "./layouts/TrusteeLayout";
 import TrusteeHome from "./pages/admin/trustee/TrusteeHome";
+import AdvancesView from "./pages/admin/trustee/AdvancesView";
+import AdvanceForm from "./pages/admin/trustee/AdvanceForm";
+import SettleAdvanceForm from "./pages/admin/trustee/SettleAdvanceForm";
+import VouchersView from "./pages/admin/trustee/VouchersView";
+import VoucherDetail from "./pages/admin/trustee/VoucherDetail";
 
 // Donation Module
 import DonationPage from "./modules/donation/DonationPage";
@@ -303,7 +307,18 @@ function App() {
                               path="overview"
                               element={<TrusteeHome />}
                             />
-                            {/* Phase 3 routes (Advances, Vouchers) will be added here */}
+                            {/* Phase 3 routes (Advances, Vouchers) */}
+                            <Route path="advances" element={<AdvancesView />} />
+                            <Route path="advances/new" element={<AdvanceForm />} />
+                            <Route
+                              path="advances/:id/settle"
+                              element={<SettleAdvanceForm />}
+                            />
+                            <Route path="vouchers" element={<VouchersView />} />
+                            <Route
+                              path="vouchers/:id"
+                              element={<VoucherDetail />}
+                            />
                             {/* Phase 4 routes (Donations) will be added here */}
                             {/* Phase 5 routes (Reports) will be added here */}
                             {/* Phase 6 routes (Audit Log) will be added here */}

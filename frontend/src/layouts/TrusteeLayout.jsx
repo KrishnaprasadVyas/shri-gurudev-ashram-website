@@ -32,12 +32,12 @@ const TrusteeLayout = () => {
     {
       path: "/admin/trustee/advances",
       label: "Cash Advances",
-      comingSoon: true, // Phase 3
+      comingSoon: false, // Phase 3
     },
     {
       path: "/admin/trustee/vouchers",
       label: "Vouchers",
-      comingSoon: true, // Phase 3
+      comingSoon: false, // Phase 3
       indent: true,
     },
     {

@@ -214,21 +214,66 @@ It is production documentation and must be updated after every phase.
 
 ---
 
-### PHASE 3 — Cash Advance System
+### PHASE 3 — Cash Advance + Settlement + Auto-Voucher (Core Workflow)
 
-**Date**: TBD  
-**Status**: PENDING  
+**Date**: 2026-07-26  
+**Status**: COMPLETED  
 
-*(Details to be filled upon phase start)*
+**Scope**:
+- Create `backend/src/models/CashAdvance.js` and `backend/src/models/Voucher.js` on `mainDb`
+- Create `backend/src/controllers/cashAdvance.controller.js` and `backend/src/controllers/voucher.controller.js`
+- Create `backend/src/services/voucher.service.js` (PDFKit lazy generation)
+- Create `backend/src/routes/finance.routes.js` and mount `/api/finance` in `app.js`
+- Create frontend UI pages: `AdvancesView.jsx`, `AdvanceForm.jsx`, `SettleAdvanceForm.jsx`, `VouchersView.jsx`, `VoucherDetail.jsx`
+- Create `frontend/src/services/financeApi.js` and wire routes in `TrusteeLayout.jsx` and `App.jsx`
+
+**Files Created**:
+- `backend/src/models/CashAdvance.js` — Type A and Type B advance schema with variance validation and immutable reference rules.
+- `backend/src/models/Voucher.js` — Immutable expense voucher schema on `mainDb`.
+- `backend/src/services/voucher.service.js` — PDFKit service generating printable official expense vouchers with itemized breakdowns and ashram branding.
+- `backend/src/controllers/cashAdvance.controller.js` — Handles creation of Type A advances and Type B direct vendor payments, multi-document transaction settlement with variance enforcement, and cancellation.
+- `backend/src/controllers/voucher.controller.js` — Handles listing, detail retrieval, and lazy PDF generation & streaming.
+- `backend/src/routes/finance.routes.js` — Express router protected by `auth`, `authorize("TRUSTEE", "SYSTEM_ADMIN")`, and `financialApiLimiter`.
+- `frontend/src/services/financeApi.js` — API client including blob PDF downloading.
+- `frontend/src/pages/admin/trustee/AdvancesView.jsx` — Advances register with status/type filters.
+- `frontend/src/pages/admin/trustee/AdvanceForm.jsx` — Form with tabs for Type A advance and Type B direct payment.
+- `frontend/src/pages/admin/trustee/SettleAdvanceForm.jsx` — Settlement form with variance calculation and line item builder.
+- `frontend/src/pages/admin/trustee/VouchersView.jsx` — Vouchers register with filter tabs and PDF download button.
+- `frontend/src/pages/admin/trustee/VoucherDetail.jsx` — Detailed printable voucher view.
+
+**Files Modified**:
+- `backend/src/app.js` — Mounted `/api/finance` router.
+- `frontend/src/layouts/TrusteeLayout.jsx` — Enabled Cash Advances and Vouchers sidebar links.
+- `frontend/src/App.jsx` — Imported and mounted Phase 3 frontend pages under `/admin/trustee/*`.
+
+**Database Changes**:
+- New collections on `mainDb`: `cashadvances` and `vouchers`.
+- Atomic sequence counter integration (`ADV`, `VCH`) via `counter.service.js`.
+
+**API Changes**:
+- New finance endpoints mounted at `/api/finance/*` (`/advances`, `/advances/direct`, `/advances/:id`, `/advances/:id/settle`, `/advances/:id/cancel`, `/vouchers`, `/vouchers/:id`, `/vouchers/:id/pdf`).
+
+**Breaking Changes**: None
+
+**Migration Required**: No
+
+**Testing Performed**:
+- Node.js syntax verification (`node --check`) across all Phase 3 backend modules: ✅ PASSED
+- Runtime module loading test with simulated environment: ✅ PASSED
+- Frontend production bundle build (`npm run build`): ✅ PASSED (1,172 KB in 7.31s)
+
+**Known Issues**: None
+
+**Completed Tasks**:
+- [x] Create CashAdvance and Voucher models on mainDb
+- [x] Implement multi-document transaction for advance settlement and auto-voucher generation
+- [x] Create PDFKit voucher service with lazy generation and authenticated streaming
+- [x] Build frontend register and management forms (AdvancesView, AdvanceForm, SettleAdvanceForm, VouchersView, VoucherDetail)
+- [x] Verify zero regression on existing donation, authentication, and collector workflows
 
 ---
 
-### PHASE 4 — Voucher Generation
-
-**Date**: TBD  
-**Status**: PENDING  
-
-*(Details to be filled upon phase start)*
+### PHASE 4 — Trustee Offline Donation Entry
 
 ---
 

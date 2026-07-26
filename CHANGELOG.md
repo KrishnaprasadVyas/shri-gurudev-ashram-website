@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Cash Advance & Voucher Accounting Models (Phase 3)**: Created `backend/src/models/CashAdvance.js` and `backend/src/models/Voucher.js` on `mainDb` supporting Type A cash advances (with return expectation) and Type B direct vendor payments with strict immutability and variance accounting rules.
+- **Voucher PDF Generation Service (Phase 3)**: Created `backend/src/services/voucher.service.js` using PDFKit to lazily generate printable official expense vouchers with itemized breakdowns and ashram branding.
+- **Finance Controllers & Routes (Phase 3)**: Created `backend/src/controllers/cashAdvance.controller.js`, `backend/src/controllers/voucher.controller.js`, and `backend/src/routes/finance.routes.js` with multi-document transaction settlement (`/api/finance/advances/:id/settle`), rate limiting (`financialApiLimiter`), and role authorization.
+- **Trustee Finance Portal UI & API Client (Phase 3)**: Created `frontend/src/services/financeApi.js`, `AdvancesView.jsx`, `AdvanceForm.jsx`, `SettleAdvanceForm.jsx`, `VouchersView.jsx`, and `VoucherDetail.jsx` enabling end-to-end accounting management.
 - **Receipt Number Generation Service (Phase 2)**: Added `generateReceiptNumber(paymentMethod, session)` export in `backend/src/services/receipt.service.js` to generate atomic sequential receipt references (`CA-`, `CH-`, `UPI-`, `OL-`) using the ERP counter service.
 - **TRUSTEE Role**: Added `TRUSTEE` to the user role enum in `backend/src/models/User.js` for ashram financial operations.
 - **Audit Log Model**: Created `backend/src/models/AuditLog.js` with append-only schema and compound indexes for tracking all financial operations.
@@ -18,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Finance Portal Card**: Added conditional Finance Portal navigation card on `AdminHome.jsx` (visible only to SYSTEM_ADMIN and TRUSTEE users).
 
 ### Changed
+- **App Router Integration (Phase 3)**: Mounted `/api/finance` router in `backend/src/app.js` and wired Phase 3 navigation links and routes in `TrusteeLayout.jsx` and `App.jsx`.
 - **Offline Cash/Cheque/UPI Donation Receipt Numbering (Phase 2)**: Updated `createCashDonation` in `backend/src/controllers/admin.controller.js` to assign atomic prefixed receipt numbers (`CA-XXXXXX`, `CH-XXXXXX`, `UPI-XXXXXX`) instead of ad-hoc timestamp strings.
 - **Online Razorpay Webhook Receipt Numbering (Phase 2)**: Updated `handleRazorpayWebhook` in `backend/src/controllers/webhook.controller.js` to assign atomic `OL-XXXXXX` receipt numbers upon payment capture.
 - **Donation Receipt Fallback Numbering (Phase 2)**: Updated `downloadReceipt` in `backend/src/controllers/donation.controller.js` to assign atomic prefix-based receipt numbers when generating fallback numbers for donations missing a reference.

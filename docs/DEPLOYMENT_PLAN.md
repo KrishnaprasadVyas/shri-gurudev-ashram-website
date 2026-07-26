@@ -83,3 +83,42 @@ In the event of an issue with receipt number sequence generation or webhook capt
    - Reload server process (`pm2 reload ashram-backend`).
 3. **Database State & Cleanup**:
    - During Phase 2, MongoDB will have seeded counter documents in `counters` (`CA`, `CH`, `UPI`, `OL`). These do NOT need to be dropped upon rollback; if Phase 2 is re-deployed later, numbering will resume safely from the highest sequence recorded without risk of duplicate IDs.
+
+---
+
+## 4. Phase 3 Deployment Protocol (Cash Advance & Voucher System)
+
+### 4.1 Deployment Sequence
+Phase 3 introduces the core accounting models (`CashAdvance`, `Voucher`), PDF generation via `PDFKit`, and new UI views in the Trustee Portal (`/admin/trustee/advances`, `/admin/trustee/vouchers`).
+
+1. **Code Deployment**:
+   - Pull latest `master` branch onto the staging/production server.
+   - Verify all dependencies are installed (`npm ci`). Note: `pdfkit` is already part of project dependencies.
+2. **Build Frontend**:
+   - Rebuild production static bundle for the frontend:
+     ```bash
+     cd frontend && npm run build
+     ```
+3. **Backend Restart**:
+   - Perform graceful restart of the backend Node.js process:
+     ```bash
+     pm2 reload ashram-backend
+     ```
+4. **Post-Deployment Verification**:
+   - Log into the Trustee Portal (`/admin/trustee`) as a `TRUSTEE` or `SYSTEM_ADMIN` user.
+   - Click "Cash Advances" and create a test Type A cash advance. Confirm atomic sequence numbering (`ADV-000001`).
+   - Click "Settle" on the open advance, enter actual expense and return amounts, and submit.
+   - Confirm the transaction settles and navigates to the newly generated Voucher detail view (`VCH-000001`).
+   - Test "Download Official PDF" button and verify a clean PDF stream is downloaded.
+
+---
+
+### 4.2 Rollback Procedure — Phase 3
+In the event of an unexpected issue with accounting workflows in production:
+1. **Code Rollback**:
+   - Revert git checkout to the Phase 2 completion commit hash.
+2. **Rebuild & Restart**:
+   - Rebuild frontend static assets (`npm run build`).
+   - Reload backend server process (`pm2 reload ashram-backend`).
+3. **Database State & Cleanup**:
+   - The `cashadvances` and `vouchers` collections created in `mainDb` during Phase 3 can remain intact without impacting pre-existing modules (Donations, Collectors, CMS). If desired, test documents created during verification can be cleared using administrative database scripts.
