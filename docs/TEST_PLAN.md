@@ -87,13 +87,39 @@ This document outlines the systematic testing protocol applied to the Shri Gurud
 
 ---
 
-## 5. Test Results Summary — Phase 1, Phase 2 & Phase 3
+## 5. Automated Regression Test Suite (Phase 3 Business Scenarios)
+
+To ensure ongoing architectural integrity and prevent regressions across future implementation phases, the six verified business workflow scenarios from Phase 3 have been codified into a permanent automated regression test suite located at `backend/tests/finance_regression.test.js`.
+
+### 5.1 Executing the Regression Suite
+The suite can be executed from the root or backend directory at any time after future modifications:
+```bash
+# From within the backend directory:
+cd backend
+npm test
+# Or directly via node:
+node tests/finance_regression.test.js
+```
+
+### 5.2 Test Coverage & Verification Scope
+The automated suite connects to MongoDB and validates:
+1. **Scenario 1**: Normal Type A cash advance creation (`ADV-XXXXXX`) and settlement with partial cash return and zero variance. Verifies linked Voucher (`VCH-XXXXXX`), audit logs, and transaction commit.
+2. **Scenario 2**: Exact Type A advance settlement with zero return and zero variance.
+3. **Scenario 3**: Variance enforcement (Rule B.7). Verifies rejection (HTTP 400) and **complete database rollback** when settling without notes, and acceptance with variance `-1000` when notes are provided.
+4. **Scenario 4**: Invalid return amount exceeding advance amount. Verifies immediate rejection (HTTP 400) and **complete database rollback** preserving clean `OPEN` advance status.
+5. **Scenario 5**: Direct Vendor Payment (Type B). Verifies atomic simultaneous creation of settled `CashAdvance` and linked `Voucher` inside a multi-document transaction.
+6. **Scenario 6**: Voucher Immutability. Attempts `.save()`, `findOneAndUpdate()`, `updateOne()`, and `deleteOne()` on permanent voucher records and verifies all 4 attempts are intercepted and blocked by Mongoose pre-hooks without altering DB records.
+
+---
+
+## 6. Test Results Summary — Phase 1, Phase 2 & Phase 3
 
 | Verification Item | Command / Method | Status | Notes |
 |---|---|:---:|---|
 | Phase 1 Backend Integrity | `node -e "require(...)"` | ✅ PASSED | All 5 Phase 1 backend modules loaded cleanly |
 | Phase 2 Backend Integrity | `node -e "require(...)"` | ✅ PASSED | All 4 Phase 2 modified modules loaded cleanly without syntax/runtime errors |
 | Phase 3 Backend Integrity | `node --check` | ✅ PASSED | All 6 Phase 3 created and modified modules validated cleanly |
+| Phase 3 Regression Suite | `npm test` (in `/backend`) | ✅ PASSED | 6/6 automated business scenarios passed (100% assertions met) |
 | Prefix & Counter Mapping | Code execution mock test | ✅ PASSED | Confirmed `CA-`, `CH-`, `UPI-`, `OL-`, `ADV-`, `VCH-` generation |
 | Frontend Production Build | `npm run build` | ✅ PASSED | 1,172 KB JS bundle generated cleanly in 7.31s |
 | Frontend Lint Verification | `npx eslint ...` | ✅ PASSED | Zero new errors introduced; pre-existing codebase baseline unchanged |
