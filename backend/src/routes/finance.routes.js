@@ -28,4 +28,8 @@ router.get("/vouchers/:id/pdf", voucherController.downloadVoucherPdf);
 const financeReportsRoutes = require("./finance.reports.routes");
 router.use("/reports", financeReportsRoutes);
 
+/* ---------------- Audit Trail Routes (Phase 6) ---------------- */
+const auditLogRoutes = require("./auditLog.routes");
+router.use("/audit-logs", auditLogRoutes);
+
 module.exports = router;

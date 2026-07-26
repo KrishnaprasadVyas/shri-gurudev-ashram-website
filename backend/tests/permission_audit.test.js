@@ -57,6 +57,9 @@ const ENDPOINTS_TO_TEST = [
   { path: "/api/finance/reports/monthly-summary", method: "GET", name: "Monthly Summary Report" },
   { path: "/api/finance/reports/annual-export", method: "GET", name: "Annual CA Audit Export" },
   { path: "/api/finance/reports/dashboard-stats", method: "GET", name: "Trustee Dashboard Stats" },
+  // Phase 6: Statutory Audit Trail Endpoints
+  { path: "/api/finance/audit-logs", method: "GET", name: "Statutory Audit Trail" },
+  { path: "/api/finance/audit-logs/filters", method: "GET", name: "Audit Trail Filter Options" },
 ];
 
 const UI_ROUTES = [
@@ -66,6 +69,7 @@ const UI_ROUTES = [
   { path: "/admin/trustee/advances", name: "Trustee Cash Advances" },
   { path: "/admin/trustee/vouchers", name: "Trustee Expense Vouchers" },
   { path: "/admin/trustee/reports", name: "Trustee Financial Reports" },
+  { path: "/admin/trustee/audit-logs", name: "Trustee Statutory Audit Trail" },
 ];
 
 async function setup() {

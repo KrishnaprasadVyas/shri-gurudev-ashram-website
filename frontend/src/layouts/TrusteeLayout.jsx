@@ -51,9 +51,9 @@ const TrusteeLayout = () => {
       comingSoon: false, // Phase 5
     },
     {
-      path: "/admin/trustee/audit-log",
-      label: "Audit Log",
-      comingSoon: true, // Phase 6
+      path: "/admin/trustee/audit-logs",
+      label: "Audit Trail",
+      comingSoon: false, // Phase 6
     },
   ];
 

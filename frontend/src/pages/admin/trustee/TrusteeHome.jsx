@@ -235,6 +235,21 @@ const TrusteeHome = () => {
               <p className="text-xs text-gray-500 mt-0.5">View Cash Book, Voucher Register, and export CA audit logs</p>
             </div>
           </Link>
+
+          <Link
+            to="/admin/trustee/audit-logs"
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:border-amber-500 hover:shadow-md transition-all flex items-center gap-4 group"
+          >
+            <div className="w-12 h-12 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-gray-900 group-hover:text-amber-700 transition-colors">Audit Trail</h3>
+              <p className="text-xs text-gray-500 mt-0.5">Inspect permanent, read-only statutory accounting logs</p>
+            </div>
+          </Link>
         </div>
       </div>
 
@@ -264,9 +279,9 @@ const TrusteeHome = () => {
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
             <span className="text-sm font-medium text-emerald-900">Phase 5: Reports &amp; Dashboard (Active)</span>
           </div>
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 flex-shrink-0"></span>
-            <span className="text-sm font-medium text-gray-600">Phase 6: Audit Log Viewer (Pending)</span>
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-emerald-50 border border-emerald-100">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
+            <span className="text-sm font-medium text-emerald-900">Phase 6: Audit Log Viewer (Active)</span>
           </div>
         </div>
       </div>

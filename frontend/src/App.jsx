@@ -70,6 +70,7 @@ import VoucherDetail from "./pages/admin/trustee/VoucherDetail";
 import TrusteeDonationsView from "./pages/admin/trustee/DonationsView";
 import TrusteeOfflineDonationForm from "./pages/admin/trustee/OfflineDonationForm";
 import TrusteeReportsView from "./pages/admin/trustee/ReportsView";
+import TrusteeAuditLogView from "./pages/admin/trustee/AuditLogView";
 
 // Donation Module
 import DonationPage from "./modules/donation/DonationPage";
@@ -327,7 +328,8 @@ function App() {
                             <Route path="donations/new" element={<TrusteeOfflineDonationForm />} />
                             {/* Phase 5 routes (Reports) */}
                             <Route path="reports" element={<TrusteeReportsView />} />
-                            {/* Phase 6 routes (Audit Log) will be added here */}
+                            {/* Phase 6 routes (Audit Log) */}
+                            <Route path="audit-logs" element={<TrusteeAuditLogView />} />
                           </Route>
                         </Route>
                       </Routes>

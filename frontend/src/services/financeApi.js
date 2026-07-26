@@ -221,7 +221,22 @@ export const financeApi = {
     link.download = filename || `${reportType}.csv`;
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
     window.URL.revokeObjectURL(downloadUrl);
   },
+
+  // ─── Statutory Audit Trail (Phase 6) ──────────────────────────────────────
+  getAuditLogs: (params = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v !== undefined && v !== "" && v !== "ALL")
+    ).toString();
+    return apiRequest(`/finance/audit-logs${query ? `?${query}` : ""}`, {
+      method: "GET",
+    });
+  },
+
+  getAuditLogFilters: () =>
+    apiRequest("/finance/audit-logs/filters", {
+      method: "GET",
+    }),
 };
+

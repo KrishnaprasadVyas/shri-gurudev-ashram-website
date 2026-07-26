@@ -156,6 +156,14 @@ const auditLogSchema = new mongoose.Schema(
     },
 
     /**
+     * Additional structured metadata details for specific actions (e.g., advance settlement breakdown).
+     */
+    details: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+
+    /**
      * Free-text notes for additional context.
      */
     notes: {
@@ -184,9 +192,26 @@ auditLogSchema.index({ createdAt: -1 });
 auditLogSchema.index({ "financialDetails.paymentMode": 1, createdAt: -1 });
 
 // ─── Guard: prevent accidental update hooks ───────────────────────────────────
-// This does NOT prevent all updates at the DB level (use role-based routes for that),
-// but it signals intent and prevents pre/post update middleware from running.
 auditLogSchema.set("strict", true);
+
+// ─── IMMUTABILITY ENFORCEMENT HOOKS ───────────────────────────────────────────
+auditLogSchema.pre("save", function () {
+  if (!this.isNew) {
+    throw new Error("Audit logs are strictly immutable and cannot be modified after creation.");
+  }
+});
+
+const immutableError = function () {
+  throw new Error("Audit logs are strictly immutable and cannot be edited or deleted via application queries.");
+};
+
+auditLogSchema.pre("findOneAndUpdate", immutableError);
+auditLogSchema.pre("updateOne", immutableError);
+auditLogSchema.pre("updateMany", immutableError);
+auditLogSchema.pre("deleteOne", { document: true, query: true }, immutableError);
+auditLogSchema.pre("deleteMany", immutableError);
+auditLogSchema.pre("findOneAndDelete", immutableError);
+auditLogSchema.pre("findOneAndRemove", immutableError);
 
 module.exports =
   mainDb.models.AuditLog || mainDb.model("AuditLog", auditLogSchema);
