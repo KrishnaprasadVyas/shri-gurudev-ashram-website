@@ -20,7 +20,14 @@ const userSchema = new mongoose.Schema(
     address: String,
     role: {
       type: String,
-      enum: ["USER", "COLLECTOR_PENDING", "COLLECTOR_APPROVED", "WEBSITE_ADMIN", "SYSTEM_ADMIN"],
+      enum: [
+        "USER",
+        "COLLECTOR_PENDING",
+        "COLLECTOR_APPROVED",
+        "WEBSITE_ADMIN",
+        "SYSTEM_ADMIN",
+        "NITYA_ANNADAN_ADMIN",
+      ],
       default: "USER",
     },
     // Collector/Referral system - permanent, human-readable code
