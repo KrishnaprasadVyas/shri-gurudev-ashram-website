@@ -111,4 +111,31 @@ router.post(
   adminController.revokeCollectorStatus
 );
 
+const rateLimit = require("express-rate-limit");
+const userManagementController = require("../controllers/userManagement.controller");
+
+const roleChangeLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10, // max 10 role changes per hour per admin
+  message: { success: false, message: "Too many role changes attempted from this account. Please try again after an hour." },
+  keyGenerator: (req, res) => req.user?.id || "anonymous", // Limit by admin user ID
+});
+
+// ==================== ROLE MANAGEMENT (PHASE 7) ====================
+
+router.get(
+  "/users",
+  auth,
+  authorize("SYSTEM_ADMIN"),
+  userManagementController.getAllUsers
+);
+
+router.patch(
+  "/users/:id/role",
+  auth,
+  authorize("SYSTEM_ADMIN"),
+  roleChangeLimiter,
+  userManagementController.changeUserRole
+);
+
 module.exports = router;

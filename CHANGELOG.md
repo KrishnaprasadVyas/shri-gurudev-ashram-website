@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Role Management API (Phase 7)**: Secure endpoints (`GET /api/admin/system/users`, `PATCH /api/admin/system/users/:id/role`) in `userManagement.controller.js` for System Admins to manage ERP roles. Implemented strict safety rules preventing `SYSTEM_ADMIN` assignment via UI, self-demotion, or modification of peer `SYSTEM_ADMIN` accounts.
+- **User Management Portal (Phase 7)**: Added `UserManagementView.jsx` UI to the System Admin interface for seamless role assignment with filterable/sortable lists, color-coded role badges, and local toast notifications.
+- **Audit Logging for Roles (Phase 7)**: Role transitions automatically emit immutable `ROLE_CHANGED` events to the statutory Audit Log.
+
 - **Statutory Audit Trail Viewer & Ledger Protection (Phase 6)**: Created `backend/src/controllers/auditLog.controller.js` and `backend/src/routes/auditLog.routes.js` with paginated read-only retrieval (`/api/finance/audit-logs`) and dynamic filter options (`/filters`). Enhanced `AuditLog.js` with structured metadata support (`details` field) and synchronous Mongoose 9 immutability hooks blocking any application-level modifications or deletions.
 - **Trustee Statutory Audit Inspection UI (Phase 6)**: Created `frontend/src/pages/admin/trustee/AuditLogView.jsx` featuring multi-criteria filtering (by entity, action, date range, search query), Indian Rupee monetary formatting, status badges, and an interactive deep inspection modal showing before/after state comparison and JSON metadata. Added `getAuditLogs` and `getAuditLogFilters` to `financeApi.js` and activated the "Audit Trail" sidebar tab in `TrusteeLayout.jsx`.
 

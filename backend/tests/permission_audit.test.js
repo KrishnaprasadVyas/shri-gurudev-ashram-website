@@ -38,20 +38,20 @@ const ROLES_TO_TEST = [
 ];
 
 const ENDPOINTS_TO_TEST = [
-  { path: "/api/finance/advances", method: "GET", name: "List Advances" },
-  { path: "/api/finance/advances", method: "POST", name: "Create Advance" },
-  { path: "/api/finance/advances/direct", method: "POST", name: "Create Direct Payment" },
-  { path: "/api/finance/advances/507f1f77bcf86cd799439011", method: "GET", name: "Get Advance By Id" },
-  { path: "/api/finance/advances/507f1f77bcf86cd799439011/settle", method: "POST", name: "Settle Advance" },
-  { path: "/api/finance/advances/507f1f77bcf86cd799439011/cancel", method: "PATCH", name: "Cancel Advance" },
-  { path: "/api/finance/vouchers", method: "GET", name: "List Vouchers" },
-  { path: "/api/finance/vouchers/507f1f77bcf86cd799439011", method: "GET", name: "Get Voucher By Id" },
-  { path: "/api/finance/vouchers/507f1f77bcf86cd799439011/pdf", method: "GET", name: "Download Voucher PDF" },
-  { path: "/api/admin/system/donations", method: "GET", name: "List Donations (Trustee Allowed)" },
-  { path: "/api/admin/system/donations/cash", method: "POST", name: "Create Cash Donation (Trustee Allowed)" },
-  { path: "/api/admin/system/donations/offline", method: "POST", name: "Create Offline Donation (Trustee Allowed)" },
+  { path: "/api/finance/advances", method: "GET", name: "List Advances", allowedRoles: ["TRUSTEE", "SYSTEM_ADMIN"] },
+  { path: "/api/finance/advances", method: "POST", name: "Create Advance", allowedRoles: ["TRUSTEE", "SYSTEM_ADMIN"] },
+  { path: "/api/finance/advances/direct", method: "POST", name: "Create Direct Payment", allowedRoles: ["TRUSTEE", "SYSTEM_ADMIN"] },
+  { path: "/api/finance/advances/507f1f77bcf86cd799439011", method: "GET", name: "Get Advance By Id", allowedRoles: ["TRUSTEE", "SYSTEM_ADMIN"] },
+  { path: "/api/finance/advances/507f1f77bcf86cd799439011/settle", method: "POST", name: "Settle Advance", allowedRoles: ["TRUSTEE", "SYSTEM_ADMIN"] },
+  { path: "/api/finance/advances/507f1f77bcf86cd799439011/cancel", method: "PATCH", name: "Cancel Advance", allowedRoles: ["TRUSTEE", "SYSTEM_ADMIN"] },
+  { path: "/api/finance/vouchers", method: "GET", name: "List Vouchers", allowedRoles: ["TRUSTEE", "SYSTEM_ADMIN"] },
+  { path: "/api/finance/vouchers/507f1f77bcf86cd799439011", method: "GET", name: "Get Voucher By Id", allowedRoles: ["TRUSTEE", "SYSTEM_ADMIN"] },
+  { path: "/api/finance/vouchers/507f1f77bcf86cd799439011/pdf", method: "GET", name: "Download Voucher PDF", allowedRoles: ["TRUSTEE", "SYSTEM_ADMIN"] },
+  { path: "/api/admin/system/donations", method: "GET", name: "List Donations (Trustee Allowed)", allowedRoles: ["TRUSTEE", "SYSTEM_ADMIN"] },
+  { path: "/api/admin/system/donations/cash", method: "POST", name: "Create Cash Donation (Trustee Allowed)", allowedRoles: ["TRUSTEE", "SYSTEM_ADMIN"] },
+  { path: "/api/admin/system/donations/offline", method: "POST", name: "Create Offline Donation (Trustee Allowed)", allowedRoles: ["TRUSTEE", "SYSTEM_ADMIN"] },
   // Phase 5: Finance Report Endpoints
-  { path: "/api/finance/reports/cash-book", method: "GET", name: "Cash Book Report" },
+  { path: "/api/finance/reports/cash-book", method: "GET", name: "Cash Book Report", allowedRoles: ["TRUSTEE", "SYSTEM_ADMIN"] },
   { path: "/api/finance/reports/voucher-register", method: "GET", name: "Voucher Register Report" },
   { path: "/api/finance/reports/outstanding-advances", method: "GET", name: "Outstanding Advances Report" },
   { path: "/api/finance/reports/monthly-summary", method: "GET", name: "Monthly Summary Report" },
@@ -60,6 +60,10 @@ const ENDPOINTS_TO_TEST = [
   // Phase 6: Statutory Audit Trail Endpoints
   { path: "/api/finance/audit-logs", method: "GET", name: "Statutory Audit Trail" },
   { path: "/api/finance/audit-logs/filters", method: "GET", name: "Audit Trail Filter Options" },
+  // Phase 7: System administration role management is intentionally more
+  // restrictive than finance operations: SYSTEM_ADMIN only.
+  { path: "/api/admin/system/users", method: "GET", name: "List Users", allowedRoles: ["SYSTEM_ADMIN"] },
+  { path: "/api/admin/system/users/507f1f77bcf86cd799439011/role", method: "PATCH", name: "Change User Role", allowedRoles: ["SYSTEM_ADMIN"] },
 ];
 
 const UI_ROUTES = [
@@ -70,6 +74,7 @@ const UI_ROUTES = [
   { path: "/admin/trustee/vouchers", name: "Trustee Expense Vouchers" },
   { path: "/admin/trustee/reports", name: "Trustee Financial Reports" },
   { path: "/admin/trustee/audit-logs", name: "Trustee Statutory Audit Trail" },
+  { path: "/admin/system/users", name: "System Admin User Management", allowedRoles: ["SYSTEM_ADMIN"] },
 ];
 
 async function setup() {
@@ -129,8 +134,9 @@ async function runAudit() {
 
   for (const endpoint of ENDPOINTS_TO_TEST) {
     console.log(`\n▶ Auditing Endpoint: [${endpoint.method}] ${endpoint.path} (${endpoint.name})`);
-    console.log(`  Allowed Roles: TRUSTEE, SYSTEM_ADMIN | Denied Roles: ANONYMOUS, COLLECTOR, OTHERS`);
-    console.log(`  Auth Required: YES | Middleware: auth -> authorize("TRUSTEE", "SYSTEM_ADMIN")`);
+    const allowedRoles = endpoint.allowedRoles || ["TRUSTEE", "SYSTEM_ADMIN"];
+    console.log(`  Allowed Roles: ${allowedRoles.join(", ")} | Denied Roles: ANONYMOUS, all other tested roles`);
+    console.log("  Auth Required: YES");
 
     for (const role of ROLES_TO_TEST) {
       totalTests++;
@@ -151,7 +157,7 @@ async function runAudit() {
 
         if (role === "ANONYMOUS") {
           expectedStatus = 401; // Unauthorized
-        } else if (role === "TRUSTEE" || role === "SYSTEM_ADMIN") {
+        } else if (allowedRoles.includes(role)) {
           // If authorized, controller runs. It should NOT return 401 or 403.
           // It might return 200, 201, 400 (validation), or 404 (dummy ID not found).
           expectedStatus = "NOT_401_OR_403";
@@ -181,8 +187,9 @@ async function runAudit() {
 
   for (const uiRoute of UI_ROUTES) {
     console.log(`▶ Auditing UI Route: ${uiRoute.path} (${uiRoute.name})`);
-    console.log(`  Guard Component: <TrusteeRoute> (Wraps <TrusteeLayout /> in App.jsx)`);
-    console.log(`  Allowed Roles: TRUSTEE, SYSTEM_ADMIN | Denied Roles: ANONYMOUS, COLLECTOR, OTHERS`);
+    const allowedRoles = uiRoute.allowedRoles || ["TRUSTEE", "SYSTEM_ADMIN"];
+    console.log(`  Guard Component: ${uiRoute.path.startsWith("/admin/system") ? "<AdminRoute requiredRole=\"SYSTEM_ADMIN\">" : "<TrusteeRoute>"}`);
+    console.log(`  Allowed Roles: ${allowedRoles.join(", ")} | Denied Roles: ANONYMOUS, all other tested roles`);
 
     for (const role of ROLES_TO_TEST) {
       totalTests++;
@@ -192,7 +199,7 @@ async function runAudit() {
       if (role === "ANONYMOUS") {
         expectedBehavior = "Redirect to /login (Authentication challenge)";
         expectedStatusEquivalent = 401;
-      } else if (role === "TRUSTEE" || role === "SYSTEM_ADMIN") {
+      } else if (allowedRoles.includes(role)) {
         expectedBehavior = "Render children (<TrusteeLayout /> or Child Page)";
         expectedStatusEquivalent = 200;
       } else {

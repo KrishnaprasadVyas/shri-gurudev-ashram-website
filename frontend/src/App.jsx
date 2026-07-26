@@ -47,6 +47,7 @@ import DonorsView from "./pages/admin/DonorsView";
 import ReportsView from "./pages/admin/ReportsView";
 import ExportsView from "./pages/admin/ExportsView";
 import CashDonationForm from "./pages/admin/CashDonationForm";
+import UserManagementView from "./pages/admin/UserManagementView";
 import CollectorsView from "./pages/admin/CollectorsView";
 import CollectorDetailView from "./pages/admin/CollectorDetailView";
 import CollectorApplicationsView from "./pages/admin/CollectorApplicationsView";
@@ -258,6 +259,7 @@ function App() {
                               path="collector-applications"
                               element={<CollectorApplicationsView />}
                             />
+                            <Route path="users" element={<UserManagementView />} />
                             <Route path="reports" element={<ReportsView />} />
                             <Route path="exports" element={<ExportsView />} />
                             <Route

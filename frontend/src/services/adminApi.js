@@ -531,6 +531,25 @@ export const siteConfigApi = {
     }),
 };
 
+// ==================== SYSTEM ADMIN ====================
+
+export const systemApi = {
+  // Get all users (Phase 7)
+  getUsers: (params = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v !== undefined && v !== "" && v !== "ALL")
+    ).toString();
+    return apiRequest(`/admin/system/users${query ? `?${query}` : ""}`);
+  },
+
+  // Change user role (Phase 7)
+  changeUserRole: (id, newRole) =>
+    apiRequest(`/admin/system/users/${id}/role`, {
+      method: "PATCH",
+      body: JSON.stringify({ newRole }),
+    }),
+};
+
 export default {
   announcements: announcementsApi,
   activities: activitiesApi,
@@ -539,4 +558,5 @@ export default {
   gallery: galleryApi,
   donationHeads: donationHeadsApi,
   siteConfig: siteConfigApi,
+  system: systemApi,
 };

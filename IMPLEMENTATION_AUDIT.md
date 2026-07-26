@@ -352,11 +352,32 @@ A formal audit architecture review was completed prior to Phase 7 commencement, 
 ---
 
 ### PHASE 7 — Role Management UI (System Admin)
+**Status**: 🟢 COMPLETE
 
-**Date**: TBD  
-**Status**: PENDING  
+#### Overview
+Implemented a dedicated System Admin UI and secure API for assigning user roles, transferring role-management capabilities from raw database access into the protected ERP web portal.
 
-*(Details to be filled upon phase start)*
+#### Implementation Details
+- **Backend**:
+  - Created `userManagement.controller.js` with `getAllUsers` and `changeUserRole`.
+  - Added strict safety rules: `SYSTEM_ADMIN` roles cannot be assigned or demoted via UI; admins cannot alter their own roles; actions are strictly authenticated.
+  - Implemented `express-rate-limit` for `roleChangeLimiter` (10 changes/hr).
+  - All role changes are appended into the cryptographically secure `AuditLog`.
+- **Frontend**:
+  - Developed `UserManagementView.jsx` in the System Admin portal.
+  - Added filterable/sortable user lists, color-coded role badges, and an intuitive "select-to-change" action UI.
+  - Integrated custom local toast notifications to align with existing design system without adding new dependencies.
+  - Connected navigation into `SystemAdminLayout.jsx` and registered routes in `App.jsx`.
+
+#### Verification Results
+- [x] Verified `SYSTEM_ADMIN` can view all users and assign roles.
+- [x] Verified `SYSTEM_ADMIN` cannot demote their own account or other System Admins.
+- [x] Verified `TRUSTEE` and lower roles receive `403 Forbidden` for both UI and API.
+- [x] Verified Role Changes properly serialize into `AuditLog` preserving `performedBy` metadata.
+- [x] Confirmed the full `npm test` suite passes: finance regression, permission audit, reconciliation, audit viewer, and role-management verification.
+- [x] Confirmed frontend `npm run build` compiles with 0 errors.
+- [x] Reconciled the complete API and frontend authorization inventory in `docs/ROLE_PERMISSION_MATRIX.md`; the permission audit now explicitly covers both Phase 7 API endpoints and the System Admin user-management route.
+- [x] Corrected the role-management allowlist and UI to use only current `User.role` schema values, excluding `SYSTEM_ADMIN` from UI assignment. Added regression coverage for a valid non-financial role and rejection of a retired role name.
 
 ---
 
