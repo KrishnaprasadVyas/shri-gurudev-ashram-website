@@ -69,6 +69,7 @@ import VouchersView from "./pages/admin/trustee/VouchersView";
 import VoucherDetail from "./pages/admin/trustee/VoucherDetail";
 import TrusteeDonationsView from "./pages/admin/trustee/DonationsView";
 import TrusteeOfflineDonationForm from "./pages/admin/trustee/OfflineDonationForm";
+import TrusteeReportsView from "./pages/admin/trustee/ReportsView";
 
 // Donation Module
 import DonationPage from "./modules/donation/DonationPage";
@@ -324,7 +325,8 @@ function App() {
                             {/* Phase 4 routes (Donations) */}
                             <Route path="donations" element={<TrusteeDonationsView />} />
                             <Route path="donations/new" element={<TrusteeOfflineDonationForm />} />
-                            {/* Phase 5 routes (Reports) will be added here */}
+                            {/* Phase 5 routes (Reports) */}
+                            <Route path="reports" element={<TrusteeReportsView />} />
                             {/* Phase 6 routes (Audit Log) will be added here */}
                           </Route>
                         </Route>

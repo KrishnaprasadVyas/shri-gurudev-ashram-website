@@ -298,10 +298,33 @@ Allow TRUSTEE users to enter offline counter donations (`CASH`, `UPI`, `CHEQUE`)
 
 ### PHASE 5 — Financial Reports + Dashboard
 
-**Date**: TBD  
-**Status**: PENDING  
+**Date**: 2026-07-26  
+**Status**: COMPLETED  
+**Version**: ERP Phase 5 (v2.5)
 
-*(Details to be filled upon phase start)*
+#### Objectives
+Implement real-time financial reporting statements and CSV export capabilities for ashram accounting, and transform the Trustee portal landing page into an interactive real-time financial summary dashboard.
+
+#### Scope Completed
+- **Finance Reports Controller**: Created `backend/src/controllers/finance.reports.controller.js` implementing 6 aggregation endpoints:
+  - `getCashBook`: Chronological ledger of all inflows (donations, advance returns) and outflows (vouchers, advance disbursements) with running balance calculation.
+  - `getVoucherRegister`: Itemized register of expense vouchers filterable by date and statutory expense category.
+  - `getOutstandingAdvances`: Register of open TYPE_A and TYPE_B cash advances requiring settlement.
+  - `getMonthlySummary`: 12-month comparative summary of income vs expenditure and net cash flow for any selected financial year.
+  - `getAnnualExport`: Complete accounting transaction dump formatted for Chartered Accountant audit compliance.
+  - `getDashboardStats`: Aggregation of today's donations, open advances, monthly vouchers, and net monthly flow.
+- **CSV Export Streaming Engine**: Implemented RFC 4180 compliant CSV streaming with double-quote escaping (`replace(/"/g, '""')`) across all report endpoints.
+- **Reports Routes & Mounting**: Created `backend/src/routes/finance.reports.routes.js` and mounted at `/api/finance/reports` in `finance.routes.js`, inheriting rate limiting (`financialApiLimiter`) and role authorization (`TRUSTEE`, `SYSTEM_ADMIN`).
+- **Trustee Reports UI & API Client**: Added report API methods and browser CSV download helpers to `frontend/src/services/financeApi.js`. Created `frontend/src/pages/admin/trustee/ReportsView.jsx` with tabbed views for all 5 statutory reports and CSV download triggers.
+- **Real-Time Trustee Dashboard**: Updated `frontend/src/pages/admin/trustee/TrusteeHome.jsx` from Phase 1 placeholder to a live summary dashboard featuring real-time financial metrics and quick actions.
+- **Portal & Router Integration**: Updated `TrusteeLayout.jsx` to enable the Reports sidebar navigation tab and registered `/admin/trustee/reports` in `App.jsx` as `TrusteeReportsView`.
+
+#### Verification Results
+- [x] Confirmed `npm test` regression, permission audit, and reconciliation suite passes across 199 verification points (`119/119 permission verifications + 6/6 regression workflows + 31/31 reconciliation metrics passed`).
+- [x] Confirmed deterministic accounting reconciliation across Cash Book, Voucher Register, Outstanding Advances, Monthly Summary, Annual CA Export, and Dashboard Stats using controlled dataset (`₹1,550 inflow, ₹700 outflow, ₹850 net ending balance`).
+- [x] Confirmed `npm run build` compiles production bundles cleanly (`0 errors`).
+- [x] Confirmed CSV export formatting properly handles special characters and quotes without syntax errors or duplicate records.
+- [x] Confirmed Trustee dashboard correctly aggregates figures across Donation, Voucher, and CashAdvance collections.
 
 ---
 

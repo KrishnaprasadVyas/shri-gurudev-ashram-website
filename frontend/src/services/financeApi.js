@@ -145,4 +145,83 @@ export const financeApi = {
     document.body.removeChild(link);
     window.URL.revokeObjectURL(downloadUrl);
   },
+
+  // Finance Reports (Phase 5)
+  getDashboardStats: () =>
+    apiRequest("/finance/reports/dashboard-stats", { method: "GET" }),
+
+  getCashBook: (params = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v !== undefined && v !== "")
+    ).toString();
+    return apiRequest(`/finance/reports/cash-book${query ? `?${query}` : ""}`, {
+      method: "GET",
+    });
+  },
+
+  getVoucherRegisterReport: (params = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v !== undefined && v !== "")
+    ).toString();
+    return apiRequest(`/finance/reports/voucher-register${query ? `?${query}` : ""}`, {
+      method: "GET",
+    });
+  },
+
+  getOutstandingAdvancesReport: (params = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v !== undefined && v !== "")
+    ).toString();
+    return apiRequest(`/finance/reports/outstanding-advances${query ? `?${query}` : ""}`, {
+      method: "GET",
+    });
+  },
+
+  getMonthlySummaryReport: (params = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v !== undefined && v !== "")
+    ).toString();
+    return apiRequest(`/finance/reports/monthly-summary${query ? `?${query}` : ""}`, {
+      method: "GET",
+    });
+  },
+
+  getAnnualExportReport: (params = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v !== undefined && v !== "")
+    ).toString();
+    return apiRequest(`/finance/reports/annual-export${query ? `?${query}` : ""}`, {
+      method: "GET",
+    });
+  },
+
+  downloadReportCsv: async (reportType, params = {}, filename) => {
+    const query = new URLSearchParams({
+      ...Object.fromEntries(
+        Object.entries(params).filter(([, v]) => v !== undefined && v !== "")
+      ),
+      export: "csv",
+    }).toString();
+    const url = `${API_BASE_URL}/finance/reports/${reportType}?${query}`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to download report CSV");
+    }
+
+    const blob = await response.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = filename || `${reportType}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(downloadUrl);
+  },
 };

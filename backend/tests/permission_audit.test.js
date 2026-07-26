@@ -50,6 +50,13 @@ const ENDPOINTS_TO_TEST = [
   { path: "/api/admin/system/donations", method: "GET", name: "List Donations (Trustee Allowed)" },
   { path: "/api/admin/system/donations/cash", method: "POST", name: "Create Cash Donation (Trustee Allowed)" },
   { path: "/api/admin/system/donations/offline", method: "POST", name: "Create Offline Donation (Trustee Allowed)" },
+  // Phase 5: Finance Report Endpoints
+  { path: "/api/finance/reports/cash-book", method: "GET", name: "Cash Book Report" },
+  { path: "/api/finance/reports/voucher-register", method: "GET", name: "Voucher Register Report" },
+  { path: "/api/finance/reports/outstanding-advances", method: "GET", name: "Outstanding Advances Report" },
+  { path: "/api/finance/reports/monthly-summary", method: "GET", name: "Monthly Summary Report" },
+  { path: "/api/finance/reports/annual-export", method: "GET", name: "Annual CA Audit Export" },
+  { path: "/api/finance/reports/dashboard-stats", method: "GET", name: "Trustee Dashboard Stats" },
 ];
 
 const UI_ROUTES = [
@@ -58,6 +65,7 @@ const UI_ROUTES = [
   { path: "/admin/trustee/donations/new", name: "Trustee Record Seva Form" },
   { path: "/admin/trustee/advances", name: "Trustee Cash Advances" },
   { path: "/admin/trustee/vouchers", name: "Trustee Expense Vouchers" },
+  { path: "/admin/trustee/reports", name: "Trustee Financial Reports" },
 ];
 
 async function setup() {

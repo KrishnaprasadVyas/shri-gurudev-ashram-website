@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- **Financial Reports & Dashboard Module (Phase 5)**: Created `backend/src/controllers/finance.reports.controller.js` and `backend/src/routes/finance.reports.routes.js` with aggregation endpoints for Cash Book (`/cash-book`), Voucher Register (`/voucher-register`), Outstanding Advances (`/outstanding-advances`), Monthly Summary (`/monthly-summary`), Annual CA Audit Dump (`/annual-export`), and real-time dashboard stats (`/dashboard-stats`). Added CSV export functionality with RFC 4180 quote-escaped streaming.
+- **Trustee Financial Reports & Live Dashboard UI (Phase 5)**: Created `frontend/src/pages/admin/trustee/ReportsView.jsx` with tabbed views for all 5 statutory reports and CSV download triggers. Replaced `TrusteeHome.jsx` placeholder with a live summary dashboard featuring real-time financial metrics and quick actions.
+- **Trustee Reports API Client & Route (Phase 5)**: Added reporting and CSV download methods to `frontend/src/services/financeApi.js` and mounted `/admin/trustee/reports` in `App.jsx` as `TrusteeReportsView`.
+
 - **Trustee Offline Donation Entry UI & Views (Phase 4)**: Created `frontend/src/pages/admin/trustee/DonationsView.jsx` and `OfflineDonationForm.jsx` allowing TRUSTEE users to view all ashram donations and record counter seva deposits (`CASH`, `UPI`, `CHEQUE`) with automatic prefixed receipt numbering (`CA-`, `CH-`, `UPI-`), while replacing legacy static frontend dummy data with live server API queries (`/api/public/donation-heads`).
 
 - **Cash Advance & Voucher Accounting Models (Phase 3)**: Created `backend/src/models/CashAdvance.js` and `backend/src/models/Voucher.js` on `mainDb` supporting Type A cash advances (with return expectation) and Type B direct vendor payments with strict immutability and variance accounting rules.

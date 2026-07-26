@@ -24,4 +24,8 @@ router.get("/vouchers", voucherController.listVouchers);
 router.get("/vouchers/:id", voucherController.getVoucherById);
 router.get("/vouchers/:id/pdf", voucherController.downloadVoucherPdf);
 
+/* ---------------- Reports Routes (Phase 5) ---------------- */
+const financeReportsRoutes = require("./finance.reports.routes");
+router.use("/reports", financeReportsRoutes);
+
 module.exports = router;
