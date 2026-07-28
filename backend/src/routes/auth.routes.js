@@ -1,16 +1,18 @@
 const router = require("express").Router();
 const {
   verifyFirebaseToken,
+  resendOtp,
   getMe,
   requestEmailVerification,
   verifyEmail,
   getEmailStatus,
 } = require("../controllers/auth.controller");
-const { emailVerificationLimiter } = require("../middlewares/rateLimit");
+const { emailVerificationLimiter, otpResendLimiter } = require("../middlewares/rateLimit");
 const authMiddleware = require("../middlewares/auth.middleware");
 
 // Firebase Phone Authentication
 router.post("/verify-firebase-token", verifyFirebaseToken);
+router.post("/resend-otp", otpResendLimiter, resendOtp);
 router.get("/me", authMiddleware, getMe);
 
 // Email verification

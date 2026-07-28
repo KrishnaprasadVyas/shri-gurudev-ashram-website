@@ -69,3 +69,19 @@ exports.financialApiLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+/**
+ * OTP Resend rate limiter
+ * 3 requests per minute per IP
+ * Purpose: Prevent OTP resend abuse and spamming
+ */
+exports.otpResendLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 3,
+  message: {
+    message: "Too many OTP resend attempts. Please wait a minute.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+

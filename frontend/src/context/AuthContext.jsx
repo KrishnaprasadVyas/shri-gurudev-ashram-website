@@ -120,11 +120,27 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, [checkAuth]);
 
-  /**
-   * Get redirect path based on user role
-   */
-  const getRedirectPath = useCallback((role) => {
-    switch (role) {
+  const getRedirectPath = useCallback((returnUrlOrRole, fallbackUser = null) => {
+    if (
+      typeof returnUrlOrRole === "string" &&
+      returnUrlOrRole.startsWith("/") &&
+      returnUrlOrRole !== "/login"
+    ) {
+      return returnUrlOrRole;
+    }
+
+    let targetRole = null;
+    if (typeof returnUrlOrRole === "string" && !returnUrlOrRole.startsWith("/")) {
+      targetRole = returnUrlOrRole;
+    } else if (returnUrlOrRole && typeof returnUrlOrRole === "object" && returnUrlOrRole.role) {
+      targetRole = returnUrlOrRole.role;
+    } else if (fallbackUser && fallbackUser.role) {
+      targetRole = fallbackUser.role;
+    } else {
+      targetRole = user?.role;
+    }
+
+    switch (targetRole) {
       case "SYSTEM_ADMIN":
         return "/admin/system";
       case "WEBSITE_ADMIN":
@@ -136,7 +152,7 @@ export const AuthProvider = ({ children }) => {
       default:
         return "/";
     }
-  }, []);
+  }, [user?.role]);
 
   const value = {
     user,

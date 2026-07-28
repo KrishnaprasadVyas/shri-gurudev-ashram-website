@@ -81,7 +81,7 @@ const TrusteeLayout = () => {
             <span className="text-sm font-bold tracking-wide uppercase bg-emerald-800 px-2 py-0.5 rounded">
               Module
             </span>
-            <span className="text-sm font-semibold">Finance Portal</span>
+            <span className="text-sm font-semibold">Trustee Dashboard</span>
           </div>
           <button
             onClick={() => navigate("/admin")}
@@ -99,7 +99,7 @@ const TrusteeLayout = () => {
             <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
               <div className="border-b border-gray-100 pb-3 mb-4">
                 <h2 className="text-lg font-bold text-gray-900">
-                  Finance Portal
+                  Trustee Dashboard
                 </h2>
                 <p className="text-xs text-emerald-700 font-medium mt-0.5">
                   Ashram ERP — Financial Operations

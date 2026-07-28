@@ -23,7 +23,10 @@ const Navbar = ({ showAnnouncement = false }) => {
   const { user, isAuthenticated, logout } = useAuth();
 
   const isAdmin =
-    user?.role === "WEBSITE_ADMIN" || user?.role === "SYSTEM_ADMIN";
+    user?.role === "WEBSITE_ADMIN" ||
+    user?.role === "SYSTEM_ADMIN" ||
+    user?.role === "NITYA_ANNADAN_ADMIN" ||
+    user?.role === "TRUSTEE";
 
   const isActive = (path) => location.pathname === path;
 
