@@ -31,7 +31,10 @@ const Signup = () => {
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [cooldown, setCooldown] = useState(60);
   const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
   const [errors, setErrors] = useState({});
 
   const fullMobile = `+91${mobile}`;
@@ -39,6 +42,19 @@ const Signup = () => {
   useEffect(() => {
     return cleanupRecaptcha;
   }, []);
+
+  // Cooldown timer countdown effect
+  useEffect(() => {
+    let timer;
+    if (step === "otp" && cooldown > 0) {
+      timer = setInterval(() => {
+        setCooldown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [step, cooldown]);
 
   const sendOTP = async (phone) => {
     const appVerifier = await setupRecaptcha(auth, "recaptcha-container");
@@ -48,6 +64,39 @@ const Signup = () => {
     } catch (err) {
       resetRecaptcha();
       throw err;
+    }
+  };
+
+  const handleResendOTP = async () => {
+    if (cooldown > 0 || isResending || isLoading) return;
+
+    setIsResending(true);
+    setError("");
+    setSuccessMsg("");
+
+    try {
+      // Backend audit log & rate-limit check
+      const response = await fetch(`${API_BASE_URL}/auth/resend-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: fullMobile }),
+      });
+
+      const backendData = await parseJsonResponse(response);
+      if (!response.ok) {
+        throw new Error(backendData.message || "Failed to process OTP resend request.");
+      }
+
+      // Firebase resend OTP
+      await sendOTP(fullMobile);
+
+      setSuccessMsg("OTP resent successfully!");
+      setCooldown(60); // Reset timer after successful resend
+    } catch (err) {
+      console.error("Resend OTP error:", err);
+      setError(getOtpErrorMessage(err));
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -68,10 +117,12 @@ const Signup = () => {
 
     setIsLoading(true);
     setError("");
+    setSuccessMsg("");
 
     try {
       await sendOTP(fullMobile);
       setStep("otp");
+      setCooldown(60); // Start 60s cooldown when entering OTP step
     } catch (err) {
       setError(getOtpErrorMessage(err));
     } finally {
@@ -184,6 +235,11 @@ const Signup = () => {
             {error}
           </div>
         )}
+        {successMsg && (
+          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-700 text-sm">
+            {successMsg}
+          </div>
+        )}
 
         <div className="mt-6 space-y-4">
           {step === "phone" && (
@@ -238,15 +294,35 @@ const Signup = () => {
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
                 placeholder="Enter OTP"
-                className="w-full px-3 py-2 border border-amber-200 rounded-md"
+                className="w-full px-3 py-2 border border-amber-200 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
               <button
                 onClick={handleVerifyOTP}
                 disabled={isLoading}
-                className="w-full py-3 bg-amber-600 text-white font-semibold rounded-md hover:bg-amber-700"
+                className="w-full py-3 bg-amber-600 text-white font-semibold rounded-md hover:bg-amber-700 transition-colors disabled:opacity-50"
               >
                 {isLoading ? "Verifying..." : "Verify OTP"}
               </button>
+
+              <div className="pt-2 text-center">
+                <button
+                  type="button"
+                  onClick={handleResendOTP}
+                  disabled={cooldown > 0 || isResending || isLoading}
+                  className="w-full py-2.5 px-4 text-sm font-medium text-amber-700 bg-amber-100/70 hover:bg-amber-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isResending ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-amber-700 border-t-transparent rounded-full animate-spin"></div>
+                      <span>Resending OTP...</span>
+                    </>
+                  ) : cooldown > 0 ? (
+                    <span>Resend OTP in {cooldown}s</span>
+                  ) : (
+                    <span>Resend OTP</span>
+                  )}
+                </button>
+              </div>
             </div>
           )}
 

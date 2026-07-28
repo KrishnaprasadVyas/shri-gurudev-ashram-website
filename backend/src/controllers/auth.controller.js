@@ -299,3 +299,45 @@ exports.getEmailStatus = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+/**
+ * Resend OTP Endpoint
+ * POST /api/auth/resend-otp
+ * Public endpoint — validates phone number and logs OTP resend request
+ */
+exports.resendOtp = async (req, res) => {
+  try {
+    const { phone } = req.body;
+
+    if (!phone) {
+      return res.status(400).json({
+        success: false,
+        message: "Phone number is required",
+      });
+    }
+
+    // Clean and validate phone number
+    const digitsOnly = phone.replace(/[^\d]/g, "");
+    if (digitsOnly.length < 10) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid phone number format",
+      });
+    }
+
+    console.log(`[Auth] OTP resend request processed for: ${digitsOnly.slice(-10)}`);
+
+    return res.json({
+      success: true,
+      message: "OTP resend request processed successfully",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("[Auth] resendOtp error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to process OTP resend request",
+    });
+  }
+};
+

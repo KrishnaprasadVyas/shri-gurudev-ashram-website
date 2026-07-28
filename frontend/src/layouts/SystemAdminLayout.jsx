@@ -14,6 +14,7 @@ const SystemAdminLayout = () => {
     { path: "/admin/system/users", label: "User Roles", active: false, disabled: false },
     { path: "/admin/system/reports", label: "Reports", active: false, disabled: false },
     { path: "/admin/system/exports", label: "Exports", active: false, disabled: false },
+    { path: "/admin/trustee", label: "Trustee Dashboard", active: false, disabled: false },
   ];
 
   const isActive = (path) => {
