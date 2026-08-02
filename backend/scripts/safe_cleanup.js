@@ -1,17 +1,7 @@
-const mongoose = require("mongoose");
+const { MongoClient } = require("mongodb");
 const fs = require("fs");
 const path = require("path");
 require("dotenv").config({ path: path.join(__dirname, "../.env") });
-
-// Models
-const Donation = require("../src/models/Donation");
-const CashAdvance = require("../src/models/CashAdvance");
-const Voucher = require("../src/models/Voucher");
-const AuditLog = require("../src/models/AuditLog");
-const User = require("../src/models/User");
-
-// (ReceiptCounter, Counter, NityaAnnadanBooking schemas might be custom or existing, 
-// using generic access where needed or skip if not strictly Mongoose models)
 
 const OUT_DIR = path.join(__dirname, "cleanup_export");
 if (!fs.existsSync(OUT_DIR)) {
@@ -46,14 +36,15 @@ function checkHeuristics(doc, fields) {
   return null;
 }
 
-async function scanCollection(Model, modelName, searchFields, refField, nameField) {
-  const docs = await Model.find({}).lean();
+async function scanCollection(db, collInfo) {
+  const coll = db.collection(collInfo.collection);
+  const docs = await coll.find({}).toArray();
   const candidates = [];
   
   for (const doc of docs) {
-    let reason = checkHeuristics(doc, searchFields);
+    let reason = checkHeuristics(doc, collInfo.searchFields);
     
-    // Check deep nested fields if necessary (like donor.name, givenTo.name)
+    // Check deep nested fields if necessary
     if (!reason && doc.donor && doc.donor.name) {
        reason = checkHeuristics({ name: doc.donor.name }, ["name"]);
     }
@@ -66,9 +57,9 @@ async function scanCollection(Model, modelName, searchFields, refField, nameFiel
 
     if (reason) {
       candidates.push({
-        _id: doc._id,
-        name: doc[nameField] || (doc.donor ? doc.donor.name : "") || (doc.givenTo ? doc.givenTo.name : "") || (doc.personName || ""),
-        reference: doc[refField] || doc.entityRef || "",
+        _id: doc._id.toString(),
+        name: doc[collInfo.nameField] || (doc.donor ? doc.donor.name : "") || (doc.givenTo ? doc.givenTo.name : "") || (doc.personName || ""),
+        reference: doc[collInfo.ref] || doc.entityRef || "",
         createdAt: doc.createdAt,
         createdBy: doc.addedBy || doc.preparedBy || doc.performedBy || doc.createdBy || "",
         reason,
@@ -77,46 +68,48 @@ async function scanCollection(Model, modelName, searchFields, refField, nameFiel
     }
   }
 
-  return candidates;
+  return { candidates, collection: collInfo.collection };
 }
 
 async function main() {
-  console.log("Connecting to Database...");
-  await mongoose.connect(process.env.MONGODB_URI);
-  console.log("Connected to Main DB.");
-  if (process.env.SHARED_MONGODB_URI) {
-     await mongoose.createConnection(process.env.SHARED_MONGODB_URI).asPromise();
-     console.log("Connected to Shared DB.");
-  }
+  console.log("Connecting to Main MongoDB...");
+  const clientMain = new MongoClient(process.env.MONGO_URI);
+  await clientMain.connect();
+  const dbMain = clientMain.db(); // Uses default db in connection string
+  
+  console.log("Connecting to Shared MongoDB...");
+  const clientShared = new MongoClient(process.env.MONGO_URI_SHARED);
+  await clientShared.connect();
+  const dbShared = clientShared.db();
 
   const collections = [
-    { Model: User, name: "Users", searchFields: ["name", "email", "phone"], ref: "email", nameField: "name" },
-    { Model: Donation, name: "Donations", searchFields: ["receiptNumber", "donorName"], ref: "receiptNumber", nameField: "donorName" },
-    { Model: CashAdvance, name: "CashAdvance", searchFields: ["advanceNumber", "purpose", "notes"], ref: "advanceNumber", nameField: "name" },
-    { Model: Voucher, name: "Voucher", searchFields: ["voucherNumber", "title", "personName", "narration"], ref: "voucherNumber", nameField: "personName" },
-    { Model: AuditLog, name: "AuditLog", searchFields: ["action", "entityRef", "performedByName", "notes"], ref: "entityRef", nameField: "performedByName" },
+    { db: dbShared, collection: "users", searchFields: ["name", "email", "phone"], ref: "email", nameField: "name" },
+    { db: dbMain, collection: "donations", searchFields: ["receiptNumber", "donorName"], ref: "receiptNumber", nameField: "donorName" },
+    { db: dbMain, collection: "cashadvances", searchFields: ["advanceNumber", "purpose", "notes"], ref: "advanceNumber", nameField: "name" },
+    { db: dbMain, collection: "vouchers", searchFields: ["voucherNumber", "title", "personName", "narration"], ref: "voucherNumber", nameField: "personName" },
+    { db: dbMain, collection: "auditlogs", searchFields: ["action", "entityRef", "performedByName", "notes"], ref: "entityRef", nameField: "performedByName" },
   ];
 
   let summary = [];
   let deleteScript = `// SAFE CLEANUP DELETION SCRIPT\n// Generated on: ${new Date().toISOString()}\n// Execute ONLY after reviewing the exported JSON data.\n\n`;
 
   for (const coll of collections) {
-    console.log(`\nScanning collection: ${coll.name}...`);
-    const candidates = await scanCollection(coll.Model, coll.name, coll.searchFields, coll.ref, coll.nameField);
+    console.log(`\nScanning collection: ${coll.collection}...`);
+    const { candidates } = await scanCollection(coll.db, coll);
     
     if (candidates.length === 0) {
-      console.log(`No candidates found for ${coll.name}.`);
+      console.log(`No candidates found for ${coll.collection}.`);
       continue;
     }
 
-    console.log(`Found ${candidates.length} candidates in ${coll.name}:`);
+    console.log(`Found ${candidates.length} candidates in ${coll.collection}:`);
     
-    const dates = candidates.map(c => new Date(c.createdAt).getTime()).filter(d => !isNaN(d));
+    const dates = candidates.map(c => c.createdAt ? new Date(c.createdAt).getTime() : NaN).filter(d => !isNaN(d));
     const oldest = dates.length ? new Date(Math.min(...dates)) : "N/A";
     const newest = dates.length ? new Date(Math.max(...dates)) : "N/A";
 
     summary.push({
-      Collection: coll.name,
+      Collection: coll.collection,
       Count: candidates.length,
       Oldest: oldest,
       Newest: newest
@@ -132,12 +125,12 @@ async function main() {
     }
 
     // Export to JSON
-    const exportFile = path.join(OUT_DIR, `${coll.name}_candidates.json`);
+    const exportFile = path.join(OUT_DIR, `${coll.collection}_candidates.json`);
     fs.writeFileSync(exportFile, JSON.stringify(exportData, null, 2));
-    console.log(`[Exported] ${coll.name} candidates to ${exportFile}`);
+    console.log(`[Exported] ${coll.collection} candidates to ${exportFile}`);
 
     // Generate safe delete script
-    deleteScript += `db.getCollection("${coll.Model.collection.collectionName}").deleteMany({\n  _id: { \n    $in: [\n      ${ids.join(",\n      ")}\n    ]\n  }\n});\n\n`;
+    deleteScript += `db.getCollection("${coll.collection}").deleteMany({\n  _id: { \n    $in: [\n      ${ids.join(",\n      ")}\n    ]\n  }\n});\n\n`;
   }
 
   console.log("\n================ SUMMARY ================");
@@ -149,7 +142,8 @@ async function main() {
   console.log(`[Script Generated] Reversible delete queries saved to ${scriptFile}`);
   console.log("DO NOT run the script until you explicitly verify the exported JSON files.");
 
-  mongoose.disconnect();
+  await clientMain.close();
+  await clientShared.close();
 }
 
 main().catch(console.error);

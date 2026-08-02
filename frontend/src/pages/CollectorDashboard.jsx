@@ -175,6 +175,13 @@ const CollectorDashboard = () => {
           />
         </div>
 
+        {/* Collector ID Card */}
+        {stats.referralCode && (
+          <div className="mt-8">
+            <CollectorIdCard user={user} referralCode={stats.referralCode} />
+          </div>
+        )}
+
         {/* Quick Links */}
         <div className="mt-8 text-center">
           <Link
@@ -563,6 +570,128 @@ const RecentDonationsSection = ({ donations, isLoading }) => {
           ))}
         </div>
       )}
+    </div>
+  );
+};
+
+/**
+ * CollectorIdCard — Digital ID card for approved collectors
+ *
+ * Data sources (no additional API calls):
+ *   - user.fullName, user.mobile, user.email, user.collectorProfile.approvedAt
+ *     all come from AuthContext which already called /api/auth/me on mount
+ *   - referralCode comes from the dashboard data already fetched on this page
+ *
+ * Limitations (documented):
+ *   - No sequential collector number — does not exist in backend schema
+ *   - No photo — User model has no photo field
+ */
+const CollectorIdCard = ({ user, referralCode }) => {
+  const [copied, setCopied] = useState(false);
+  const approvedAt = user?.collectorProfile?.approvedAt;
+  const publicUrl = `${window.location.origin}/collector/profile/${referralCode}`;
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-6">
+      <h3 className="text-lg font-bold text-amber-900 mb-4">My Collector ID Card</h3>
+
+      {/* Card */}
+      <div className="bg-gradient-to-br from-amber-600 to-amber-800 rounded-xl p-6 text-white max-w-sm shadow-lg">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-amber-200 text-xs font-semibold uppercase tracking-widest">
+              Shri Gurudev Ashram
+            </p>
+            <p className="text-amber-100 text-xs mt-0.5">Collector ID Card</p>
+          </div>
+          {/* Verified badge */}
+          <span className="bg-white/20 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fillRule="evenodd"
+                d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                clipRule="evenodd"
+              />
+            </svg>
+            Verified
+          </span>
+        </div>
+
+        {/* Avatar placeholder */}
+        <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold text-white mb-4">
+          {(user?.fullName || "C").charAt(0).toUpperCase()}
+        </div>
+
+        <p className="text-xl font-bold">{user?.fullName || "—"}</p>
+
+        <div className="mt-4 space-y-2 text-sm">
+          {user?.mobile && (
+            <div className="flex items-center gap-2 text-amber-100">
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+              {user.mobile}
+            </div>
+          )}
+          {user?.email && (
+            <div className="flex items-center gap-2 text-amber-100">
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              {user.email}
+            </div>
+          )}
+          {approvedAt && (
+            <div className="flex items-center gap-2 text-amber-100">
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Member since{" "}
+              {new Date(approvedAt).toLocaleDateString("en-IN", {
+                month: "long",
+                year: "numeric",
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-4 pt-4 border-t border-white/20">
+          <p className="text-amber-200 text-xs mb-1">Referral Code</p>
+          <p className="text-lg font-bold font-mono tracking-widest">{referralCode}</p>
+        </div>
+      </div>
+
+      {/* Public Profile Link */}
+      <div className="mt-4">
+        <p className="text-xs text-gray-500 mb-2">Your public profile link:</p>
+        <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
+          <span className="text-xs text-gray-600 truncate flex-1 font-mono">{publicUrl}</span>
+          <button
+            onClick={copyLink}
+            className="text-amber-600 hover:text-amber-800 text-xs font-semibold shrink-0"
+          >
+            {copied ? "Copied!" : "Copy"}
+          </button>
+        </div>
+        <Link
+          to={`/collector/profile/${referralCode}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block mt-2 text-xs text-amber-600 hover:text-amber-800 underline"
+        >
+          Preview public profile →
+        </Link>
+      </div>
     </div>
   );
 };

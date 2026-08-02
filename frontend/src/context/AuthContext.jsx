@@ -149,6 +149,8 @@ export const AuthProvider = ({ children }) => {
         return "/admin/nitya-annadan";
       case "TRUSTEE": // ERP Phase 1
         return "/admin/trustee";
+      case "COLLECTOR_APPROVED":
+        return "/collector";
       default:
         return "/";
     }

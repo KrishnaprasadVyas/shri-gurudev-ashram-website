@@ -159,8 +159,8 @@ const Login = () => {
 
       const data = await parseJsonResponse(response);
 
-      login(data.token, data.user);
-      navigate(getRedirectPath(returnUrl, data.user));
+      const userData = await login(data.token);
+      navigate(getRedirectPath(returnUrl, userData));
     } catch (err) {
       console.error(err);
       setError("Invalid OTP");

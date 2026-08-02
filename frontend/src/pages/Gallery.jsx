@@ -1,9 +1,19 @@
+import { useEffect } from "react";
 import SectionHeading from "../components/SectionHeading";
 import GalleryGrid from "../components/GalleryGrid";
 import { useGallery } from "../context/GalleryContext";
 
 const Gallery = () => {
-  const { getVisibleItems, getCategories } = useGallery();
+  const { getVisibleItems, getCategories, fetchVisibleGallery } = useGallery();
+
+  // Trigger the public gallery fetch explicitly when this page mounts or the
+  // language changes. Previously this was auto-fired inside GalleryContext on
+  // every mount (including the admin pages), which caused admin-fetched
+  // galleryCategories to be overwritten. Now it runs only for the public page.
+  useEffect(() => {
+    fetchVisibleGallery();
+  }, [fetchVisibleGallery]);
+
   const images = getVisibleItems();
   const categories = getCategories();
 

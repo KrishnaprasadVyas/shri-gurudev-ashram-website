@@ -79,6 +79,7 @@ import MyDonations from "./pages/MyDonations";
 import CollectorDashboard from "./pages/CollectorDashboard";
 import CollectorApplicationPage from "./pages/CollectorApplicationPage";
 import CollectorReapplyPage from "./pages/CollectorReapplyPage";
+import CollectorPublicProfile from "./pages/CollectorPublicProfile";
 import LeaderboardPage from "./pages/LeaderboardPage";
 
 // E-commerce Module (disabled)
@@ -158,6 +159,11 @@ function App() {
                                 <CollectorReapplyPage />
                               </ProtectedRoute>
                             }
+                          />
+                          {/* Public collector profile — no auth required */}
+                          <Route
+                            path="collector/profile/:code"
+                            element={<CollectorPublicProfile />}
                           />
 
                           {/* Public Leaderboard */}

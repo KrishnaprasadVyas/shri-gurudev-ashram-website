@@ -1,0 +1,236 @@
+[
+  {
+    "_id": "6a65dcef044412daac4ff7b5",
+    "advanceNumber": "ADV-000001",
+    "type": "ADVANCE",
+    "givenTo": {
+      "name": "Sevadar Ram",
+      "userId": null
+    },
+    "purpose": "Bhandara Groceries",
+    "category": "GROCERIES_PROVISIONS",
+    "advanceAmount": 10000,
+    "settlement": {
+      "settledAt": null,
+      "actualExpense": null,
+      "returnedAmount": null,
+      "variance": null,
+      "paymentMode": null,
+      "paymentRef": "",
+      "notes": "",
+      "settledBy": null,
+      "items": []
+    },
+    "directPayment": {
+      "paymentMode": null,
+      "paymentRef": "",
+      "paymentDate": null,
+      "bankName": "",
+      "accountNo": ""
+    },
+    "voucherId": null,
+    "voucherNumber": null,
+    "status": "CANCELLED",
+    "addedBy": "696fe46dc55aa19d46784405",
+    "notes": "Scenario 1 Test",
+    "createdAt": "2026-07-26T10:09:51.975Z",
+    "updatedAt": "2026-07-26T13:46:49.562Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a65dd179076b08a580dc0b1",
+    "advanceNumber": "ADV-000005",
+    "type": "ADVANCE",
+    "givenTo": {
+      "name": "Sevadar Ram",
+      "userId": null
+    },
+    "purpose": "Bhandara Groceries",
+    "category": "GROCERIES_PROVISIONS",
+    "advanceAmount": 10000,
+    "settlement": {
+      "settledAt": "2026-07-26T10:10:31.382Z",
+      "actualExpense": 8000,
+      "returnedAmount": 2000,
+      "variance": 0,
+      "paymentMode": "CASH",
+      "paymentRef": "",
+      "notes": "Balance returned in cash",
+      "items": [
+        {
+          "description": "Bhandara Groceries",
+          "amount": 8000,
+          "category": "GROCERIES_PROVISIONS"
+        }
+      ],
+      "settledBy": "696fe46dc55aa19d46784405"
+    },
+    "directPayment": {
+      "paymentMode": null,
+      "paymentRef": "",
+      "paymentDate": null,
+      "bankName": "",
+      "accountNo": ""
+    },
+    "voucherId": "6a65dd179076b08a580dc0bd",
+    "voucherNumber": "VCH-000001",
+    "status": "SETTLED",
+    "addedBy": "696fe46dc55aa19d46784405",
+    "notes": "Scenario 1 Test",
+    "createdAt": "2026-07-26T10:10:31.109Z",
+    "updatedAt": "2026-07-26T10:10:31.383Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a65e5d6f9e92882406d0663",
+    "advanceNumber": "ADV-000062",
+    "type": "ADVANCE",
+    "givenTo": {
+      "name": "RegTest Sevadar 1",
+      "userId": null
+    },
+    "purpose": "Groceries Purchase",
+    "category": "GROCERIES_PROVISIONS",
+    "advanceAmount": 10000,
+    "settlement": {
+      "settledAt": null,
+      "actualExpense": null,
+      "returnedAmount": null,
+      "variance": null,
+      "paymentMode": null,
+      "paymentRef": "",
+      "notes": "",
+      "settledBy": null,
+      "items": []
+    },
+    "directPayment": {
+      "paymentMode": null,
+      "paymentRef": "",
+      "paymentDate": null,
+      "bankName": "",
+      "accountNo": ""
+    },
+    "voucherId": null,
+    "voucherNumber": null,
+    "status": "CANCELLED",
+    "addedBy": "696fe46dc55aa19d46784405",
+    "notes": "Regression Scenario 1",
+    "createdAt": "2026-07-26T10:47:50.504Z",
+    "updatedAt": "2026-07-26T13:45:35.756Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a65e5d6f9e92882406d066c",
+    "advanceNumber": "ADV-000063",
+    "type": "ADVANCE",
+    "givenTo": {
+      "name": "RegTest Sevadar 2",
+      "userId": null
+    },
+    "purpose": "Electricity Bill",
+    "category": "ELECTRICITY_UTILITIES",
+    "advanceAmount": 10000,
+    "settlement": {
+      "settledAt": null,
+      "actualExpense": null,
+      "returnedAmount": null,
+      "variance": null,
+      "paymentMode": null,
+      "paymentRef": "",
+      "notes": "",
+      "settledBy": null,
+      "items": []
+    },
+    "directPayment": {
+      "paymentMode": null,
+      "paymentRef": "",
+      "paymentDate": null,
+      "bankName": "",
+      "accountNo": ""
+    },
+    "voucherId": null,
+    "voucherNumber": null,
+    "status": "CANCELLED",
+    "addedBy": "696fe46dc55aa19d46784405",
+    "notes": "",
+    "createdAt": "2026-07-26T10:47:50.616Z",
+    "updatedAt": "2026-07-26T13:45:34.240Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a65e5d6f9e92882406d0672",
+    "advanceNumber": "ADV-000064",
+    "type": "ADVANCE",
+    "givenTo": {
+      "name": "RegTest Sevadar 3",
+      "userId": null
+    },
+    "purpose": "Plumbing Repairs",
+    "category": "MAINTENANCE_REPAIRS",
+    "advanceAmount": 10000,
+    "settlement": {
+      "settledAt": null,
+      "actualExpense": null,
+      "returnedAmount": null,
+      "variance": null,
+      "paymentMode": null,
+      "paymentRef": "",
+      "notes": "",
+      "settledBy": null,
+      "items": []
+    },
+    "directPayment": {
+      "paymentMode": null,
+      "paymentRef": "",
+      "paymentDate": null,
+      "bankName": "",
+      "accountNo": ""
+    },
+    "voucherId": null,
+    "voucherNumber": null,
+    "status": "CANCELLED",
+    "addedBy": "696fe46dc55aa19d46784405",
+    "notes": "",
+    "createdAt": "2026-07-26T10:47:50.734Z",
+    "updatedAt": "2026-07-26T13:45:32.532Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a65e5d6f9e92882406d0677",
+    "advanceNumber": "ADV-000065",
+    "type": "ADVANCE",
+    "givenTo": {
+      "name": "RegTest Sevadar 4",
+      "userId": null
+    },
+    "purpose": "Transport Advance",
+    "category": "TRANSPORT",
+    "advanceAmount": 10000,
+    "settlement": {
+      "settledAt": null,
+      "actualExpense": null,
+      "returnedAmount": null,
+      "variance": null,
+      "paymentMode": null,
+      "paymentRef": "",
+      "notes": "",
+      "settledBy": null,
+      "items": []
+    },
+    "directPayment": {
+      "paymentMode": null,
+      "paymentRef": "",
+      "paymentDate": null,
+      "bankName": "",
+      "accountNo": ""
+    },
+    "voucherId": null,
+    "voucherNumber": null,
+    "status": "CANCELLED",
+    "addedBy": "696fe46dc55aa19d46784405",
+    "notes": "",
+    "createdAt": "2026-07-26T10:47:50.838Z",
+    "updatedAt": "2026-07-26T13:45:27.571Z",
+    "__v": 0
+  }
+]

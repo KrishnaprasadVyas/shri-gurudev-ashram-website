@@ -2,7 +2,6 @@ import {
   createContext,
   useContext,
   useState,
-  useEffect,
   useCallback,
 } from "react";
 import { galleryApi } from "../services/adminApi";
@@ -358,10 +357,9 @@ export const GalleryProvider = ({ children }) => {
       .filter(Boolean);
   }, [galleryCategories, i18n.language]);
 
-  // Fetch visible gallery on mount and when language changes (for public pages)
-  useEffect(() => {
-    fetchVisibleGallery();
-  }, [fetchVisibleGallery, i18n.language]);
+  // NOTE: fetchVisibleGallery is intentionally NOT auto-called here.
+  // Calling it on every context mount would overwrite admin-fetched galleryCategories.
+  // The public Gallery page triggers fetchVisibleGallery explicitly via its own useEffect.
 
   const value = {
     // State
