@@ -80,7 +80,7 @@ const CollectorPublicProfile = () => {
               </p>
 
               <Link
-                to={`/?ref=${code}`}
+                to={`/donate?ref=${code}&cause=General Seva`}
                 className="mt-6 inline-block w-full px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl transition-colors text-sm"
               >
                 🙏 Donate Now

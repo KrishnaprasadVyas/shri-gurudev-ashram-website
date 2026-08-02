@@ -120,26 +120,38 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, [checkAuth]);
 
-  const getRedirectPath = useCallback((returnUrlOrRole, fallbackUser = null) => {
-    if (
-      typeof returnUrlOrRole === "string" &&
-      returnUrlOrRole.startsWith("/") &&
-      returnUrlOrRole !== "/login"
-    ) {
-      return returnUrlOrRole;
-    }
+  /**
+   * Routes that require only authentication (no privileged role).
+   * A USER who was deep-linking to one of these will be sent back there
+   * after login. Paths that require a privileged role must NOT appear here
+   * to prevent any accidental privilege escalation via returnUrl.
+   */
+  const USER_ACCESSIBLE_ROUTES = [
+    "/my-donations",
+    "/collector/apply",
+    "/collector/reapply",
+  ];
 
+  const getRedirectPath = useCallback((returnUrlOrRole, fallbackUser = null) => {
+    // Resolve the target role from whatever argument is provided
     let targetRole = null;
     if (typeof returnUrlOrRole === "string" && !returnUrlOrRole.startsWith("/")) {
+      // Argument is a role string (not a path)
       targetRole = returnUrlOrRole;
     } else if (returnUrlOrRole && typeof returnUrlOrRole === "object" && returnUrlOrRole.role) {
+      // Argument is a user object
       targetRole = returnUrlOrRole.role;
     } else if (fallbackUser && fallbackUser.role) {
+      // Fallback user provided
       targetRole = fallbackUser.role;
     } else {
+      // Use current context user role
       targetRole = user?.role;
     }
 
+    // Privileged roles always go to their hardcoded dashboards, regardless of
+    // any returnUrl. This prevents returnUrl from being used as an escalation
+    // vector and ensures a consistent entry point for admin/collector/trustee.
     switch (targetRole) {
       case "SYSTEM_ADMIN":
         return "/admin/system";
@@ -151,8 +163,20 @@ export const AuthProvider = ({ children }) => {
         return "/admin/trustee";
       case "COLLECTOR_APPROVED":
         return "/collector";
-      default:
+      default: {
+        // USER role: honour returnUrl only if it is a whitelisted user-accessible
+        // route (one that requires authentication but no privileged role).
+        // Any other path — including admin/collector/trustee URLs — is ignored
+        // and the user is sent to the public Home page instead.
+        const returnUrl =
+          typeof returnUrlOrRole === "string" && returnUrlOrRole.startsWith("/")
+            ? returnUrlOrRole
+            : null;
+        if (returnUrl && USER_ACCESSIBLE_ROUTES.some((r) => returnUrl.startsWith(r))) {
+          return returnUrl;
+        }
         return "/";
+      }
     }
   }, [user?.role]);
 
